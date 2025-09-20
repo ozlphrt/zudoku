@@ -320,18 +320,10 @@ class SudokuGame {
         
         if (this.givenCells[row][col]) return;
         
-        // If cell is empty, add a note (cycle through numbers 1-9)
-        if (this.grid[row][col] === 0) {
-            // Find the next number to add as a note
-            let nextNumber = 1;
-            while (nextNumber <= 9 && this.notes[row][col].has(nextNumber)) {
-                nextNumber++;
-            }
-            
-            if (nextNumber <= 9) {
-                this.toggleNote(row, col, nextNumber);
-                this.updateDisplay();
-            }
+        // If cell is empty and we have a highlighted number (paint mode)
+        if (this.grid[row][col] === 0 && this.isPaintMode && this.paintNumber) {
+            this.toggleNote(row, col, this.paintNumber);
+            this.updateDisplay();
         }
     }
     
@@ -344,18 +336,10 @@ class SudokuGame {
         
         if (this.givenCells[row][col]) return;
         
-        // If cell is empty, add a note (cycle through numbers 1-9)
-        if (this.grid[row][col] === 0) {
-            // Find the next number to add as a note
-            let nextNumber = 1;
-            while (nextNumber <= 9 && this.notes[row][col].has(nextNumber)) {
-                nextNumber++;
-            }
-            
-            if (nextNumber <= 9) {
-                this.toggleNote(row, col, nextNumber);
-                this.updateDisplay();
-            }
+        // If cell is empty and we have a highlighted number (paint mode)
+        if (this.grid[row][col] === 0 && this.isPaintMode && this.paintNumber) {
+            this.toggleNote(row, col, this.paintNumber);
+            this.updateDisplay();
         }
     }
     
