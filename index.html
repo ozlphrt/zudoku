@@ -415,6 +415,15 @@
             <div class="game-area">
                 <div class="game-content">
                     <div class="sudoku-grid" id="sudokuGrid"></div>
+                    
+                    <!-- Mobile Note Mode Toggle -->
+                    <div class="mobile-note-toggle" style="margin-top: 15px;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="noteModeToggle" onchange="toggleNoteModeMobile()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">Note Mode</span>
+                    </div>
                 </div>
             </div>
             
@@ -447,15 +456,6 @@
                         <button class="btn difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
                     </div>
                     <button class="btn" onclick="solveHint()" style="margin-top: 10px; width: 100%;">Hint</button>
-                    
-                    <!-- Mobile Note Mode Toggle -->
-                    <div class="mobile-note-toggle" style="margin-top: 15px;">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="noteModeToggle" onchange="toggleNoteModeMobile()">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-label">Note Mode</span>
-                    </div>
                 </div>
                 
                 <div class="instructions">
