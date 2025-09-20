@@ -309,6 +309,12 @@ class SudokuGame {
             document.body.classList.remove('note-mode');
         }
         
+        // Update mobile toggle
+        const toggle = document.getElementById('noteModeToggle');
+        if (toggle) {
+            toggle.checked = this.isNoteMode;
+        }
+        
         // Remove previous selection and highlights
         this.clearSelection();
         this.clearHighlights();
@@ -820,6 +826,12 @@ class SudokuGame {
         this.isPaintMode = false;
         this.paintNumber = null;
         document.body.classList.remove('note-mode', 'paint-mode');
+        
+        // Reset mobile toggle
+        const toggle = document.getElementById('noteModeToggle');
+        if (toggle) {
+            toggle.checked = false;
+        }
         this.moveCount = 0;
         this.errorCount = 0;
         this.hintCount = 0;
@@ -1141,6 +1153,30 @@ function clearBoard() {
 
 function setDifficulty(difficulty) {
     game.setDifficulty(difficulty);
+}
+
+function toggleNoteModeMobile() {
+    const toggle = document.getElementById('noteModeToggle');
+    if (toggle) {
+        game.isNoteMode = toggle.checked;
+        
+        // Update cursor style
+        if (game.isNoteMode) {
+            document.body.classList.add('note-mode');
+        } else {
+            document.body.classList.remove('note-mode');
+        }
+        
+        // Clear paint mode when toggling note mode
+        game.isPaintMode = false;
+        game.paintNumber = null;
+        document.body.classList.remove('paint-mode');
+        game.hidePaintModeIndicator();
+        
+        // Clear selection and highlights
+        game.clearSelection();
+        game.clearHighlights();
+    }
 }
 
 
