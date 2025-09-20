@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku - Pastel Theme</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 25%, #fd79a8 50%, #a29bfe 75%, #6c5ce7 100%);
+            min-height: 100vh;
+            color: #2d3436;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            padding: 15px;
+            gap: 15px;
+            overflow: hidden;
+        }
+
+        .game-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            overflow: hidden;
+        }
+
+        .game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stats-panel {
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .game-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            gap: 3px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 12px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 700px;
+            aspect-ratio: 1;
+            flex-shrink: 0;
+            border: 3px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .cell {
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 600;
+            cursor: crosshair;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 45px;
+            color: #2d3436;
+        }
+
+        .cell:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .cell.selected {
+            background: rgba(116, 185, 255, 0.4);
+            border-color: #74b9ff;
+            box-shadow: 0 0 20px rgba(116, 185, 255, 0.3);
+        }
+
+        .cell.given {
+            background: rgba(255, 255, 255, 0.9);
+            color: #2d3436;
+            font-weight: 700;
+        }
+
+        .cell.error {
+            background: rgba(255, 107, 107, 0.4);
+            border-color: #ff6b6b;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .cell.correct {
+            background: rgba(85, 230, 193, 0.4);
+            border-color: #55e6c1;
+        }
+
+        .cell.highlighted {
+            background: rgba(255, 195, 113, 0.4);
+            border-color: #ffc371;
+        }
+
+        .cell.notes {
+            font-size: 0.7rem;
+            color: rgba(45, 52, 54, 0.7);
+            line-height: 1.2;
+        }
+
+        .cell.notes .note-number {
+            display: inline-block;
+            width: 30%;
+            text-align: center;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* 3x3 block separators */
+        .cell:nth-child(3n) {
+            border-right: 3px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .cell:nth-child(n+19):nth-child(-n+27),
+        .cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 3px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            color: #2d3436;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn.primary {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            border-color: #74b9ff;
+            color: #ffffff;
+        }
+
+        .btn.danger {
+            background: linear-gradient(45deg, #ff6b6b, #e84393);
+            border-color: #ff6b6b;
+            color: #ffffff;
+        }
+
+        .stats-section {
+            margin-bottom: 20px;
+        }
+
+        .stats-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #74b9ff;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-label {
+            color: rgba(45, 52, 54, 0.8);
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .difficulty-selector {
+            margin-bottom: 15px;
+        }
+
+        .difficulty-btn {
+            width: 100%;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+
+        .difficulty-btn.active {
+            background: rgba(116, 185, 255, 0.3);
+            border-color: #74b9ff;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .instructions h3 {
+            color: #74b9ff;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .instructions p {
+            color: rgba(45, 52, 54, 0.8);
+            line-height: 1.4;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 10px;
+                height: auto;
+                min-height: 100vh;
+            }
+            
+            .game-panel {
+                flex-direction: column;
+            }
+            
+            .game-content {
+                flex-direction: column;
+            }
+            
+            .stats-panel {
+                width: 100%;
+            }
+            
+            .cell {
+                min-height: 30px;
+                font-size: 1rem;
+            }
+            
+            .sudoku-grid {
+                max-width: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-panel">
+            <div class="game-area">
+                <div class="game-content">
+                    <div class="sudoku-grid" id="sudokuGrid"></div>
+                </div>
+            </div>
+            
+            <div class="stats-panel">
+                <div class="stats-section">
+                    <h2 class="stats-title">Game Stats</h2>
+                    <div class="stat-item">
+                        <span class="stat-label">Time:</span>
+                        <span class="stat-value" id="timer">00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Moves:</span>
+                        <span class="stat-value" id="moveCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Errors:</span>
+                        <span class="stat-value" id="errorCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Hints Used:</span>
+                        <span class="stat-value" id="hintCount">0</span>
+                    </div>
+                </div>
+                
+                <div class="stats-section">
+                    <h2 class="stats-title">Difficulty</h2>
+                    <div class="difficulty-selector">
+                        <button class="btn difficulty-btn active">Easy</button>
+                        <button class="btn difficulty-btn">Medium</button>
+                        <button class="btn difficulty-btn">Hard</button>
+                    </div>
+                    <button class="btn" style="margin-top: 10px; width: 100%;">Hint</button>
+                </div>
+                
+                <div class="instructions">
+                    <h3>How to Play</h3>
+                    <p><strong>1.</strong> Click a number</p>
+                    <p><strong>2.</strong> Left-click empty cell to place</p>
+                    <p><strong>3.</strong> Right-click empty cell for notes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

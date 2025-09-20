@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku - Neon Cyber</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: #00ff00;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            padding: 15px;
+            gap: 15px;
+            overflow: hidden;
+        }
+
+        .game-panel {
+            flex: 1;
+            background: rgba(0, 255, 0, 0.05);
+            border-radius: 15px;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            overflow: hidden;
+        }
+
+        .game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stats-panel {
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .game-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            gap: 2px;
+            background: rgba(0, 255, 0, 0.1);
+            padding: 8px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 700px;
+            aspect-ratio: 1;
+            flex-shrink: 0;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+        }
+
+        .cell {
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid #00ff00;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 600;
+            cursor: crosshair;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 45px;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .cell:hover {
+            background: rgba(0, 255, 0, 0.1);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        .cell.selected {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+        }
+
+        .cell.given {
+            background: rgba(0, 255, 0, 0.15);
+            color: #00ff00;
+            font-weight: 700;
+            text-shadow: 0 0 15px #00ff00;
+        }
+
+        .cell.error {
+            background: rgba(255, 0, 0, 0.3);
+            border-color: #ff0000;
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff0000;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .cell.correct {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: #00ff00;
+            color: #00ff00;
+            text-shadow: 0 0 15px #00ff00;
+        }
+
+        .cell.highlighted {
+            background: rgba(255, 255, 0, 0.3);
+            border-color: #ffff00;
+            color: #ffff00;
+            text-shadow: 0 0 10px #ffff00;
+        }
+
+        .cell.notes {
+            font-size: 0.7rem;
+            color: rgba(0, 255, 0, 0.7);
+            line-height: 1.2;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .cell.notes .note-number {
+            display: inline-block;
+            width: 30%;
+            text-align: center;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* 3x3 block separators */
+        .cell:nth-child(3n) {
+            border-right: 2px solid #00ff00;
+        }
+
+        .cell:nth-child(n+19):nth-child(-n+27),
+        .cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 2px solid #00ff00;
+        }
+
+        .btn {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 10px;
+            color: #00ff00;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .btn:hover {
+            background: rgba(0, 255, 0, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 255, 0, 0.3);
+        }
+
+        .btn.primary {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .btn.danger {
+            background: rgba(255, 0, 0, 0.3);
+            border-color: #ff0000;
+            color: #ff0000;
+            text-shadow: 0 0 5px #ff0000;
+        }
+
+        .stats-section {
+            margin-bottom: 20px;
+        }
+
+        .stats-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        .stat-label {
+            color: rgba(0, 255, 0, 0.8);
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .difficulty-selector {
+            margin-bottom: 15px;
+        }
+
+        .difficulty-btn {
+            width: 100%;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+
+        .difficulty-btn.active {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .instructions {
+            background: rgba(0, 255, 0, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        .instructions h3 {
+            color: #00ff00;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .instructions p {
+            color: rgba(0, 255, 0, 0.8);
+            line-height: 1.4;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 10px;
+                height: auto;
+                min-height: 100vh;
+            }
+            
+            .game-panel {
+                flex-direction: column;
+            }
+            
+            .game-content {
+                flex-direction: column;
+            }
+            
+            .stats-panel {
+                width: 100%;
+            }
+            
+            .cell {
+                min-height: 30px;
+                font-size: 1rem;
+            }
+            
+            .sudoku-grid {
+                max-width: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-panel">
+            <div class="game-area">
+                <div class="game-content">
+                    <div class="sudoku-grid" id="sudokuGrid"></div>
+                </div>
+            </div>
+            
+            <div class="stats-panel">
+                <div class="stats-section">
+                    <h2 class="stats-title">Game Stats</h2>
+                    <div class="stat-item">
+                        <span class="stat-label">Time:</span>
+                        <span class="stat-value" id="timer">00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Moves:</span>
+                        <span class="stat-value" id="moveCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Errors:</span>
+                        <span class="stat-value" id="errorCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Hints Used:</span>
+                        <span class="stat-value" id="hintCount">0</span>
+                    </div>
+                </div>
+                
+                <div class="stats-section">
+                    <h2 class="stats-title">Difficulty</h2>
+                    <div class="difficulty-selector">
+                        <button class="btn difficulty-btn active">Easy</button>
+                        <button class="btn difficulty-btn">Medium</button>
+                        <button class="btn difficulty-btn">Hard</button>
+                    </div>
+                    <button class="btn" style="margin-top: 10px; width: 100%;">Hint</button>
+                </div>
+                
+                <div class="instructions">
+                    <h3>How to Play</h3>
+                    <p><strong>1.</strong> Click a number</p>
+                    <p><strong>2.</strong> Left-click empty cell to place</p>
+                    <p><strong>3.</strong> Right-click empty cell for notes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
