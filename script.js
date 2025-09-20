@@ -23,6 +23,7 @@ class SudokuGame {
         };
         
         this.createGrid();
+        this.addWheelListener();
         this.newGame();
     }
     
@@ -72,6 +73,27 @@ class SudokuGame {
             
             gridElement.appendChild(cell);
         }
+    }
+    
+    addWheelListener() {
+        document.addEventListener('wheel', (e) => {
+            // Only work when in paint mode
+            if (!this.isPaintMode || !this.paintNumber) return;
+            
+            e.preventDefault();
+            
+            // Scroll up = increase number, scroll down = decrease number
+            if (e.deltaY < 0) {
+                // Scroll up - increase number
+                this.paintNumber = Math.min(9, this.paintNumber + 1);
+            } else {
+                // Scroll down - decrease number
+                this.paintNumber = Math.max(1, this.paintNumber - 1);
+            }
+            
+            // Update the cursor with new number
+            this.updateCursor();
+        }, { passive: false });
     }
     
     selectCell(index) {
@@ -375,11 +397,15 @@ class SudokuGame {
             if (this.givenCells[row][col]) {
                 cell.classList.add('given');
                 cell.textContent = this.grid[row][col] || '';
+            } else if (this.grid[row][col] !== 0) {
+                // If cell has a number, show the number (not notes)
+                cell.textContent = this.grid[row][col];
             } else if (this.notes[row][col].size > 0) {
+                // Only show notes if cell is empty
                 cell.classList.add('notes');
                 cell.innerHTML = this.formatNotes(this.notes[row][col]);
             } else {
-                cell.textContent = this.grid[row][col] || '';
+                cell.textContent = '';
             }
         }
     }
@@ -646,6 +672,7 @@ class SudokuGame {
                     const possibleNumbers = this.getPossibleNumbers(row, col);
                     if (possibleNumbers.length === 1) {
                         this.grid[row][col] = possibleNumbers[0];
+                        this.notes[row][col].clear(); // Clear any existing notes
                         this.hintCount++;
                         this.updateHintCount();
                         this.updateDisplay();
@@ -661,12 +688,13 @@ class SudokuGame {
         const hiddenSingle = this.findHiddenSingle();
         if (hiddenSingle) {
             this.grid[hiddenSingle.row][hiddenSingle.col] = hiddenSingle.number;
-                    this.hintCount++;
-                    this.updateHintCount();
-                    this.updateDisplay();
+            this.notes[hiddenSingle.row][hiddenSingle.col].clear(); // Clear any existing notes
+            this.hintCount++;
+            this.updateHintCount();
+            this.updateDisplay();
             this.highlightHintCell(hiddenSingle.row, hiddenSingle.col);
             this.showHintMessage(`Hidden Single: The number ${hiddenSingle.number} can only go in this cell because all other empty cells in this ${hiddenSingle.reason} already have ${hiddenSingle.number} blocked by existing numbers. Check each number 1-9 to see where it can fit!`);
-                    return;
+            return;
         }
         
         // If no easy hints found, provide general strategy advice
