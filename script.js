@@ -79,8 +79,11 @@ class SudokuGame {
                     const deltaX = touchEndX - touchStartX;
                     const deltaY = touchEndY - touchStartY;
                     
-                    // Flick right: deltaX > 30 and |deltaY| < 50
-                    if (deltaX > 30 && Math.abs(deltaY) < 50) {
+                    console.log(`Touch gesture: duration=${touchDuration}ms, deltaX=${deltaX}, deltaY=${deltaY}`);
+                    
+                    // Flick right: deltaX > 20 and |deltaY| < 60
+                    if (deltaX > 20 && Math.abs(deltaY) < 60) {
+                        console.log('Flick right detected!');
                         e.preventDefault();
                         e.stopPropagation();
                         this.handleFlickRight(i);
@@ -337,6 +340,7 @@ class SudokuGame {
     
     // Handle flick right gesture for note mode
     handleFlickRight(index) {
+        console.log('handleFlickRight called for index:', index);
         if (this.isGameWon) return;
         
         const row = Math.floor(index / 9);
@@ -353,6 +357,7 @@ class SudokuGame {
             }
             
             if (nextNumber <= 9) {
+                console.log('Adding note:', nextNumber, 'to cell', row, col);
                 this.toggleNote(row, col, nextNumber);
                 this.updateDisplay();
             }
