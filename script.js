@@ -47,8 +47,15 @@ class SudokuGame {
             
             // Touch support - let browser handle pointer events naturally
             let longPressTimer = null;
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchStartTime = 0;
             
             cell.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                touchStartTime = Date.now();
+                
                 // Start long press timer
                 longPressTimer = setTimeout(() => {
                     this.handleLongPress(i);
@@ -56,10 +63,28 @@ class SudokuGame {
             });
             
             cell.addEventListener('touchend', (e) => {
+                const touchEndTime = Date.now();
+                const touchDuration = touchEndTime - touchStartTime;
+                
                 // Clear long press timer
                 if (longPressTimer) {
                     clearTimeout(longPressTimer);
                     longPressTimer = null;
+                }
+                
+                // Check for flick gesture (quick swipe right)
+                if (touchDuration < 300 && e.changedTouches.length > 0) {
+                    const touchEndX = e.changedTouches[0].clientX;
+                    const touchEndY = e.changedTouches[0].clientY;
+                    const deltaX = touchEndX - touchStartX;
+                    const deltaY = touchEndY - touchStartY;
+                    
+                    // Flick right: deltaX > 50 and |deltaY| < 50
+                    if (deltaX > 50 && Math.abs(deltaY) < 50) {
+                        e.preventDefault();
+                        this.handleFlickRight(i);
+                        return;
+                    }
                 }
             });
             
@@ -348,6 +373,30 @@ class SudokuGame {
         }
     }
     
+    // Handle flick right gesture for note mode
+    handleFlickRight(index) {
+        if (this.isGameWon) return;
+        
+        const row = Math.floor(index / 9);
+        const col = index % 9;
+        
+        if (this.givenCells[row][col]) return;
+        
+        // If cell is empty, add a note (cycle through numbers 1-9)
+        if (this.grid[row][col] === 0) {
+            // Find the next number to add as a note
+            let nextNumber = 1;
+            while (nextNumber <= 9 && this.notes[row][col].includes(nextNumber)) {
+                nextNumber++;
+            }
+            
+            if (nextNumber <= 9) {
+                this.toggleNote(row, col, nextNumber);
+                this.updateDisplay();
+            }
+        }
+    }
+    
     addNote(number) {
         if (this.selectedCell === null || this.isGameWon) return;
         
@@ -377,6 +426,9 @@ class SudokuGame {
             
             // Clear selection after valid move
             this.clearSelection();
+            
+            // Check for completed rows/columns/blocks
+            this.checkCompletion();
             
             // Check for win
             if (this.checkWin()) {
@@ -500,6 +552,118 @@ class SudokuGame {
         return html;
     }
     
+    checkCompletion() {
+        // Check rows
+        for (let row = 0; row < 9; row++) {
+            if (this.isRowComplete(row)) {
+                this.highlightRow(row);
+            }
+        }
+        
+        // Check columns
+        for (let col = 0; col < 9; col++) {
+            if (this.isColumnComplete(col)) {
+                this.highlightColumn(col);
+            }
+        }
+        
+        // Check 3x3 blocks
+        for (let blockRow = 0; blockRow < 3; blockRow++) {
+            for (let blockCol = 0; blockCol < 3; blockCol++) {
+                if (this.isBlockComplete(blockRow, blockCol)) {
+                    this.highlightBlock(blockRow, blockCol);
+                }
+            }
+        }
+    }
+    
+    isRowComplete(row) {
+        const numbers = new Set();
+        for (let col = 0; col < 9; col++) {
+            if (this.grid[row][col] === 0) return false;
+            numbers.add(this.grid[row][col]);
+        }
+        return numbers.size === 9;
+    }
+    
+    isColumnComplete(col) {
+        const numbers = new Set();
+        for (let row = 0; row < 9; row++) {
+            if (this.grid[row][col] === 0) return false;
+            numbers.add(this.grid[row][col]);
+        }
+        return numbers.size === 9;
+    }
+    
+    isBlockComplete(blockRow, blockCol) {
+        const numbers = new Set();
+        const startRow = blockRow * 3;
+        const startCol = blockCol * 3;
+        
+        for (let row = startRow; row < startRow + 3; row++) {
+            for (let col = startCol; col < startCol + 3; col++) {
+                if (this.grid[row][col] === 0) return false;
+                numbers.add(this.grid[row][col]);
+            }
+        }
+        return numbers.size === 9;
+    }
+    
+    highlightRow(row) {
+        for (let col = 0; col < 9; col++) {
+            const index = row * 9 + col;
+            const cell = document.querySelector(`[data-index="${index}"]`);
+            cell.classList.add('completed-highlight');
+        }
+        
+        setTimeout(() => {
+            for (let col = 0; col < 9; col++) {
+                const index = row * 9 + col;
+                const cell = document.querySelector(`[data-index="${index}"]`);
+                cell.classList.remove('completed-highlight');
+            }
+        }, 1500);
+    }
+    
+    highlightColumn(col) {
+        for (let row = 0; row < 9; row++) {
+            const index = row * 9 + col;
+            const cell = document.querySelector(`[data-index="${index}"]`);
+            cell.classList.add('completed-highlight');
+        }
+        
+        setTimeout(() => {
+            for (let row = 0; row < 9; row++) {
+                const index = row * 9 + col;
+                const cell = document.querySelector(`[data-index="${index}"]`);
+                cell.classList.remove('completed-highlight');
+            }
+        }, 1500);
+    }
+    
+    highlightBlock(blockRow, blockCol) {
+        const startRow = blockRow * 3;
+        const startCol = blockCol * 3;
+        
+        for (let row = startRow; row < startRow + 3; row++) {
+            for (let col = startCol; col < startCol + 3; col++) {
+                const index = row * 9 + col;
+                const cell = document.querySelector(`[data-index="${index}"]`);
+                cell.classList.add('completed-highlight');
+            }
+        }
+        
+        setTimeout(() => {
+            for (let row = startRow; row < startRow + 3; row++) {
+                for (let col = startCol; col < startCol + 3; col++) {
+                    const index = row * 9 + col;
+                    const cell = document.querySelector(`[data-index="${index}"]`);
+                    cell.classList.remove('completed-highlight');
+                }
+            }
+        }, 1500);
+    }
+
     checkWin() {
         for (let row = 0; row < 9; row++) {
             for (let col = 0; col < 9; col++) {

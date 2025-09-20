@@ -159,6 +159,13 @@
             animation: hintPulse 2s ease-in-out;
         }
 
+        .cell.completed-highlight {
+            background: rgba(76, 175, 80, 0.6);
+            border-color: #4caf50;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.8);
+            animation: completionPulse 1.5s ease-in-out;
+        }
+
         @keyframes hintPulse {
             0%, 100% { 
                 transform: scale(1);
@@ -167,6 +174,17 @@
             50% { 
                 transform: scale(1.1);
                 box-shadow: 0 0 30px rgba(76, 175, 80, 0.8);
+            }
+        }
+
+        @keyframes completionPulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 0 15px rgba(76, 175, 80, 0.8);
+            }
+            50% { 
+                transform: scale(1.08);
+                box-shadow: 0 0 25px rgba(76, 175, 80, 1);
             }
         }
 
@@ -444,7 +462,7 @@
                     <h3>How to Play</h3>
                 <p><strong>1.</strong> Click or touch a number</p>
                 <p><strong>2.</strong> Left-click or tap empty cell to place</p>
-                <p><strong>3.</strong> Right-click or hold empty cell for notes</p>
+                <p><strong>3.</strong> Right-click, hold, or flick right for notes</p>
                 </div>
             </div>
         </div>
