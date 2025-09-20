@@ -181,11 +181,16 @@ class SudokuGame {
             return;
         }
         
-        // If it's an empty cell and we're in note mode, just select it for note input
+        // If it's an empty cell and we're in note mode, add the highlighted number as a note
         if (this.isNoteMode && this.grid[row][col] === 0) {
-            this.selectedCell = index;
-            const cell = document.querySelector(`[data-index="${index}"]`);
-            cell.classList.add('selected');
+            if (this.isPaintMode && this.paintNumber) {
+                this.toggleNote(row, col, this.paintNumber);
+                this.updateDisplay();
+            } else {
+                this.selectedCell = index;
+                const cell = document.querySelector(`[data-index="${index}"]`);
+                cell.classList.add('selected');
+            }
             return;
         }
         
