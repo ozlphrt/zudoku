@@ -573,35 +573,64 @@ class SudokuGame {
     }
     
     removeNumbers() {
-        const cellsToRemove = 81 - this.difficulties[this.difficulty];
-        const positions = [];
+        const targetCellsToRemove = 81 - this.difficulties[this.difficulty];
+        let removedCount = 0;
+        let attempts = 0;
+        const maxAttempts = 1000; // Prevent infinite loops
         
+        // Create a list of all positions
+        const positions = [];
         for (let i = 0; i < 81; i++) {
             positions.push(i);
         }
         
-        this.shuffleArray(positions);
-        
-        let removedCount = 0;
-        for (let i = 0; i < positions.length && removedCount < cellsToRemove; i++) {
-            const pos = positions[i];
-            const row = Math.floor(pos / 9);
-            const col = pos % 9;
+        // Try multiple times to remove numbers while maintaining solvability
+        while (removedCount < targetCellsToRemove && attempts < maxAttempts) {
+            attempts++;
             
-            // Store the original value
-            const originalValue = this.grid[row][col];
+            // Shuffle positions for each attempt
+            this.shuffleArray(positions);
             
-            // Try removing this cell
-            this.grid[row][col] = 0;
+            let foundRemovable = false;
             
-            // Check if the puzzle still has a unique solution
-            if (this.hasUniqueSolution()) {
-            this.givenCells[row][col] = false;
-                removedCount++;
-            } else {
-                // Restore the value if removing it makes the puzzle invalid
-                this.grid[row][col] = originalValue;
+            for (let i = 0; i < positions.length; i++) {
+                const pos = positions[i];
+                const row = Math.floor(pos / 9);
+                const col = pos % 9;
+                
+                // Skip if already removed
+                if (this.grid[row][col] === 0) continue;
+                
+                // Store the original value
+                const originalValue = this.grid[row][col];
+                
+                // Try removing this cell
+                this.grid[row][col] = 0;
+                
+                // Check if the puzzle still has exactly one solution
+                if (this.hasUniqueSolution()) {
+                    this.givenCells[row][col] = false;
+                    removedCount++;
+                    foundRemovable = true;
+                    
+                    // If we've reached our target, stop
+                    if (removedCount >= targetCellsToRemove) break;
+                } else {
+                    // Restore the value if removing it makes the puzzle invalid
+                    this.grid[row][col] = originalValue;
+                }
             }
+            
+            // If we couldn't remove any more numbers, break
+            if (!foundRemovable) break;
+        }
+        
+        // Final validation - ensure the puzzle is still solvable
+        if (!this.hasUniqueSolution()) {
+            console.warn('Generated puzzle is not uniquely solvable, regenerating...');
+            this.generateSolution();
+            this.removeNumbers(); // Try again
+            return;
         }
         
         // Mark remaining cells as given
@@ -612,6 +641,8 @@ class SudokuGame {
                 }
             }
         }
+        
+        console.log(`Removed ${removedCount} cells, target was ${targetCellsToRemove}`);
     }
     
     hasUniqueSolution() {
@@ -700,10 +731,84 @@ class SudokuGame {
     
     newGame() {
         this.resetGame();
-        this.generateSolution();
-        this.removeNumbers();
+        
+        // Try to generate a valid puzzle with multiple attempts
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        do {
+            this.generateSolution();
+            this.removeNumbers();
+            attempts++;
+            
+            // If we've tried too many times, use a simpler approach
+            if (attempts >= maxAttempts) {
+                console.warn('Using fallback puzzle generation');
+                this.generateFallbackPuzzle();
+                break;
+            }
+        } while (!this.hasUniqueSolution());
+        
         this.updateDisplay();
         this.startTimer();
+    }
+    
+    generateFallbackPuzzle() {
+        // Generate a simpler, guaranteed solvable puzzle
+        this.generateSolution();
+        
+        // Remove fewer numbers to ensure solvability
+        const safeRemovalCount = Math.min(20, 81 - this.difficulties[this.difficulty]);
+        const positions = [];
+        
+        for (let i = 0; i < 81; i++) {
+            positions.push(i);
+        }
+        
+        this.shuffleArray(positions);
+        
+        let removedCount = 0;
+        for (let i = 0; i < positions.length && removedCount < safeRemovalCount; i++) {
+            const pos = positions[i];
+            const row = Math.floor(pos / 9);
+            const col = pos % 9;
+            
+            // Only remove cells that are not critical for solvability
+            if (this.canSafelyRemove(row, col)) {
+                this.grid[row][col] = 0;
+                this.givenCells[row][col] = false;
+                removedCount++;
+            }
+        }
+        
+        // Mark remaining cells as given
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (this.grid[row][col] !== 0) {
+                    this.givenCells[row][col] = true;
+                }
+            }
+        }
+    }
+    
+    canSafelyRemove(row, col) {
+        // Check if removing this cell would make the puzzle unsolvable
+        const originalValue = this.grid[row][col];
+        this.grid[row][col] = 0;
+        
+        // Count how many numbers can go in this cell
+        let possibleNumbers = 0;
+        for (let num = 1; num <= 9; num++) {
+            if (this.isValidMoveForGrid(this.grid, row, col, num)) {
+                possibleNumbers++;
+            }
+        }
+        
+        // Restore the original value
+        this.grid[row][col] = originalValue;
+        
+        // Only remove if there's exactly one possible number (making it solvable)
+        return possibleNumbers === 1;
     }
     
     resetGame() {
