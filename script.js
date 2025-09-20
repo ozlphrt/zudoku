@@ -76,24 +76,46 @@ class SudokuGame {
     }
     
     addWheelListener() {
+        // Add wheel listener to the entire document
         document.addEventListener('wheel', (e) => {
             // Only work when in paint mode
             if (!this.isPaintMode || !this.paintNumber) return;
             
+            // Only prevent default if we're actually changing the paint number
             e.preventDefault();
+            e.stopPropagation();
             
             // Scroll up = increase number, scroll down = decrease number
             if (e.deltaY < 0) {
                 // Scroll up - increase number
                 this.paintNumber = Math.min(9, this.paintNumber + 1);
-            } else {
+            } else if (e.deltaY > 0) {
                 // Scroll down - decrease number
                 this.paintNumber = Math.max(1, this.paintNumber - 1);
             }
             
             // Update the cursor with new number
             this.updateCursor();
-        }, { passive: false });
+        }, { passive: false, capture: true });
+        
+        // Also add wheel listener to the grid specifically
+        const gridElement = document.getElementById('sudokuGrid');
+        if (gridElement) {
+            gridElement.addEventListener('wheel', (e) => {
+                if (!this.isPaintMode || !this.paintNumber) return;
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (e.deltaY < 0) {
+                    this.paintNumber = Math.min(9, this.paintNumber + 1);
+                } else if (e.deltaY > 0) {
+                    this.paintNumber = Math.max(1, this.paintNumber - 1);
+                }
+                
+                this.updateCursor();
+            }, { passive: false });
+        }
     }
     
     selectCell(index) {
@@ -170,8 +192,50 @@ class SudokuGame {
             // Update the cursor to show the paint number
             const cursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="%23ffc107" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16" text-anchor="middle" font-family="Arial" font-size="12" font-weight="300" fill="%23ffc107">${this.paintNumber}</text></svg>`;
             document.documentElement.style.setProperty('--paint-cursor', `url('${cursorSvg}') 24 24, pointer`);
+            
+            // Add visual indicator that wheel is active
+            this.showPaintModeIndicator();
         } else {
             document.body.classList.remove('paint-mode');
+            this.hidePaintModeIndicator();
+        }
+    }
+    
+    showPaintModeIndicator() {
+        let indicator = document.getElementById('paint-mode-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'paint-mode-indicator';
+            indicator.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: rgba(0, 0, 0, 0.8);
+                    color: white;
+                    padding: 10px 15px;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    z-index: 1000;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                ">
+                    Paint Mode: ${this.paintNumber}<br>
+                    <small>Scroll wheel to change number</small>
+                </div>
+            `;
+            document.body.appendChild(indicator);
+        } else {
+            indicator.querySelector('div').innerHTML = `
+                Paint Mode: ${this.paintNumber}<br>
+                <small>Scroll wheel to change number</small>
+            `;
+        }
+    }
+    
+    hidePaintModeIndicator() {
+        const indicator = document.getElementById('paint-mode-indicator');
+        if (indicator) {
+            indicator.remove();
         }
     }
     
