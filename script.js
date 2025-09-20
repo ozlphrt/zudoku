@@ -327,7 +327,7 @@ class SudokuGame {
         if (this.grid[row][col] === 0) {
             // Find the next number to add as a note
             let nextNumber = 1;
-            while (nextNumber <= 9 && this.notes[row][col].includes(nextNumber)) {
+            while (nextNumber <= 9 && this.notes[row][col].has(nextNumber)) {
                 nextNumber++;
             }
             
@@ -352,7 +352,7 @@ class SudokuGame {
         if (this.grid[row][col] === 0) {
             // Find the next number to add as a note
             let nextNumber = 1;
-            while (nextNumber <= 9 && this.notes[row][col].includes(nextNumber)) {
+            while (nextNumber <= 9 && this.notes[row][col].has(nextNumber)) {
                 nextNumber++;
             }
             
