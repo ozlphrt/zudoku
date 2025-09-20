@@ -60,7 +60,7 @@ class SudokuGame {
                 longPressTimer = setTimeout(() => {
                     this.handleLongPress(i);
                 }, 800);
-            });
+            }, { passive: true });
             
             cell.addEventListener('touchend', (e) => {
                 const touchEndTime = Date.now();
@@ -79,14 +79,15 @@ class SudokuGame {
                     const deltaX = touchEndX - touchStartX;
                     const deltaY = touchEndY - touchStartY;
                     
-                    // Flick right: deltaX > 50 and |deltaY| < 50
-                    if (deltaX > 50 && Math.abs(deltaY) < 50) {
+                    // Flick right: deltaX > 30 and |deltaY| < 50
+                    if (deltaX > 30 && Math.abs(deltaY) < 50) {
                         e.preventDefault();
+                        e.stopPropagation();
                         this.handleFlickRight(i);
                         return;
                     }
                 }
-            });
+            }, { passive: false });
             
             cell.addEventListener('touchmove', (e) => {
                 // Cancel long press on move
@@ -94,7 +95,7 @@ class SudokuGame {
                     clearTimeout(longPressTimer);
                     longPressTimer = null;
                 }
-            });
+            }, { passive: true });
             
             gridElement.appendChild(cell);
         }
@@ -218,51 +219,12 @@ class SudokuGame {
             const cursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="%23ffc107" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16" text-anchor="middle" font-family="Arial" font-size="12" font-weight="300" fill="%23ffc107">${this.paintNumber}</text></svg>`;
             document.documentElement.style.setProperty('--paint-cursor', `url('${cursorSvg}') 24 24, pointer`);
             
-            // Add visual indicator that wheel is active
-            this.showPaintModeIndicator();
+            // Paint mode is active
         } else {
             document.body.classList.remove('paint-mode');
-            this.hidePaintModeIndicator();
         }
     }
     
-    showPaintModeIndicator() {
-        let indicator = document.getElementById('paint-mode-indicator');
-        if (!indicator) {
-            indicator = document.createElement('div');
-            indicator.id = 'paint-mode-indicator';
-            indicator.innerHTML = `
-                <div style="
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    background: rgba(0, 0, 0, 0.8);
-                    color: white;
-                    padding: 10px 15px;
-                    border-radius: 8px;
-                    font-size: 14px;
-                    z-index: 1000;
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                ">
-                    Paint Mode: ${this.paintNumber}<br>
-                    <small>Scroll wheel to change number</small>
-                </div>
-            `;
-            document.body.appendChild(indicator);
-        } else {
-            indicator.querySelector('div').innerHTML = `
-                Paint Mode: ${this.paintNumber}<br>
-                <small>Scroll wheel to change number</small>
-            `;
-        }
-    }
-    
-    hidePaintModeIndicator() {
-        const indicator = document.getElementById('paint-mode-indicator');
-        if (indicator) {
-            indicator.remove();
-        }
-    }
     
     highlightSameNumbers(number) {
         for (let i = 0; i < 81; i++) {
@@ -1335,7 +1297,6 @@ function toggleNoteModeMobile() {
         game.isPaintMode = false;
         game.paintNumber = null;
         document.body.classList.remove('paint-mode');
-        game.hidePaintModeIndicator();
         
         // Clear selection and highlights
         game.clearSelection();
