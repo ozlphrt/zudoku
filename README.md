@@ -2,6 +2,8 @@
 
 A modern, interactive Sudoku game with multiple themes and full touch support.
 
+🚀 **Live Demo**: [Play Now](https://ozlphrt.github.io/sudoku/)
+
 ## Features
 
 - 🎮 **Three Difficulty Levels**: Easy, Medium, Hard
