@@ -948,6 +948,8 @@ class SudokuGame {
     }
 
     generateSimplePuzzle() {
+        console.log('🎯 Generating valid puzzle...');
+        
         // Start with a known valid complete Sudoku
         const completeSudoku = [
             [5,3,4,6,7,8,9,1,2],
@@ -961,34 +963,12 @@ class SudokuGame {
             [3,4,5,2,8,6,1,7,9]
         ];
         
-        // Copy to our grid
+        // Copy to our grid and solution
         this.grid = completeSudoku.map(row => [...row]);
         this.solution = completeSudoku.map(row => [...row]);
         
-        // Remove numbers based on difficulty
-        const targetGivenCount = this.difficulties[this.difficulty];
-        const targetRemovalCount = 81 - targetGivenCount;
-        
-        console.log(`Removing ${targetRemovalCount} numbers for ${this.difficulty} difficulty...`);
-        
-        // Create array of all positions
-        const positions = [];
-        for (let i = 0; i < 81; i++) {
-            positions.push(i);
-        }
-        
-        // Shuffle and remove numbers
-        this.shuffleArray(positions);
-        
-        let removedCount = 0;
-        for (let i = 0; i < positions.length && removedCount < targetRemovalCount; i++) {
-            const pos = positions[i];
-            const row = Math.floor(pos / 9);
-            const col = pos % 9;
-            
-            this.grid[row][col] = 0;
-            removedCount++;
-        }
+        // Remove numbers carefully to maintain unique solution
+        this.removeNumbersForDifficulty();
         
         // Mark remaining cells as given
         for (let row = 0; row < 9; row++) {
@@ -997,7 +977,164 @@ class SudokuGame {
             }
         }
         
-        console.log(`✅ Simple puzzle: ${81 - removedCount} given numbers`);
+        // Final validation
+        if (!this.validateGameState()) {
+            console.warn('⚠️ Generated puzzle has duplicates, using fallback');
+            this.useFallbackPuzzle();
+        }
+        
+        const givenCount = this.grid.flat().filter(num => num !== 0).length;
+        console.log(`✅ Generated valid puzzle: ${givenCount} given numbers`);
+    }
+    
+    removeNumbersForDifficulty() {
+        const targetGivenCount = this.difficulties[this.difficulty];
+        let attempts = 0;
+        const maxAttempts = 100;
+        
+        while (attempts < maxAttempts) {
+            // Create a copy for testing
+            const testGrid = this.grid.map(row => [...row]);
+            const positions = [];
+            
+            // Get all positions that can be removed
+            for (let i = 0; i < 81; i++) {
+                positions.push(i);
+            }
+            
+            this.shuffleArray(positions);
+            
+            // Try to remove numbers one by one, checking for unique solution
+            for (let pos of positions) {
+                const row = Math.floor(pos / 9);
+                const col = pos % 9;
+                
+                if (testGrid[row][col] === 0) continue;
+                
+                const originalValue = testGrid[row][col];
+                testGrid[row][col] = 0;
+                
+                // Check if this removal maintains unique solution
+                if (this.hasUniqueSolution(testGrid)) {
+                    this.grid[row][col] = 0;
+                    
+                    // Check if we've reached target difficulty
+                    const currentGivenCount = this.grid.flat().filter(num => num !== 0).length;
+                    if (currentGivenCount <= targetGivenCount) {
+                        console.log(`✅ Removed enough numbers for ${this.difficulty}: ${currentGivenCount} given`);
+                        return;
+                    }
+                } else {
+                    // Restore if it breaks unique solution
+                    testGrid[row][col] = originalValue;
+                }
+            }
+            
+            attempts++;
+        }
+        
+        console.log(`⚠️ Could not reach target difficulty after ${maxAttempts} attempts`);
+    }
+    
+    hasUniqueSolution(grid) {
+        // Count solutions using backtracking
+        const solutions = [];
+        this.countSolutions(grid, solutions, 0);
+        return solutions.length === 1;
+    }
+    
+    countSolutions(grid, solutions, startIndex) {
+        if (solutions.length > 1) return; // Early exit if multiple solutions found
+        
+        // Find first empty cell
+        for (let i = startIndex; i < 81; i++) {
+            const row = Math.floor(i / 9);
+            const col = i % 9;
+            
+            if (grid[row][col] === 0) {
+                // Try each number 1-9
+                for (let num = 1; num <= 9; num++) {
+                    if (this.isValidMoveForGrid(grid, row, col, num)) {
+                        grid[row][col] = num;
+                        this.countSolutions(grid, solutions, i + 1);
+                        grid[row][col] = 0;
+                        
+                        if (solutions.length > 1) return; // Early exit
+                    }
+                }
+                return; // No valid moves for this cell
+            }
+        }
+        
+        // If we reach here, grid is complete
+        solutions.push(1);
+    }
+    
+    isValidMoveForGrid(grid, row, col, num) {
+        // Check row
+        for (let c = 0; c < 9; c++) {
+            if (grid[row][c] === num) return false;
+        }
+        
+        // Check column
+        for (let r = 0; r < 9; r++) {
+            if (grid[r][col] === num) return false;
+        }
+        
+        // Check 3x3 box
+        const boxRow = Math.floor(row / 3) * 3;
+        const boxCol = Math.floor(col / 3) * 3;
+        for (let r = boxRow; r < boxRow + 3; r++) {
+            for (let c = boxCol; c < boxCol + 3; c++) {
+                if (grid[r][c] === num) return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    useFallbackPuzzle() {
+        // Use a pre-validated puzzle as fallback
+        const fallbackPuzzles = {
+            easy: [
+                [5,3,0,0,7,0,0,0,0],
+                [6,0,0,1,9,5,0,0,0],
+                [0,9,8,0,0,0,0,6,0],
+                [8,0,0,0,6,0,0,0,3],
+                [4,0,0,8,0,3,0,0,1],
+                [7,0,0,0,2,0,0,0,6],
+                [0,6,0,0,0,0,2,8,0],
+                [0,0,0,4,1,9,0,0,5],
+                [0,0,0,0,8,0,0,7,9]
+            ],
+            medium: [
+                [0,0,0,6,0,0,0,0,0],
+                [0,0,0,0,9,5,0,0,0],
+                [0,9,8,0,0,0,0,6,0],
+                [8,0,0,0,6,0,0,0,0],
+                [4,0,0,8,0,0,0,0,1],
+                [0,0,0,0,2,0,0,0,0],
+                [0,6,0,0,0,0,2,8,0],
+                [0,0,0,4,1,9,0,0,0],
+                [0,0,0,0,8,0,0,0,0]
+            ]
+        };
+        
+        const puzzle = fallbackPuzzles[this.difficulty] || fallbackPuzzles.easy;
+        this.grid = puzzle.map(row => [...row]);
+        this.solution = [
+            [5,3,4,6,7,8,9,1,2],
+            [6,7,2,1,9,5,3,4,8],
+            [1,9,8,3,4,2,5,6,7],
+            [8,5,9,7,6,1,4,2,3],
+            [4,2,6,8,5,3,7,9,1],
+            [7,1,3,9,2,4,8,5,6],
+            [9,6,1,5,3,7,2,8,4],
+            [2,8,7,4,1,9,6,3,5],
+            [3,4,5,2,8,6,1,7,9]
+        ];
+        
+        console.log('🔄 Using fallback puzzle');
     }
 
     generateCompleteSolution() {
@@ -1549,6 +1686,70 @@ class SudokuGame {
         this.showHintMessage("Strategy Tips: 1) Look for cells with only one possible number (check what's already in the row/column/box). 2) For each number 1-9, see if it can only go in one place in a row, column, or 3x3 box. 3) Use notes to track possibilities!");
     }
     
+    solvePuzzle() {
+        if (this.isGameWon) {
+            console.log('🎉 Puzzle already solved!');
+            return;
+        }
+        
+        console.log('🔍 Solving puzzle...');
+        
+        // Create a copy of the current grid for solving
+        const workingGrid = this.grid.map(row => [...row]);
+        
+        // Try to solve the puzzle
+        if (this.solveSudokuForGrid(workingGrid)) {
+            // If successful, copy the solution back
+            this.grid = workingGrid;
+            this.updateDisplay();
+            
+            // Check if this matches our stored solution
+            let matchesSolution = true;
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (this.grid[row][col] !== this.solution[row][col]) {
+                        matchesSolution = false;
+                        break;
+                    }
+                }
+                if (!matchesSolution) break;
+            }
+            
+            if (matchesSolution) {
+                console.log('✅ Puzzle solved correctly! Matches stored solution.');
+                this.gameWon();
+            } else {
+                console.log('⚠️ Puzzle solved, but solution differs from stored solution.');
+                console.log('This might indicate the puzzle has multiple solutions or the stored solution is incorrect.');
+            }
+        } else {
+            console.log('❌ Puzzle could not be solved! This indicates an invalid puzzle.');
+            console.log('The puzzle may have no solution or multiple conflicting constraints.');
+        }
+    }
+    
+    solveSudokuForGrid(grid) {
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (grid[row][col] === 0) {
+                    for (let num = 1; num <= 9; num++) {
+                        if (this.isValidMoveForGrid(grid, row, col, num)) {
+                            grid[row][col] = num;
+                            
+                            if (this.solveSudokuForGrid(grid)) {
+                                return true;
+                            }
+                            
+                            grid[row][col] = 0;
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
     getPossibleNumbers(row, col) {
         const possible = [];
         for (let num = 1; num <= 9; num++) {
@@ -1814,6 +2015,10 @@ function solveHint() {
     game.solveHint();
 }
 
+function solvePuzzle() {
+    game.solvePuzzle();
+}
+
 function clearBoard() {
     game.clearBoard();
 }
@@ -1827,7 +2032,7 @@ function setDifficulty(difficulty) {
 function runValidationTests() {
     if (game) {
         return game.runValidationTests();
-    } else {
+        } else {
         console.error('Game not initialized yet');
         return null;
     }
