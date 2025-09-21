@@ -25,6 +25,7 @@ class SudokuGame {
         
         this.createGrid();
         this.addWheelListener();
+        this.initializeButtons();
         this.newGame();
     }
     
@@ -143,6 +144,40 @@ class SudokuGame {
                 }
                 
                 this.updateCursor();
+            }, { passive: false });
+        }
+    }
+    
+    initializeButtons() {
+        // Initialize solve buttons with proper touch support
+        const solveHintBtn = document.querySelector('.solve-hint-btn');
+        const solvePuzzleBtn = document.querySelector('.solve-puzzle-btn');
+        
+        if (solveHintBtn) {
+            // Click event
+            solveHintBtn.addEventListener('click', () => {
+                this.solveHint();
+            });
+            
+            // Touch events for mobile
+            solveHintBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.solveHint();
+            }, { passive: false });
+        }
+        
+        if (solvePuzzleBtn) {
+            // Click event
+            solvePuzzleBtn.addEventListener('click', () => {
+                this.solvePuzzle();
+            });
+            
+            // Touch events for mobile
+            solvePuzzleBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.solvePuzzle();
             }, { passive: false });
         }
     }
