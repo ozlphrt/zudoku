@@ -281,8 +281,10 @@
 
         .difficulty-btn {
             width: 100%;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             text-align: left;
+            font-size: 0.85rem;
+            padding: 6px 12px;
         }
 
         .difficulty-btn.active {
@@ -453,6 +455,7 @@
                     <div class="difficulty-selector">
                         <button class="btn difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
                         <button class="btn difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
+                        <button class="btn difficulty-btn" onclick="setDifficulty('advanced')">Advanced</button>
                         <button class="btn difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
                     </div>
                     <button class="btn" onclick="solveHint()" style="margin-top: 10px; width: 100%;">Hint</button>
@@ -468,6 +471,7 @@
         </div>
     </div>
 
+    <!-- Remove the sudoku-gen library for now -->
     <script src="script.js"></script>
 </body>
 </html>

@@ -21,7 +21,7 @@ A modern, interactive Sudoku game with multiple themes and full touch support.
 
 ## Live Demo
 
-Play the game online: [https://YOUR_USERNAME.github.io/sudoku-game/](https://YOUR_USERNAME.github.io/sudoku-game/)
+Play the game online: [https://ozlphrt.github.io/sudoku/](https://ozlphrt.github.io/sudoku/)
 
 ## Themes
 
