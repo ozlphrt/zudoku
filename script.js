@@ -73,14 +73,14 @@ class SudokuGame {
                     longPressTimer = null;
                 }
                 
-                // Check for flick gesture (quick swipe right)
+                // Check for flick gesture (quick swipe right) - original logic
                 if (touchDuration < 300 && e.changedTouches.length > 0) {
                     const touchEndX = e.changedTouches[0].clientX;
                     const touchEndY = e.changedTouches[0].clientY;
                     const deltaX = touchEndX - touchStartX;
                     const deltaY = touchEndY - touchStartY;
                     
-                    // Flick right: deltaX > 20 and |deltaY| < 60
+                    // Flick right: deltaX > 20 and |deltaY| < 60 (original values)
                     if (deltaX > 20 && Math.abs(deltaY) < 60) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -88,6 +88,7 @@ class SudokuGame {
                         return;
                     }
                 }
+                
             }, { passive: false });
             
             cell.addEventListener('touchmove', (e) => {
@@ -97,6 +98,7 @@ class SudokuGame {
                     longPressTimer = null;
                 }
             }, { passive: true });
+            
             
             gridElement.appendChild(cell);
         }
@@ -853,7 +855,7 @@ class SudokuGame {
         // Ensure exactly one solution exists
         return this.solutionCount === 1;
     }
-
+    
     countSolutionsEfficient(grid, row, col) {
         // If we've found more than one solution, stop immediately
         if (this.solutionCount > 1) return;
@@ -1111,7 +1113,7 @@ class SudokuGame {
         // Final validation
         if (!this.isPuzzleSolvable()) {
             console.warn('⚠️ Generated puzzle may not be solvable, using fallback...');
-            this.generateFallbackPuzzle();
+                this.generateFallbackPuzzle();
             return;
         }
         
@@ -1123,7 +1125,7 @@ class SudokuGame {
         
         console.log(`✅ Final puzzle: ${81 - this.countEmptyCells()} given numbers`);
     }
-
+    
     generateFallbackPuzzle() {
         console.log('🔄 Using fallback puzzle generation...');
         
@@ -1306,7 +1308,7 @@ class SudokuGame {
                 this.grid[row][col] = parseInt(puzzleChar);
                 this.givenCells[row][col] = true;
             } else {
-                this.grid[row][col] = 0;
+        this.grid[row][col] = 0;
                 this.givenCells[row][col] = false;
             }
             
@@ -1383,7 +1385,7 @@ class SudokuGame {
         for (let row = 0; row < 9; row++) {
             for (let col = 0; col < 9; col++) {
                 if (grid[row][col] === 0) {
-                    for (let num = 1; num <= 9; num++) {
+        for (let num = 1; num <= 9; num++) {
                         if (this.isValidMoveForGrid(grid, row, col, num)) {
                             grid[row][col] = num;
                             
@@ -1820,28 +1822,6 @@ function setDifficulty(difficulty) {
     game.setDifficulty(difficulty);
 }
 
-function toggleNoteModeMobile() {
-    const toggle = document.getElementById('noteModeToggle');
-    if (toggle) {
-        game.isNoteMode = toggle.checked;
-        
-        // Update cursor style
-        if (game.isNoteMode) {
-            document.body.classList.add('note-mode');
-        } else {
-            document.body.classList.remove('note-mode');
-        }
-        
-        // Clear paint mode when toggling note mode
-        game.isPaintMode = false;
-        game.paintNumber = null;
-        document.body.classList.remove('paint-mode');
-        
-        // Clear selection and highlights
-        game.clearSelection();
-        game.clearHighlights();
-    }
-}
 
 // Global function to run validation tests
 function runValidationTests() {
