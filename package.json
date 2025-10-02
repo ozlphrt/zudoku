@@ -1,5 +1,13 @@
 {
-  "dependencies": {
-    "sudoku-gen": "^1.0.2"
-  }
+  "name": "zudoku",
+  "version": "1.0.0",
+  "description": "A beautiful glassmorphism Sudoku game - completely standalone, no dependencies required",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "python -m http.server 8000"
+  },
+  "keywords": ["sudoku", "game", "puzzle", "glassmorphism", "standalone"],
+  "author": "ozlphrt",
+  "license": "MIT"
 }

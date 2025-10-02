@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Sudoku - Glassmorphism</title>
+    <title>Zudoku - Glassmorphism</title>
     <style>
         * {
             margin: 0;
@@ -13,9 +13,9 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: var(--bg-primary);
             height: 100vh;
-            color: #ffffff;
+            color: var(--text-primary);
             overflow: hidden;
             touch-action: manipulation;
             -webkit-touch-callout: none;
@@ -33,33 +33,44 @@
             overflow: hidden;
         }
 
-        .game-panel {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
+        .left-panel {
+            width: 280px;
+            background: var(--bg-tertiary);
             border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 8px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             gap: 8px;
-            overflow: hidden;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
         }
 
-        .game-area {
+        .center-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 8px;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
             align-items: center;
             justify-content: center;
         }
 
-        .stats-panel {
-            width: 180px;
+        .right-panel {
+            width: 280px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 8px;
             display: flex;
             flex-direction: column;
+            gap: 8px;
             overflow-y: auto;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
         }
 
         .game-title {
@@ -67,7 +78,7 @@
             font-size: 1.2rem;
             font-weight: 300;
             margin-bottom: 8px;
-            background: linear-gradient(45deg, #64b5f6, #42a5f5);
+            background: linear-gradient(45deg, var(--accent-color), #42a5f5);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -88,7 +99,7 @@
             grid-template-columns: repeat(9, 1fr);
             grid-template-rows: repeat(9, 1fr);
             gap: 3px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--bg-secondary);
             padding: 10px;
             border-radius: 12px;
             width: 100%;
@@ -99,8 +110,8 @@
         }
 
         .cell {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -125,14 +136,14 @@
         }
 
         .cell:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--bg-secondary);
             transform: scale(1.05);
         }
 
         .cell.selected {
-            background: rgba(100, 181, 246, 0.3);
-            border-color: #64b5f6;
-            box-shadow: 0 0 20px rgba(100, 181, 246, 0.5);
+            background: var(--bg-accent);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 20px var(--bg-accent);
         }
 
         .cell.paint-target {
@@ -152,27 +163,109 @@
             }
         }
 
+        /* Enhanced animations for better visual feedback */
+        @keyframes numberPlace {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) rotate(-10deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2) rotate(5deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-8px) rotate(-2deg); }
+            20%, 40%, 60%, 80% { transform: translateX(8px) rotate(2deg); }
+        }
+
+        @keyframes successRipple {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        @keyframes victoryCelebration {
+            0% {
+                transform: scale(1) rotate(0deg);
+                box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+            }
+            25% {
+                transform: scale(1.05) rotate(1deg);
+                box-shadow: 0 0 30px rgba(76, 175, 80, 1);
+            }
+            50% {
+                transform: scale(1.1) rotate(0deg);
+                box-shadow: 0 0 40px rgba(76, 175, 80, 1);
+            }
+            75% {
+                transform: scale(1.05) rotate(-1deg);
+                box-shadow: 0 0 30px rgba(76, 175, 80, 1);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+            }
+        }
+
+        @keyframes themeTransition {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes progressFill {
+            0% { width: 0%; }
+            100% { width: var(--target-width, 0%); }
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes hintGlow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(76, 175, 80, 1);
+            }
+        }
+
         .cell.given {
-            background: rgba(255, 255, 255, 0.15);
-            color: #ffffff;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             font-weight: 700;
         }
 
         .cell.error {
-            background: rgba(244, 67, 54, 0.3);
-            border-color: #f44336;
+            background: var(--error-color);
+            opacity: 0.3;
+            border-color: var(--error-color);
             animation: shake 0.5s ease-in-out;
         }
 
-
         .cell.correct {
-            background: rgba(76, 175, 80, 0.3);
-            border-color: #4caf50;
+            background: var(--success-color);
+            opacity: 0.3;
+            border-color: var(--success-color);
         }
 
         .cell.highlighted {
-            background: rgba(255, 193, 7, 0.3);
-            border-color: #ffc107;
+            background: rgba(100, 181, 246, 0.3);
+            border-color: #64b5f6;
         }
 
         .cell.hint-highlight {
@@ -222,45 +315,219 @@
             width: 30%;
             text-align: center;
             transition: all 0.3s ease;
+            color: var(--text-primary);
         }
 
         .note-number-highlight {
-            background: rgba(100, 181, 246, 0.6) !important;
-            color: #ffffff !important;
+            background: var(--accent-color) !important;
+            opacity: 0.8 !important;
+            color: var(--text-primary) !important;
             border-radius: 3px;
             font-weight: 700 !important;
             transform: scale(1.1);
-            box-shadow: 0 0 8px rgba(100, 181, 246, 0.8);
+            box-shadow: 0 0 8px var(--accent-color);
         }
 
         .note-number-error {
-            background: rgba(244, 67, 54, 0.8) !important;
-            color: #ffffff !important;
+            background: var(--error-color) !important;
+            opacity: 0.9 !important;
+            color: var(--text-primary) !important;
             border-radius: 3px;
             font-weight: 700 !important;
             animation: noteNumberErrorPulse 0.6s ease-in-out;
         }
 
+        /* Animation classes */
+        .cell.number-place-animation {
+            animation: numberPlace 0.6s ease-out;
+        }
+
+        .cell.error-shake {
+            animation: errorShake 0.8s ease-out;
+        }
+
+        .cell.success-ripple {
+            position: relative;
+        }
+
+        .cell.success-ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            border-radius: 6px;
+            background: rgba(76, 175, 80, 0.3);
+            transform: translate(-50%, -50%);
+            animation: successRipple 0.6s ease-out;
+            pointer-events: none;
+        }
+
+        .cell.victory-celebration {
+            animation: victoryCelebration 1s ease-out;
+        }
+
+        .cell.hint-glow {
+            animation: hintGlow 1s ease-in-out;
+        }
+
+        .theme-transition {
+            animation: themeTransition 0.5s ease-in-out;
+        }
+
+        .progress-animated {
+            animation: progressFill 0.8s ease-out;
+        }
+
+        .loading-pulse {
+            animation: loadingPulse 1s ease-in-out infinite;
+        }
+
+        /* Daily Challenge CSS */
+        .challenge-completion-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .challenge-completion-content {
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-color);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(100, 181, 246, 0.5);
+            animation: numberPlace 0.5s ease-out;
+        }
+
+        .challenge-completion-content h2 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .challenge-completion-content h3 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .challenge-completion-content p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .challenge-results {
+            margin: 20px 0;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item.passed {
+            color: var(--success-color);
+        }
+
+        .result-item.failed {
+            color: var(--error-color);
+        }
+
+        .challenge-reward {
+            margin: 20px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--accent-color), var(--success-color));
+            border-radius: 10px;
+            color: white;
+        }
+
+        .challenge-reward h4 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .challenge-stats {
+            margin: 20px 0;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+        }
+
+        .challenge-stats p {
+            margin: 5px 0;
+            font-weight: 600;
+        }
+
+        /* Reset button styling */
+        .reset-btn {
+            background: rgba(239, 68, 68, 0.1) !important;
+            border: 1px solid rgba(239, 68, 68, 0.3) !important;
+            color: #ef4444 !important;
+            padding: 2px 6px !important;
+            font-size: 0.7rem !important;
+            margin-left: 5px !important;
+            min-width: auto !important;
+            border-radius: 4px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .reset-btn:hover {
+            background: rgba(239, 68, 68, 0.2) !important;
+            border-color: #ef4444 !important;
+            transform: scale(1.05) !important;
+        }
+
+        .reset-btn:active {
+            transform: scale(0.95) !important;
+        }
+
         @keyframes noteNumberErrorPulse {
             0%, 100% { 
-                background: rgba(244, 67, 54, 0.8) !important;
+                background: var(--error-color) !important;
+                opacity: 0.8 !important;
                 transform: scale(1);
-                box-shadow: 0 0 8px rgba(244, 67, 54, 0.8);
+                box-shadow: 0 0 8px var(--error-color);
             }
             25% { 
-                background: rgba(244, 67, 54, 1) !important;
+                background: var(--error-color) !important;
+                opacity: 1 !important;
                 transform: scale(1.1);
-                box-shadow: 0 0 12px rgba(244, 67, 54, 1);
+                box-shadow: 0 0 12px var(--error-color);
             }
             50% { 
-                background: rgba(244, 67, 54, 1) !important;
+                background: var(--error-color) !important;
+                opacity: 1 !important;
                 transform: scale(1.2);
-                box-shadow: 0 0 16px rgba(244, 67, 54, 1);
+                box-shadow: 0 0 16px var(--error-color);
             }
             75% { 
-                background: rgba(244, 67, 54, 1) !important;
+                background: var(--error-color) !important;
+                opacity: 1 !important;
                 transform: scale(1.1);
-                box-shadow: 0 0 12px rgba(244, 67, 54, 1);
+                box-shadow: 0 0 12px var(--error-color);
             }
         }
 
@@ -282,10 +549,10 @@
 
 
         .btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            color: #ffffff;
+            color: var(--text-primary);
             padding: 6px 12px;
             font-size: 0.8rem;
             cursor: pointer;
@@ -295,40 +562,40 @@
         }
 
         .btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--bg-tertiary);
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .btn.primary {
-            background: linear-gradient(45deg, #64b5f6, #42a5f5);
-            border-color: #64b5f6;
+            background: var(--accent-color);
+            border-color: var(--accent-color);
         }
 
         .btn.danger {
-            background: linear-gradient(45deg, #f44336, #e53935);
-            border-color: #f44336;
+            background: var(--error-color);
+            border-color: var(--error-color);
         }
 
 
         .stats-section {
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .stats-title {
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            margin-bottom: 6px;
-            color: #64b5f6;
+            margin-bottom: 4px;
+            color: var(--accent-color);
         }
 
         .stat-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 4px 0;
+            padding: 2px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
         .progress-item {
@@ -350,58 +617,298 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #64b5f6, #42a5f5);
+            background: var(--accent-color);
             border-radius: 4px;
             width: 0%;
             transition: width 0.5s ease;
-            box-shadow: 0 0 10px rgba(100, 181, 246, 0.5);
+            box-shadow: 0 0 10px var(--accent-color);
+            opacity: 0.7;
         }
 
         .stat-label {
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--text-secondary);
         }
 
         .stat-value {
             font-weight: 600;
-            color: #ffffff;
+            color: var(--text-primary);
         }
 
         .difficulty-selector {
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .difficulty-btn {
             width: 100%;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
             text-align: left;
-            font-size: 0.75rem;
-            padding: 4px 8px;
+            font-size: 0.7rem;
+            padding: 3px 6px;
         }
 
         .difficulty-btn.active {
-            background: rgba(100, 181, 246, 0.3);
-            border-color: #64b5f6;
+            background: var(--bg-accent);
+            border-color: var(--accent-color);
         }
+
+        .action-buttons {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+
+        .action-btn {
+            flex: 1;
+            font-size: 0.7rem;
+            padding: 3px 6px;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .action-btn:not(:disabled) {
+            opacity: 1;
+            cursor: pointer;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .timer-btn {
+            flex: 1;
+            font-size: 0.7rem;
+            padding: 3px 6px;
+        }
+
+        .audio-controls {
+            margin-bottom: 6px;
+        }
+
+        .audio-btn {
+            font-size: 0.7rem;
+            padding: 3px 6px;
+            min-width: 40px;
+        }
+
+
+        .theme-selector {
+            margin-bottom: 6px;
+        }
+
+        .theme-btn {
+            width: 100%;
+            margin-bottom: 2px;
+            text-align: left;
+            font-size: 0.7rem;
+            padding: 3px 6px;
+        }
+
+        .theme-btn.active {
+            background: var(--bg-accent);
+            border-color: var(--accent-color);
+        }
+
+        /* Theme-specific button visibility */
+        [data-theme="light"] .theme-btn {
+            background: rgba(59, 130, 246, 0.1) !important;
+            border: 1px solid rgba(59, 130, 246, 0.3) !important;
+            color: #1e40af !important;
+        }
+
+        [data-theme="light"] .theme-btn:hover {
+            background: rgba(59, 130, 246, 0.2) !important;
+            border-color: rgba(59, 130, 246, 0.5) !important;
+        }
+
+        [data-theme="light"] .theme-btn.active {
+            background: rgba(59, 130, 246, 0.3) !important;
+            border-color: #1e40af !important;
+            color: #1e40af !important;
+            font-weight: 600 !important;
+        }
+
+        [data-theme="dark"] .theme-btn {
+            background: rgba(100, 181, 246, 0.15) !important;
+            border: 1px solid rgba(100, 181, 246, 0.4) !important;
+            color: #64b5f6 !important;
+        }
+
+        [data-theme="dark"] .theme-btn:hover {
+            background: rgba(100, 181, 246, 0.25) !important;
+            border-color: rgba(100, 181, 246, 0.6) !important;
+        }
+
+        [data-theme="dark"] .theme-btn.active {
+            background: rgba(100, 181, 246, 0.35) !important;
+            border-color: #64b5f6 !important;
+            color: #64b5f6 !important;
+            font-weight: 600 !important;
+        }
+
+        /* CSS Variables for Themes */
+        :root {
+            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            --bg-secondary: rgba(255, 255, 255, 0.1);
+            --bg-tertiary: rgba(255, 255, 255, 0.05);
+            --bg-accent: rgba(100, 181, 246, 0.3);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-color: #64b5f6;
+            --success-color: #4caf50;
+            --error-color: #f44336;
+        }
+
+        /* Theme: Dark */
+        [data-theme="dark"] {
+            --bg-primary: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%);
+            --bg-secondary: rgba(255, 255, 255, 0.08);
+            --bg-tertiary: rgba(255, 255, 255, 0.03);
+            --bg-accent: rgba(58, 139, 255, 0.3);
+            --text-primary: #f0f6fc;
+            --text-secondary: rgba(240, 246, 252, 0.7);
+            --border-color: rgba(240, 246, 252, 0.08);
+            --accent-color: #3a8bff;
+            --success-color: #238636;
+            --error-color: #da3633;
+        }
+
+        /* Theme: Light */
+        [data-theme="light"] {
+            --bg-primary: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+            --bg-secondary: rgba(0, 0, 0, 0.08);
+            --bg-tertiary: rgba(0, 0, 0, 0.04);
+            --bg-accent: rgba(59, 130, 246, 0.15);
+            --text-primary: #0f172a;
+            --text-secondary: rgba(15, 23, 42, 0.8);
+            --border-color: rgba(0, 0, 0, 0.15);
+            --accent-color: #2563eb;
+            --success-color: #047857;
+            --error-color: #dc2626;
+        }
+
+        /* Light theme specific highlighting overrides - Maximum visibility */
+        [data-theme="light"] .cell.selected {
+            background: rgba(37, 99, 235, 0.6) !important;
+            border-color: #1e40af !important;
+            border-width: 3px !important;
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.8) !important;
+            transform: scale(1.02) !important;
+        }
+
+        [data-theme="light"] .cell.paint-target {
+            background: rgba(37, 99, 235, 0.5) !important;
+            border-color: #1e40af !important;
+            border-width: 3px !important;
+            box-shadow: 0 0 25px rgba(37, 99, 235, 0.7) !important;
+            transform: scale(1.01) !important;
+        }
+
+        [data-theme="light"] .cell.given {
+            background: rgba(0, 0, 0, 0.25) !important;
+            color: #0f172a !important;
+            font-weight: 700;
+            border-color: rgba(0, 0, 0, 0.3) !important;
+            border-width: 2px !important;
+        }
+
+        [data-theme="light"] .cell.correct {
+            background: rgba(4, 120, 87, 0.6) !important;
+            border-color: #064e3b !important;
+            border-width: 3px !important;
+            box-shadow: 0 0 20px rgba(4, 120, 87, 0.6) !important;
+        }
+
+        [data-theme="light"] .cell.error {
+            background: rgba(220, 38, 38, 0.6) !important;
+            border-color: #991b1b !important;
+            border-width: 3px !important;
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.6) !important;
+        }
+
+        [data-theme="light"] .cell.hint-highlight {
+            background: rgba(4, 120, 87, 0.7) !important;
+            border-color: #064e3b !important;
+            border-width: 3px !important;
+            box-shadow: 0 0 30px rgba(4, 120, 87, 0.8) !important;
+            transform: scale(1.02) !important;
+        }
+
+        [data-theme="light"] .cell.completed-highlight {
+            background: rgba(4, 120, 87, 0.75) !important;
+            border-color: #064e3b !important;
+            border-width: 3px !important;
+            box-shadow: 0 0 25px rgba(4, 120, 87, 0.9) !important;
+            transform: scale(1.01) !important;
+        }
+
+        [data-theme="light"] .note-number-highlight {
+            background: #1e40af !important;
+            color: #ffffff !important;
+            border: 2px solid #1e3a8a !important;
+            font-weight: 900 !important;
+            transform: scale(1.1) !important;
+        }
+
+        [data-theme="light"] .note-number-error {
+            background: #991b1b !important;
+            color: #ffffff !important;
+            border: 2px solid #7f1d1d !important;
+            font-weight: 900 !important;
+            transform: scale(1.1) !important;
+        }
+
+        /* Light theme same-number highlighting - Subtle */
+        [data-theme="light"] .cell.highlighted {
+            background: rgba(37, 99, 235, 0.25) !important;
+            border-color: #1e40af !important;
+            border-width: 1px !important;
+            box-shadow: 0 0 8px rgba(37, 99, 235, 0.3) !important;
+        }
+
+        [data-theme="light"] .cell.same-number-highlight {
+            background: rgba(37, 99, 235, 0.25) !important;
+            border-color: #1e40af !important;
+            border-width: 1px !important;
+            box-shadow: 0 0 8px rgba(37, 99, 235, 0.3) !important;
+        }
+
+        [data-theme="light"] .cell.highlighted.given {
+            background: rgba(37, 99, 235, 0.35) !important;
+            border-color: #1e40af !important;
+            border-width: 2px !important;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4) !important;
+        }
+
+        [data-theme="light"] .cell.same-number-highlight.given {
+            background: rgba(37, 99, 235, 0.35) !important;
+            border-color: #1e40af !important;
+            border-width: 2px !important;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4) !important;
+        }
+
 
         .instructions {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
-            padding: 8px;
-            margin-top: 8px;
-            font-size: 0.7rem;
+            padding: 6px;
+            margin-top: 6px;
+            font-size: 0.65rem;
         }
 
         .instructions h3 {
-            color: #64b5f6;
-            margin-bottom: 4px;
-            font-size: 0.85rem;
+            color: var(--accent-color);
+            margin-bottom: 3px;
+            font-size: 0.8rem;
         }
 
         .instructions p {
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.2;
-            margin-bottom: 2px;
-            font-size: 0.65rem;
+            color: var(--text-secondary);
+            line-height: 1.1;
+            margin-bottom: 1px;
+            font-size: 0.6rem;
         }
 
 
@@ -412,20 +919,27 @@
                 height: 100vh;
             }
             
-            .game-panel {
-                flex-direction: column;
-                padding: 5px;
-            }
-            
-            .stats-panel {
+            .left-panel {
                 width: 100%;
-                max-height: 160px;
-                order: 2;
+                max-height: 120px;
+                order: 3;
+                flex-direction: row;
+                overflow-x: auto;
+                overflow-y: hidden;
             }
             
-            .game-area {
+            .center-panel {
                 order: 1;
                 flex: 1;
+            }
+            
+            .right-panel {
+                width: 100%;
+                max-height: 120px;
+                order: 2;
+                flex-direction: row;
+                overflow-x: auto;
+                overflow-y: hidden;
             }
             
             .cell {
@@ -434,79 +948,147 @@
             }
             
             .sudoku-grid {
-                max-width: min(95vw, 95vh - 180px);
+                max-width: min(95vw, 95vh - 220px);
+            }
+            
+            .stats-section {
+                min-width: 220px;
+                margin-bottom: 4px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 2px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="game-panel">
-            <div class="game-area">
-                <div class="game-content">
-                    <div class="sudoku-grid" id="sudokuGrid"></div>
-                    
+        <!-- Left Panel: Game Stats, Progress, Themes, Instructions -->
+        <div class="left-panel">
+            <div class="stats-section">
+                <h2 class="stats-title">Game Stats</h2>
+                <div class="stat-item">
+                    <span class="stat-label">Time:</span>
+                    <span class="stat-value" id="timer">00:00:00</span>
+                </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Best Time:</span>
+                        <span class="stat-value" id="bestTime">--:--:--</span>
+                        <button class="btn reset-btn" onclick="resetBestTime()" title="Reset best time for current difficulty">↻</button>
+                    </div>
+                <div class="stat-item">
+                    <span class="stat-label">Speed:</span>
+                    <span class="stat-value" id="speedIndicator">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Moves:</span>
+                    <span class="stat-value" id="moveCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Errors:</span>
+                    <span class="stat-value" id="errorCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Hints Used:</span>
+                    <span class="stat-value" id="hintCount">0</span>
+                </div>
+                <div class="timer-controls">
+                    <button class="btn timer-btn" id="pauseBtn" onclick="pauseTimer()">Pause</button>
+                    <button class="btn timer-btn" id="resumeBtn" onclick="resumeTimer()" style="display: none;">Resume</button>
                 </div>
             </div>
             
-            <div class="stats-panel">
-                <div class="stats-section">
-                    <h2 class="stats-title">Game Stats</h2>
+            <div class="stats-section">
+                <h2 class="stats-title">Progress</h2>
+                <div class="progress-item">
+                    <span class="stat-label">Completion:</span>
+                    <span class="stat-value" id="completionPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-item">
+                    <span class="stat-label">Cells Filled:</span>
+                    <span class="stat-value" id="cellsFilled">0/81</span>
+                </div>
+            </div>
+            
+            <div class="stats-section">
+                <h2 class="stats-title">Theme</h2>
+                <div class="theme-selector">
+                    <button class="btn theme-btn active" onclick="setTheme('default')" data-theme="default">Default</button>
+                    <button class="btn theme-btn" onclick="setTheme('dark')" data-theme="dark">Dark</button>
+                    <button class="btn theme-btn" onclick="setTheme('light')" data-theme="light">Light</button>
+                </div>
+            </div>
+            
+            <div class="stats-section">
+                <h2 class="stats-title">Audio</h2>
+                <div class="audio-controls">
                     <div class="stat-item">
-                        <span class="stat-label">Time:</span>
-                        <span class="stat-value" id="timer">00:00</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Moves:</span>
-                        <span class="stat-value" id="moveCount">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Errors:</span>
-                        <span class="stat-value" id="errorCount">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Hints Used:</span>
-                        <span class="stat-value" id="hintCount">0</span>
+                        <span class="stat-label">Sounds:</span>
+                        <button class="btn audio-btn" onclick="toggleSounds()" id="soundToggle">On</button>
                     </div>
                 </div>
-                
-                <div class="stats-section">
-                    <h2 class="stats-title">Progress</h2>
-                    <div class="progress-item">
-                        <span class="stat-label">Completion:</span>
-                        <span class="stat-value" id="completionPercent">0%</span>
+            </div>
+            
+            <div class="stats-section">
+                <h2 class="stats-title">Daily Challenge</h2>
+                <div class="challenge-info">
+                    <div class="stat-item">
+                        <span class="stat-label">Streak:</span>
+                        <span class="stat-value" id="challengeStreak">0 days</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
+                    <div class="stat-item">
+                        <span class="stat-label">Today:</span>
+                        <span class="stat-value" id="todayChallenge">--</span>
                     </div>
-                    <div class="progress-item">
-                        <span class="stat-label">Cells Filled:</span>
-                        <span class="stat-value" id="cellsFilled">0/81</span>
-                    </div>
+                    <button class="btn challenge-btn" onclick="startDailyChallenge()">Start Challenge</button>
+                    <button class="btn challenge-btn" onclick="showChallengeHistory()" style="margin-top: 5px;">History</button>
                 </div>
-                
-                <div class="stats-section">
-                    <h2 class="stats-title">Difficulty</h2>
-                    <div class="difficulty-selector">
-                        <button class="btn difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
-                        <button class="btn difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
-                        <button class="btn difficulty-btn" onclick="setDifficulty('advanced')">Advanced</button>
-                        <button class="btn difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
-                    </div>
-                    <button class="btn" onclick="solveHint()" style="margin-top: 6px; width: 100%;">Hint</button>
-                    <button class="btn" onclick="solvePuzzle()" style="margin-top: 4px; width: 100%;">Solve</button>
-                    <button class="btn" onclick="cleanupNotes()" style="margin-top: 4px; width: 100%;">Clean Notes</button>
+            </div>
+            
+            <div class="instructions">
+                <h3>How to Play</h3>
+                <p><strong>1.</strong> Click or touch a number</p>
+                <p><strong>2.</strong> Left-click or tap empty cell to place</p>
+                <p><strong>3.</strong> Right-click, hold, or flick right for notes</p>
+                <p><strong>4.</strong> Select numbers to highlight same notes</p>
+                <p><strong>5.</strong> Use 'C' key or Clean Notes button</p>
+                <p><strong>6.</strong> Use 'A' key for auto-suggestions</p>
+            </div>
+        </div>
+        
+        <!-- Center Panel: Sudoku Board -->
+        <div class="center-panel">
+            <div class="sudoku-grid" id="sudokuGrid"></div>
+        </div>
+        
+        <!-- Right Panel: Actions, Difficulty, Game Controls -->
+        <div class="right-panel">
+            <div class="stats-section">
+                <h2 class="stats-title">Actions</h2>
+                <div class="action-buttons">
+                    <button class="btn action-btn" onclick="undoMove()" id="undoBtn" disabled>Undo</button>
+                    <button class="btn action-btn" onclick="redoMove()" id="redoBtn" disabled>Redo</button>
+                    <button class="btn action-btn" onclick="eraseCell()" id="eraseBtn" disabled>Erase</button>
+                    <button class="btn action-btn" onclick="resumeGame()" id="resumeBtn" style="margin-top: 5px; display: none;">Resume Game</button>
                 </div>
-                
-                <div class="instructions">
-                    <h3>How to Play</h3>
-                    <p><strong>1.</strong> Click or touch a number</p>
-                    <p><strong>2.</strong> Left-click or tap empty cell to place</p>
-                    <p><strong>3.</strong> Right-click, hold, or flick right for notes</p>
-                    <p><strong>4.</strong> Select numbers to highlight same notes</p>
-                    <p><strong>5.</strong> Use 'C' key or Clean Notes button</p>
-                    <p><strong>6.</strong> Use 'A' key for auto-suggestions</p>
+            </div>
+            
+            <div class="stats-section">
+                <h2 class="stats-title">Difficulty</h2>
+                <div class="difficulty-selector">
+                    <button class="btn difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
+                    <button class="btn difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
+                    <button class="btn difficulty-btn" onclick="setDifficulty('advanced')">Advanced</button>
+                    <button class="btn difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
                 </div>
+                <button class="btn" onclick="solveHint()" style="margin-top: 6px; width: 100%;">Hint</button>
+                <button class="btn" onclick="solvePuzzle()" style="margin-top: 4px; width: 100%;">Solve</button>
+                <button class="btn" onclick="cleanupNotes()" style="margin-top: 4px; width: 100%;">Clean Notes</button>
             </div>
         </div>
     </div>

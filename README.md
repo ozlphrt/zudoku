@@ -1,8 +1,8 @@
-# Sudoku Game
+# Zudoku
 
-A modern, interactive Sudoku game with multiple themes and full touch support.
+A modern, interactive Sudoku game with multiple themes and full touch support. **Completely standalone** - no dependencies, no installation required!
 
-🚀 **Live Demo**: [Play Now](https://ozlphrt.github.io/sudoku/)
+🚀 **Live Demo**: [Play Now](https://ozlphrt.github.io/zudoku/)
 
 ## Features
 
@@ -21,7 +21,7 @@ A modern, interactive Sudoku game with multiple themes and full touch support.
 
 ## Live Demo
 
-Play the game online: [https://ozlphrt.github.io/sudoku/](https://ozlphrt.github.io/sudoku/)
+Play the game online: [https://ozlphrt.github.io/zudoku/](https://ozlphrt.github.io/zudoku/)
 
 ## Themes
 
@@ -31,7 +31,13 @@ Play the game online: [https://ozlphrt.github.io/sudoku/](https://ozlphrt.github
 
 ## Installation
 
-No installation required! Just open `index.html` in your browser or visit the live demo.
+**No installation required!** This is a completely standalone game that works directly in your browser:
+
+1. **Online**: Visit the [live demo](https://ozlphrt.github.io/zudoku/)
+2. **Offline**: Simply download and open `index.html` in any modern web browser
+3. **Local server**: Run `python -m http.server 8000` and visit `http://localhost:8000`
+
+No dependencies, no build process, no installation needed!
 
 ## Files
 

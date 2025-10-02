@@ -1,5 +1,24 @@
-# GitHub Pages configuration
-theme: minima
-plugins:
-  - jekyll-feed
-  - jekyll-sitemap
+# GitHub Pages configuration for Zudoku
+# This ensures the site works properly on GitHub Pages
+
+# Disable Jekyll processing since this is a static HTML site
+plugins: []
+markdown: kramdown
+highlighter: rouge
+
+# Custom 404 page
+error_page: 404.html
+
+# Exclude files that shouldn't be processed
+exclude:
+  - node_modules/
+  - package.json
+  - package-lock.json
+  - deploy.bat
+  - README.md
+
+# Include only necessary files
+include:
+  - index.html
+  - script.js
+  - _config.yml
