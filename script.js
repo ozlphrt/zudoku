@@ -153,6 +153,7 @@ class SudokuGame {
         // Remove previous selection and highlights
         this.clearSelection();
         this.clearHighlights();
+        this.clearNoteHighlights();
         
         const row = Math.floor(index / 9);
         const col = index % 9;
@@ -161,6 +162,7 @@ class SudokuGame {
         if (this.givenCells[row][col]) {
             const number = this.grid[row][col];
             this.highlightSameNumbers(number);
+            this.highlightSameNotes(number); // Also highlight notes with this number
             this.paintNumber = number;
             this.isPaintMode = true;
             this.updateCursor();
@@ -171,16 +173,16 @@ class SudokuGame {
         if (this.grid[row][col] !== 0) {
             const number = this.grid[row][col];
             this.highlightSameNumbers(number);
+            this.highlightSameNotes(number); // Also highlight notes with this number
             this.paintNumber = number;
             this.isPaintMode = true;
             this.updateCursor();
             return;
         }
         
-        // If it's an empty cell and we're in paint mode, place the paint number
+        // If it's an empty cell and we're in paint mode, place the number immediately
         if (this.isPaintMode && this.paintNumber) {
             this.setNumber(row, col, this.paintNumber);
-            this.updateDisplay();
             return;
         }
         
@@ -188,7 +190,7 @@ class SudokuGame {
         if (this.isNoteMode && this.grid[row][col] === 0) {
             if (this.isPaintMode && this.paintNumber) {
                 this.toggleNote(row, col, this.paintNumber);
-                this.updateDisplay();
+                // updateDisplay and highlighting are already handled in toggleNote
             } else {
                 this.selectedCell = index;
                 const cell = document.querySelector(`[data-index="${index}"]`);
@@ -206,7 +208,7 @@ class SudokuGame {
     clearSelection() {
         if (this.selectedCell !== null) {
             const cell = document.querySelector(`[data-index="${this.selectedCell}"]`);
-            cell.classList.remove('selected');
+            cell.classList.remove('selected', 'paint-target');
             this.selectedCell = null;
         }
         // Don't reset note mode - keep it sticky
@@ -255,6 +257,13 @@ class SudokuGame {
         
         if (this.givenCells[row][col]) return;
         
+        // If we're in paint mode and the paint number matches the input number, place it
+        if (this.isPaintMode && this.paintNumber && this.paintNumber === number) {
+            this.setNumber(row, col, number);
+            this.updateDisplay();
+            return;
+        }
+        
         if (this.isNoteMode) {
             this.toggleNote(row, col, number);
         } else {
@@ -275,7 +284,7 @@ class SudokuGame {
         // If we're in paint mode and clicking an empty cell, add the paint number as a note
         if (this.isPaintMode && this.paintNumber && this.grid[row][col] === 0) {
             this.toggleNote(row, col, this.paintNumber);
-            this.updateDisplay();
+            // updateDisplay and highlighting are already handled in toggleNote
             return;
         }
         
@@ -360,7 +369,7 @@ class SudokuGame {
         if (this.givenCells[row][col]) return;
         
         this.toggleNote(row, col, number);
-        this.updateDisplay();
+        // updateDisplay is already called in toggleNote
     }
     
     setNumber(row, col, number) {
@@ -378,8 +387,25 @@ class SudokuGame {
             // Remove this number from notes in the same row, column, and 3x3 block
             this.removeNotesFromBlock(row, col, number);
             
-            // Clear selection after valid move
-            this.clearSelection();
+            // Remove invalid notes from entire grid (smart note cleanup)
+            this.removeInvalidNotes();
+            
+            // Update display first
+            this.updateDisplay();
+            
+            // Update progress
+            this.updateProgress();
+            
+            // If we're in paint mode and this matches the paint number, re-highlight all instances
+            if (this.isPaintMode && this.paintNumber === number) {
+                // Re-highlight all instances of this number (including the newly placed one)
+                this.highlightSameNumbers(number);
+                this.highlightSameNotes(number);
+                // Keep paint mode active, don't clear selection
+            } else {
+                // Clear selection after valid move (only if not in paint mode)
+                this.clearSelection();
+            }
             
             // Check for completed rows/columns/blocks
             this.checkCompletion();
@@ -401,15 +427,60 @@ class SudokuGame {
     }
     
     toggleNote(row, col, number) {
-        if (this.notes[row][col].has(number)) {
+        const wasRemoving = this.notes[row][col].has(number);
+        
+        if (wasRemoving) {
+            // Always allow removing notes
             this.notes[row][col].delete(number);
         } else {
+            // Validate before adding notes
+            if (!this.isValidMove(row, col, number)) {
+                // Show red pulse animation on the number and don't add the note
+                this.showNoteError(row, col, number);
+                return;
+            }
+            
+            // Add the note if it's valid
             this.notes[row][col].add(number);
+        }
+        
+        // Update display to show the note change
+        this.updateDisplay();
+        
+        // If we're in paint mode and this matches the paint number, highlight the note
+        if (this.isPaintMode && this.paintNumber === number && !wasRemoving) {
+            const index = row * 9 + col;
+            const cell = document.querySelector(`[data-index="${index}"]`);
+            const noteNumbers = cell.querySelectorAll('.note-number');
+            noteNumbers.forEach(noteSpan => {
+                if (noteSpan.textContent === number.toString()) {
+                    noteSpan.classList.add('note-number-highlight');
+                }
+            });
         }
     }
     
     
     removeNotesFromBlock(row, col, number) {
+        let removedCount = 0;
+        
+        // Remove notes from the same row
+        for (let c = 0; c < 9; c++) {
+            if (this.notes[row][c].has(number)) {
+                this.notes[row][c].delete(number);
+                removedCount++;
+            }
+        }
+        
+        // Remove notes from the same column
+        for (let r = 0; r < 9; r++) {
+            if (this.notes[r][col].has(number)) {
+                this.notes[r][col].delete(number);
+                removedCount++;
+            }
+        }
+        
+        // Remove notes from the same 3x3 block
         const blockRow = Math.floor(row / 3) * 3;
         const blockCol = Math.floor(col / 3) * 3;
         
@@ -417,8 +488,104 @@ class SudokuGame {
             for (let c = blockCol; c < blockCol + 3; c++) {
                 if (this.notes[r][c].has(number)) {
                     this.notes[r][c].delete(number);
+                    removedCount++;
                 }
             }
+        }
+        
+        if (removedCount > 0) {
+            console.log(`🧹 Auto-removed ${removedCount} impossible notes for number ${number}`);
+        }
+    }
+    
+    // Smart note management - remove notes that are no longer valid
+    removeInvalidNotes() {
+        let notesRemoved = 0;
+        
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (this.grid[row][col] === 0 && this.notes[row][col].size > 0) {
+                    const notesToRemove = [];
+                    
+                    // Check each note to see if it's still valid
+                    for (let noteNumber of this.notes[row][col]) {
+                        if (!this.isValidMove(row, col, noteNumber)) {
+                            notesToRemove.push(noteNumber);
+                        }
+                    }
+                    
+                    // Remove invalid notes
+                    notesToRemove.forEach(noteNumber => {
+                        this.notes[row][col].delete(noteNumber);
+                        notesRemoved++;
+                    });
+                }
+            }
+        }
+        
+        if (notesRemoved > 0) {
+            console.log(`🧹 Smart cleanup: Removed ${notesRemoved} invalid notes`);
+            this.updateDisplay();
+        }
+    }
+    
+    // Highlight same numbers in notes across the grid
+    highlightSameNotes(number) {
+        // Clear previous note highlights
+        this.clearNoteHighlights();
+        
+        // Find all cells with this number in notes and highlight only the number
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (this.grid[row][col] === 0 && this.notes[row][col].has(number)) {
+                    const index = row * 9 + col;
+                    const cell = document.querySelector(`[data-index="${index}"]`);
+                    
+                    // Only highlight the specific note number within the cell (no cell background)
+                    const noteNumbers = cell.querySelectorAll('.note-number');
+                    noteNumbers.forEach(noteSpan => {
+                        if (noteSpan.textContent === number.toString()) {
+                            noteSpan.classList.add('note-number-highlight');
+                        }
+                    });
+                }
+            }
+        }
+    }
+    
+    // Clear note highlighting
+    clearNoteHighlights() {
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            // Clear note number highlights
+            const noteNumbers = cell.querySelectorAll('.note-number');
+            noteNumbers.forEach(noteSpan => {
+                noteSpan.classList.remove('note-number-highlight');
+            });
+        });
+    }
+    
+    // Auto-suggest notes based on constraints
+    autoSuggestNotes(row, col) {
+        if (this.grid[row][col] !== 0) return;
+        
+        const suggestions = [];
+        for (let num = 1; num <= 9; num++) {
+            if (this.isValidMove(row, col, num)) {
+                suggestions.push(num);
+            }
+        }
+        
+        // Only add suggestions if there are reasonable possibilities (2-6 options)
+        if (suggestions.length >= 2 && suggestions.length <= 6) {
+            // Clear existing notes and add suggestions
+            this.notes[row][col].clear();
+            suggestions.forEach(num => {
+                this.notes[row][col].add(num);
+            });
+            
+            console.log(`💡 Auto-suggested notes for (${row}, ${col}): ${suggestions.join(', ')}`);
+            this.updateDisplay();
         }
     }
     
@@ -461,6 +628,32 @@ class SudokuGame {
             cell.classList.remove('error');
         }, 1000);
     }
+
+    showNoteError(row, col, number) {
+        const index = row * 9 + col;
+        const cell = document.querySelector(`[data-index="${index}"]`);
+        
+        // Create a temporary note number element to show the error
+        const noteError = document.createElement('span');
+        noteError.className = 'note-number note-number-error';
+        noteError.textContent = number.toString();
+        noteError.style.position = 'absolute';
+        noteError.style.zIndex = '1000';
+        
+        // Position it in the center of the cell
+        const rect = cell.getBoundingClientRect();
+        noteError.style.left = '50%';
+        noteError.style.top = '50%';
+        noteError.style.transform = 'translate(-50%, -50%)';
+        
+        cell.appendChild(noteError);
+        
+        setTimeout(() => {
+            if (noteError.parentNode) {
+                noteError.parentNode.removeChild(noteError);
+            }
+        }, 600);
+    }
     
     updateDisplay() {
         for (let i = 0; i < 81; i++) {
@@ -480,6 +673,16 @@ class SudokuGame {
                 // Only show notes if cell is empty
                 cell.classList.add('notes');
                 cell.innerHTML = this.formatNotes(this.notes[row][col]);
+                
+                // Re-apply note highlighting if we're in paint mode
+                if (this.isPaintMode && this.paintNumber) {
+                    const noteNumbers = cell.querySelectorAll('.note-number');
+                    noteNumbers.forEach(noteSpan => {
+                        if (noteSpan.textContent === this.paintNumber.toString()) {
+                            noteSpan.classList.add('note-number-highlight');
+                        }
+                    });
+                }
             } else {
                 cell.textContent = '';
             }
@@ -595,6 +798,38 @@ class SudokuGame {
         }, 1500);
     }
     
+    clearAllHighlights() {
+        // Clear all visual highlights from cells
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            cell.classList.remove(
+                'completed-highlight',
+                'selected',
+                'highlight',
+                'error',
+                'hint-highlight',
+                'paint-target',
+                'note-highlight',
+                'correct'
+            );
+        });
+        
+        // Clear note number highlights
+        this.clearNoteHighlights();
+        
+        // Clear same number highlights
+        this.clearSameNumberHighlights();
+        
+        console.log('🧹 Cleared all visual highlights');
+    }
+    
+    clearSameNumberHighlights() {
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            cell.classList.remove('same-number-highlight');
+        });
+    }
+    
     highlightBlock(blockRow, blockCol) {
         const startRow = blockRow * 3;
         const startCol = blockCol * 3;
@@ -641,9 +876,8 @@ class SudokuGame {
             }, index * 20);
         });
         
-        setTimeout(() => {
-            alert(`Congratulations! You solved the puzzle in ${this.formatTime(this.getElapsedTime())} with ${this.moveCount} moves!`);
-        }, 1000);
+        // No popup message - just console log for debugging
+        console.log(`🎉 Puzzle completed in ${this.formatTime(this.getElapsedTime())} with ${this.moveCount} moves!`);
     }
     
     generateSolution() {
@@ -977,9 +1211,9 @@ class SudokuGame {
             }
         }
         
-        // Final validation
-        if (!this.validateGameState()) {
-            console.warn('⚠️ Generated puzzle has duplicates, using fallback');
+        // Comprehensive validation
+        if (!this.validatePuzzleCompletely()) {
+            console.warn('⚠️ Generated puzzle failed validation, using fallback');
             this.useFallbackPuzzle();
         }
         
@@ -1014,8 +1248,8 @@ class SudokuGame {
                 const originalValue = testGrid[row][col];
                 testGrid[row][col] = 0;
                 
-                // Check if this removal maintains unique solution
-                if (this.hasUniqueSolution(testGrid)) {
+                // Check if this removal maintains puzzle validity
+                if (this.isValidRemoval(testGrid)) {
                     this.grid[row][col] = 0;
                     
                     // Check if we've reached target difficulty
@@ -1025,7 +1259,7 @@ class SudokuGame {
                         return;
                     }
                 } else {
-                    // Restore if it breaks unique solution
+                    // Restore if it breaks unique solution or solvability
                     testGrid[row][col] = originalValue;
                 }
             }
@@ -1034,6 +1268,129 @@ class SudokuGame {
         }
         
         console.log(`⚠️ Could not reach target difficulty after ${maxAttempts} attempts`);
+    }
+    
+    // Check if a removal maintains puzzle validity (faster than full validation)
+    isValidRemoval(testGrid) {
+        // Quick check: ensure no empty cells have zero valid moves
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (testGrid[row][col] === 0) {
+                    let hasValidMove = false;
+                    for (let num = 1; num <= 9; num++) {
+                        if (this.isValidMoveForGrid(testGrid, row, col, num)) {
+                            hasValidMove = true;
+                            break;
+                        }
+                    }
+                    if (!hasValidMove) {
+                        return false; // Dead cell found
+                    }
+                }
+            }
+        }
+        
+        // Enhanced constraint check: ensure all numbers can still be placed in all required blocks
+        for (let num = 1; num <= 9; num++) {
+            const existingPositions = this.findExistingPositionsForGrid(testGrid, num);
+            const requiredBlocks = this.findRequiredBlocksForNumberForGrid(num, existingPositions);
+            
+            for (const blockInfo of requiredBlocks) {
+                if (!this.canPlaceNumberInSpecificBlockForGrid(testGrid, num, blockInfo.blockRow, blockInfo.blockCol, existingPositions)) {
+                    return false; // Number cannot be placed in required block
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    // Grid-specific versions of the constraint validation methods
+    findExistingPositionsForGrid(grid, number) {
+        const positions = [];
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (grid[row][col] === number) {
+                    positions.push({ row, col });
+                }
+            }
+        }
+        return positions;
+    }
+    
+    findRequiredBlocksForNumberForGrid(number, existingPositions) {
+        const requiredBlocks = [];
+        const existingBlocks = new Set();
+        
+        // Find which blocks already have this number
+        for (const pos of existingPositions) {
+            const blockRow = Math.floor(pos.row / 3);
+            const blockCol = Math.floor(pos.col / 3);
+            existingBlocks.add(`${blockRow}-${blockCol}`);
+        }
+        
+        // Find blocks that still need this number
+        for (let blockRow = 0; blockRow < 3; blockRow++) {
+            for (let blockCol = 0; blockCol < 3; blockCol++) {
+                const blockKey = `${blockRow}-${blockCol}`;
+                if (!existingBlocks.has(blockKey)) {
+                    requiredBlocks.push({ blockRow, blockCol });
+                }
+            }
+        }
+        
+        return requiredBlocks;
+    }
+    
+    canPlaceNumberInSpecificBlockForGrid(grid, number, blockRow, blockCol, existingPositions) {
+        const startRow = blockRow * 3;
+        const startCol = blockCol * 3;
+        
+        // Check each empty cell in this block
+        for (let r = startRow; r < startRow + 3; r++) {
+            for (let c = startCol; c < startCol + 3; c++) {
+                if (grid[r][c] === 0) {
+                    // Check if this number can be placed here considering existing positions
+                    let canPlace = true;
+                    
+                    // Check row constraint
+                    for (const pos of existingPositions) {
+                        if (pos.row === r) {
+                            canPlace = false;
+                            break;
+                        }
+                    }
+                    
+                    // Check column constraint
+                    if (canPlace) {
+                        for (const pos of existingPositions) {
+                            if (pos.col === c) {
+                                canPlace = false;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Check block constraint (should be true since we're checking this block)
+                    if (canPlace) {
+                        for (const pos of existingPositions) {
+                            const existingBlockRow = Math.floor(pos.row / 3);
+                            const existingBlockCol = Math.floor(pos.col / 3);
+                            if (existingBlockRow === blockRow && existingBlockCol === blockCol) {
+                                canPlace = false;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (canPlace) {
+                        return true; // Found a valid position
+                    }
+                }
+            }
+        }
+        
+        return false; // No valid position found
     }
     
     hasUniqueSolution(grid) {
@@ -1135,6 +1492,108 @@ class SudokuGame {
         ];
         
         console.log('🔄 Using fallback puzzle');
+    }
+    
+    validateAllNumbersCanBePlaced() {
+        // Check if every number 1-9 can be placed in every 3x3 block
+        for (let blockRow = 0; blockRow < 3; blockRow++) {
+            for (let blockCol = 0; blockCol < 3; blockCol++) {
+                for (let num = 1; num <= 9; num++) {
+                    let canPlace = false;
+                    
+                    // Check if this number can be placed anywhere in this block
+                    for (let r = blockRow * 3; r < blockRow * 3 + 3; r++) {
+                        for (let c = blockCol * 3; c < blockCol * 3 + 3; c++) {
+                            if (this.grid[r][c] === 0 && this.isValidMoveForGrid(this.grid, r, c, num)) {
+                                canPlace = true;
+                                break;
+                            }
+                        }
+                        if (canPlace) break;
+                    }
+                    
+                    if (!canPlace) {
+                        console.log(`❌ Cannot place number ${num} in block (${blockRow}, ${blockCol})`);
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        console.log('✅ All numbers can be placed in all blocks');
+        return true;
+    }
+    
+    isPuzzleSolvable() {
+        // Check if every empty cell has at least one valid move
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (this.grid[row][col] === 0) {
+                    let hasValidMove = false;
+                    for (let num = 1; num <= 9; num++) {
+                        if (this.isValidMoveForGrid(this.grid, row, col, num)) {
+                            hasValidMove = true;
+                            break;
+                        }
+                    }
+                    if (!hasValidMove) {
+                        console.log(`❌ No valid moves for empty cell at (${row}, ${col})`);
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        console.log('✅ Puzzle is solvable - all empty cells have valid moves');
+        return true;
+    }
+    
+    isPuzzleSolvableForGrid(grid) {
+        // Check if every empty cell has at least one valid move
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (grid[row][col] === 0) {
+                    let hasValidMove = false;
+                    for (let num = 1; num <= 9; num++) {
+                        if (this.isValidMoveForGrid(grid, row, col, num)) {
+                            hasValidMove = true;
+                            break;
+                        }
+                    }
+                    if (!hasValidMove) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    
+    validateAllNumbersCanBePlacedForGrid(grid) {
+        // Check if every number 1-9 can be placed in every 3x3 block
+        for (let blockRow = 0; blockRow < 3; blockRow++) {
+            for (let blockCol = 0; blockCol < 3; blockCol++) {
+                for (let num = 1; num <= 9; num++) {
+                    let canPlace = false;
+                    
+                    // Check if this number can be placed anywhere in this block
+                    for (let r = blockRow * 3; r < blockRow * 3 + 3; r++) {
+                        for (let c = blockCol * 3; c < blockCol * 3 + 3; c++) {
+                            if (grid[r][c] === 0 && this.isValidMoveForGrid(grid, r, c, num)) {
+                                canPlace = true;
+                                break;
+                            }
+                        }
+                        if (canPlace) break;
+                    }
+                    
+                    if (!canPlace) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     generateCompleteSolution() {
@@ -1247,15 +1706,9 @@ class SudokuGame {
             this.grid = bestAttempt;
         }
         
-        // Final validation
-        if (!this.isPuzzleSolvable()) {
-            console.warn('⚠️ Generated puzzle may not be solvable, using fallback...');
-                this.generateFallbackPuzzle();
-            return;
-        }
-        
-        if (!this.validateAllNumbersCanBePlaced()) {
-            console.warn('⚠️ Generated puzzle has blocks where numbers cannot be placed, using fallback...');
+        // Final comprehensive validation
+        if (!this.validatePuzzleCompletely()) {
+            console.warn('⚠️ Final puzzle validation failed, using fallback...');
             this.generateFallbackPuzzle();
             return;
         }
@@ -1307,24 +1760,8 @@ class SudokuGame {
     }
 
     isPuzzleSolvable() {
-        // Check if every empty cell has at least one valid number
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
-                if (this.grid[row][col] === 0) {
-                    let hasValidMove = false;
-                    for (let num = 1; num <= 9; num++) {
-                        if (this.isValidMove(row, col, num)) {
-                            hasValidMove = true;
-                            break;
-                        }
-                    }
-                    if (!hasValidMove) {
-                        return false; // This cell has no valid moves
-                    }
-                }
-            }
-        }
-        return true;
+        // Use the grid-specific version
+        return this.isPuzzleSolvableForGrid(this.grid);
     }
 
     countEmptyCells() {
@@ -1385,49 +1822,203 @@ class SudokuGame {
         return true;
     }
 
+    // Enhanced puzzle validation system
+    validatePuzzleCompletely() {
+        console.log('🔍 Comprehensive puzzle validation...');
+        
+        // Check basic validity first
+        if (!this.validateGameState()) {
+            console.error('❌ Basic validation failed - duplicates found');
+            return false;
+        }
+        
+        // Check if puzzle is solvable (has at least one solution)
+        if (!this.isPuzzleSolvable()) {
+            console.error('❌ Puzzle is not solvable - dead cells found');
+            return false;
+        }
+        
+        // Check if all numbers can be placed in all blocks
+        if (!this.validateAllNumbersCanBePlaced()) {
+            console.error('❌ Some numbers cannot be placed in all blocks');
+            return false;
+        }
+        
+        // Enhanced constraint validation - check for impossible number placements
+        if (!this.validateNumberPlacementConstraints()) {
+            console.error('❌ Puzzle has impossible number placement constraints');
+            return false;
+        }
+        
+        // Check for unique solution (this is expensive, so do it last)
+        if (!this.hasUniqueSolution()) {
+            console.error('❌ Puzzle does not have a unique solution');
+            return false;
+        }
+        
+        console.log('✅ Puzzle passed all validation checks');
+        return true;
+    }
+    
+    // Enhanced validation to detect impossible number placement scenarios
+    validateNumberPlacementConstraints() {
+        console.log('🔍 Checking number placement constraints...');
+        
+        // For each number 1-9, check if it can be placed in all required positions
+        for (let num = 1; num <= 9; num++) {
+            const existingPositions = this.findExistingPositions(num);
+            const requiredBlocks = this.findRequiredBlocksForNumber(num, existingPositions);
+            
+            // Check if this number can be placed in all required blocks
+            for (const blockInfo of requiredBlocks) {
+                if (!this.canPlaceNumberInSpecificBlock(num, blockInfo.blockRow, blockInfo.blockCol, existingPositions)) {
+                    console.error(`❌ Cannot place number ${num} in block (${blockInfo.blockRow + 1}, ${blockInfo.blockCol + 1})`);
+                    console.error(`   Existing positions:`, existingPositions);
+                    console.error(`   Required blocks:`, requiredBlocks);
+                    return false;
+                }
+            }
+        }
+        
+        console.log('✅ All number placement constraints are valid');
+        return true;
+    }
+    
+    // Find all existing positions of a specific number
+    findExistingPositions(number) {
+        const positions = [];
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (this.grid[row][col] === number) {
+                    positions.push({ row, col });
+                }
+            }
+        }
+        return positions;
+    }
+    
+    // Find which blocks still need this number
+    findRequiredBlocksForNumber(number, existingPositions) {
+        const requiredBlocks = [];
+        const existingBlocks = new Set();
+        
+        // Find which blocks already have this number
+        for (const pos of existingPositions) {
+            const blockRow = Math.floor(pos.row / 3);
+            const blockCol = Math.floor(pos.col / 3);
+            existingBlocks.add(`${blockRow}-${blockCol}`);
+        }
+        
+        // Find blocks that still need this number
+        for (let blockRow = 0; blockRow < 3; blockRow++) {
+            for (let blockCol = 0; blockCol < 3; blockCol++) {
+                const blockKey = `${blockRow}-${blockCol}`;
+                if (!existingBlocks.has(blockKey)) {
+                    requiredBlocks.push({ blockRow, blockCol });
+                }
+            }
+        }
+        
+        return requiredBlocks;
+    }
+    
+    // Check if a number can be placed in a specific block given existing positions
+    canPlaceNumberInSpecificBlock(number, blockRow, blockCol, existingPositions) {
+        const startRow = blockRow * 3;
+        const startCol = blockCol * 3;
+        
+        // Check each empty cell in this block
+        for (let r = startRow; r < startRow + 3; r++) {
+            for (let c = startCol; c < startCol + 3; c++) {
+                if (this.grid[r][c] === 0) {
+                    // Check if this number can be placed here considering existing positions
+                    let canPlace = true;
+                    
+                    // Check row constraint
+                    for (const pos of existingPositions) {
+                        if (pos.row === r) {
+                            canPlace = false;
+                            break;
+                        }
+                    }
+                    
+                    // Check column constraint
+                    if (canPlace) {
+                        for (const pos of existingPositions) {
+                            if (pos.col === c) {
+                                canPlace = false;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Check block constraint (should be true since we're checking this block)
+                    if (canPlace) {
+                        for (const pos of existingPositions) {
+                            const existingBlockRow = Math.floor(pos.row / 3);
+                            const existingBlockCol = Math.floor(pos.col / 3);
+                            if (existingBlockRow === blockRow && existingBlockCol === blockCol) {
+                                canPlace = false;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (canPlace) {
+                        return true; // Found a valid position
+                    }
+                }
+            }
+        }
+        
+        return false; // No valid position found
+    }
+    
+    // Enhanced unique solution check with better performance
     hasUniqueSolution() {
-        // Create a copy of the current grid
         const tempGrid = this.grid.map(row => [...row]);
         this.solutionCount = 0;
         
-        // Count solutions
-        this.countSolutions(tempGrid, 0, 0);
+        // Count solutions with early termination
+        this.countSolutions(tempGrid, 0, 0, 2); // Stop after finding 2 solutions
         
         return this.solutionCount === 1;
     }
-
-    countSolutions(grid, row, col) {
-        // If we've found more than one solution, stop counting
-        if (this.solutionCount > 1) return;
+    
+    // Enhanced solution counting with early termination
+    countSolutions(grid, row, col, maxSolutions = 2) {
+        if (this.solutionCount >= maxSolutions) {
+            return; // Early termination
+        }
         
-        // If we've filled the entire grid
         if (row === 9) {
             this.solutionCount++;
             return;
         }
         
-        // Calculate next position
-        const nextRow = col === 8 ? row + 1 : row;
-        const nextCol = col === 8 ? 0 : col + 1;
-        
-        // If current cell is already filled, move to next
-        if (grid[row][col] !== 0) {
-            this.countSolutions(grid, nextRow, nextCol);
+        if (col === 9) {
+            this.countSolutions(grid, row + 1, 0, maxSolutions);
             return;
         }
         
-        // Try each number 1-9
+        if (grid[row][col] !== 0) {
+            this.countSolutions(grid, row, col + 1, maxSolutions);
+            return;
+        }
+        
         for (let num = 1; num <= 9; num++) {
             if (this.isValidMoveForGrid(grid, row, col, num)) {
                 grid[row][col] = num;
-                this.countSolutions(grid, nextRow, nextCol);
-                grid[row][col] = 0; // Backtrack
+                this.countSolutions(grid, row, col + 1, maxSolutions);
+                grid[row][col] = 0;
                 
-                // Early termination if multiple solutions found
-                if (this.solutionCount > 1) return;
+                if (this.solutionCount >= maxSolutions) {
+                    return; // Early termination
+                }
             }
         }
     }
+
 
     loadPuzzleFromLibrary(puzzleString, solutionString) {
         // Convert string format to 2D array
@@ -1626,6 +2217,7 @@ class SudokuGame {
         this.givenCells = Array(9).fill().map(() => Array(9).fill(false));
         this.notes = Array(9).fill().map(() => Array(9).fill().map(() => new Set()));
         this.clearSelection();
+        this.clearAllHighlights();
         this.isNoteMode = false;
         this.isPaintMode = false;
         this.paintNumber = null;
@@ -1644,6 +2236,7 @@ class SudokuGame {
         this.updateMoveCount();
         this.updateErrorCount();
         this.updateHintCount();
+        this.updateProgress();
         this.stopTimer();
     }
     
@@ -1658,10 +2251,11 @@ class SudokuGame {
                     if (possibleNumbers.length === 1) {
                         this.grid[row][col] = possibleNumbers[0];
                         this.notes[row][col].clear(); // Clear any existing notes
-                        this.hintCount++;
-                        this.updateHintCount();
-                        this.updateDisplay();
-                        this.highlightHintCell(row, col);
+            this.hintCount++;
+            this.updateHintCount();
+            this.updateDisplay();
+            this.updateProgress();
+            this.highlightHintCell(row, col);
                         this.showHintMessage(`Naked Single: This cell can only contain ${possibleNumbers[0]} because all other numbers 1-9 are already used in this row, column, or 3x3 box. Look for cells where most numbers are already placed nearby!`);
                         return;
                     }
@@ -1677,6 +2271,7 @@ class SudokuGame {
             this.hintCount++;
             this.updateHintCount();
             this.updateDisplay();
+            this.updateProgress();
             this.highlightHintCell(hiddenSingle.row, hiddenSingle.col);
             this.showHintMessage(`Hidden Single: The number ${hiddenSingle.number} can only go in this cell because all other empty cells in this ${hiddenSingle.reason} already have ${hiddenSingle.number} blocked by existing numbers. Check each number 1-9 to see where it can fit!`);
             return;
@@ -1990,6 +2585,28 @@ class SudokuGame {
     updateHintCount() {
         document.getElementById('hintCount').textContent = this.hintCount;
     }
+    
+    updateProgress() {
+        const filledCells = this.countFilledCells();
+        const completionPercent = Math.round((filledCells / 81) * 100);
+        
+        // Update progress bar
+        document.getElementById('progressFill').style.width = completionPercent + '%';
+        document.getElementById('completionPercent').textContent = completionPercent + '%';
+        document.getElementById('cellsFilled').textContent = filledCells + '/81';
+    }
+    
+    countFilledCells() {
+        let count = 0;
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (this.grid[row][col] !== 0) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
 }
 
 // Global functions
@@ -2035,6 +2652,31 @@ function clearBoard() {
 
 function setDifficulty(difficulty) {
     game.setDifficulty(difficulty);
+}
+
+function cleanupNotes() {
+    if (game) {
+        game.removeInvalidNotes();
+    }
+}
+
+function autoSuggestNotes() {
+    if (game && game.selectedCell !== null) {
+        const row = Math.floor(game.selectedCell / 9);
+        const col = game.selectedCell % 9;
+        game.autoSuggestNotes(row, col);
+    }
+}
+
+function validateCurrentPuzzle() {
+    console.log('🔍 Validating current puzzle...');
+    const isValid = game.validatePuzzleCompletely();
+    if (isValid) {
+        console.log('✅ Current puzzle is valid and solvable!');
+    } else {
+        console.log('❌ Current puzzle has issues - check console for details');
+    }
+    return isValid;
 }
 
 
@@ -2205,6 +2847,12 @@ document.addEventListener('keydown', (e) => {
         solveHint();
     } else if (e.key === 'n' || e.key === 'N') {
         newGame();
+    } else if (e.key === 'c' || e.key === 'C') {
+        cleanupNotes();
+    } else if (e.key === 'a' || e.key === 'A') {
+        autoSuggestNotes();
+    } else if (e.key === 'v' || e.key === 'V') {
+        validateCurrentPuzzle();
     }
 });
 
