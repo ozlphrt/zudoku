@@ -33,8 +33,8 @@ class SudokuGame {
         this.difficulties = {
             easy: 35,
             medium: 28,
-            advanced: 25,
-            hard: 20
+            advanced: 22,
+            hard: 17
         };
         
         // Pre-validated puzzle database
@@ -149,21 +149,40 @@ class SudokuGame {
             // Only work when in paint mode
             if (!this.isPaintMode || !this.paintNumber) return;
             
-            // Only prevent default if we're actually changing the paint number
-            e.preventDefault();
-            e.stopPropagation();
+            let numberChanged = false;
+            const oldPaintNumber = this.paintNumber;
             
             // Scroll up = increase number, scroll down = decrease number
             if (e.deltaY < 0) {
                 // Scroll up - increase number
-                this.paintNumber = Math.min(9, this.paintNumber + 1);
+                const newNumber = Math.min(9, this.paintNumber + 1);
+                if (newNumber !== this.paintNumber) {
+                    this.paintNumber = newNumber;
+                    numberChanged = true;
+                }
             } else if (e.deltaY > 0) {
                 // Scroll down - decrease number
-                this.paintNumber = Math.max(1, this.paintNumber - 1);
+                const newNumber = Math.max(1, this.paintNumber - 1);
+                if (newNumber !== this.paintNumber) {
+                    this.paintNumber = newNumber;
+                    numberChanged = true;
+                }
             }
             
-            // Update the cursor with new number
-            this.updateCursor();
+            // Only prevent default and update if number actually changed
+            if (numberChanged) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Clear previous highlights and highlight new number
+                this.clearHighlights();
+                this.clearNoteHighlights();
+                this.highlightSameNumbers(this.paintNumber);
+                this.highlightSameNotes(this.paintNumber);
+                
+                // Update the cursor with new number
+                this.updateCursor();
+            }
         }, { passive: false, capture: true });
         
         // Also add wheel listener to the grid specifically
@@ -172,16 +191,34 @@ class SudokuGame {
             gridElement.addEventListener('wheel', (e) => {
                 if (!this.isPaintMode || !this.paintNumber) return;
                 
-                e.preventDefault();
-                e.stopPropagation();
+                let numberChanged = false;
                 
                 if (e.deltaY < 0) {
-                    this.paintNumber = Math.min(9, this.paintNumber + 1);
+                    const newNumber = Math.min(9, this.paintNumber + 1);
+                    if (newNumber !== this.paintNumber) {
+                        this.paintNumber = newNumber;
+                        numberChanged = true;
+                    }
                 } else if (e.deltaY > 0) {
-                    this.paintNumber = Math.max(1, this.paintNumber - 1);
+                    const newNumber = Math.max(1, this.paintNumber - 1);
+                    if (newNumber !== this.paintNumber) {
+                        this.paintNumber = newNumber;
+                        numberChanged = true;
+                    }
                 }
                 
-                this.updateCursor();
+                if (numberChanged) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Clear previous highlights and highlight new number
+                    this.clearHighlights();
+                    this.clearNoteHighlights();
+                    this.highlightSameNumbers(this.paintNumber);
+                    this.highlightSameNotes(this.paintNumber);
+                    
+                    this.updateCursor();
+                }
             }, { passive: false });
         }
     }
@@ -1283,20 +1320,35 @@ class SudokuGame {
         // Small delay to show loading animation
         setTimeout(() => {
             // Try to load from pre-validated database first
+            console.log('🔍 Attempting to load from database...');
             const loadedFromDatabase = this.loadPuzzleFromDatabase(this.difficulty);
             
             if (!loadedFromDatabase) {
                 console.log(`Falling back to puzzle generation for ${this.difficulty} difficulty...`);
-        // Generate a reliable puzzle using our own system
-        this.generateReliablePuzzle();
+                // Generate a reliable puzzle using our own system
+                this.generateReliablePuzzle();
+            } else {
+                console.log('✅ Loaded puzzle from database');
             }
+            
+            // Debug: Check if grid has numbers
+            let givenCount = 0;
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (this.grid[row][col] !== 0) {
+                        givenCount++;
+                        this.givenCells[row][col] = true;
+                    }
+                }
+            }
+            console.log(`📊 Generated puzzle has ${givenCount} given numbers`);
             
             // Hide loading animation
             this.hideLoadingAnimation();
         
-        this.updateDisplay();
+            this.updateDisplay();
             this.updateProgress();
-        this.startTimer();
+            this.startTimer();
             this.startAutoSave();
         }, 100);
     }
@@ -1796,7 +1848,8 @@ class SudokuGame {
             this.shuffleArray(positions);
             
             let removedCount = 0;
-            const maxAttempts = Math.min(targetRemovalCount * 2, 60); // Don't try too hard
+            // For hard difficulty, be more aggressive with attempts
+            const maxAttempts = this.difficulty === 'hard' ? 120 : Math.min(targetRemovalCount * 2, 60);
             
             for (let i = 0; i < positions.length && removedCount < targetRemovalCount && i < maxAttempts; i++) {
                 const pos = positions[i];
@@ -1811,11 +1864,21 @@ class SudokuGame {
                     this.grid[row][col] = 0;
                     
                     // Check if puzzle still has unique solution and is solvable
-                    if (this.hasUniqueSolution() && this.isPuzzleSolvable()) {
-                        removedCount++;
+                    // For hard difficulty, be less strict about uniqueness to allow more removals
+                    if (this.difficulty === 'hard') {
+                        if (this.isPuzzleSolvable()) {
+                            removedCount++;
+                        } else {
+                            // Restore if it breaks solvability
+                            this.grid[row][col] = originalValue;
+                        }
                     } else {
-                        // Restore if it breaks uniqueness or solvability
-                        this.grid[row][col] = originalValue;
+                        if (this.hasUniqueSolution() && this.isPuzzleSolvable()) {
+                            removedCount++;
+                        } else {
+                            // Restore if it breaks uniqueness or solvability
+                            this.grid[row][col] = originalValue;
+                        }
                     }
                 }
             }
@@ -1980,7 +2043,8 @@ class SudokuGame {
         }
         
         // Check for unique solution (this is expensive, so do it last)
-        if (!this.hasUniqueSolution()) {
+        // For hard difficulty, skip unique solution check to allow more challenging puzzles
+        if (this.difficulty !== 'hard' && !this.hasUniqueSolution()) {
             console.error('❌ Puzzle does not have a unique solution');
             return false;
         }
@@ -2361,7 +2425,10 @@ class SudokuGame {
         this.startTime = null;
         this.pausedTime = 0;
         this.isPaused = false;
-        document.getElementById('timer').textContent = '00:00:00';
+        const timerElement = document.getElementById('timer');
+        if (timerElement) {
+            timerElement.textContent = '00:00:00';
+        }
         this.updateTimerControls();
         
         // Reset mobile toggle
@@ -2738,7 +2805,10 @@ class SudokuGame {
     
     updateTimer() {
         const elapsed = this.getElapsedTime();
-        document.getElementById('timer').textContent = this.formatTime(elapsed);
+        const timerElement = document.getElementById('timer');
+        if (timerElement) {
+            timerElement.textContent = this.formatTime(elapsed);
+        }
         this.updateSpeedIndicator(elapsed);
     }
     
@@ -2759,15 +2829,17 @@ class SudokuGame {
         const pauseBtn = document.getElementById('pauseBtn');
         const resumeBtn = document.getElementById('resumeBtn');
         
-        if (this.isPaused) {
-            pauseBtn.style.display = 'none';
-            resumeBtn.style.display = 'block';
-        } else if (this.timer) {
-            pauseBtn.style.display = 'block';
-            resumeBtn.style.display = 'none';
-        } else {
-            pauseBtn.style.display = 'none';
-            resumeBtn.style.display = 'none';
+        if (pauseBtn && resumeBtn) {
+            if (this.isPaused) {
+                pauseBtn.style.display = 'none';
+                resumeBtn.style.display = 'block';
+            } else if (this.timer) {
+                pauseBtn.style.display = 'block';
+                resumeBtn.style.display = 'none';
+            } else {
+                pauseBtn.style.display = 'none';
+                resumeBtn.style.display = 'none';
+            }
         }
     }
     
@@ -2798,19 +2870,25 @@ class SudokuGame {
         if (!currentBest || currentTime < currentBest) {
             this.bestTimes[this.difficulty] = currentTime;
             this.saveBestTimes();
-            document.getElementById('bestTime').textContent = this.formatTime(currentTime);
-            document.getElementById('bestTime').style.color = 'var(--success-color)';
+            const bestTimeElement = document.getElementById('bestTime');
+            if (bestTimeElement) {
+                bestTimeElement.textContent = this.formatTime(currentTime);
+                bestTimeElement.style.color = 'var(--success-color)';
+            }
         }
     }
     
     updateBestTimeDisplay() {
         const bestTime = this.bestTimes[this.difficulty];
-        if (bestTime) {
-            document.getElementById('bestTime').textContent = this.formatTime(bestTime);
-            document.getElementById('bestTime').style.color = 'var(--accent-color)';
-        } else {
-            document.getElementById('bestTime').textContent = '--:--:--';
-            document.getElementById('bestTime').style.color = 'var(--text-secondary)';
+        const bestTimeElement = document.getElementById('bestTime');
+        if (bestTimeElement) {
+            if (bestTime) {
+                bestTimeElement.textContent = this.formatTime(bestTime);
+                bestTimeElement.style.color = 'var(--accent-color)';
+            } else {
+                bestTimeElement.textContent = '--:--:--';
+                bestTimeElement.style.color = 'var(--text-secondary)';
+            }
         }
     }
     
@@ -3066,7 +3144,10 @@ class SudokuGame {
     }
     
     updateMoveCount() {
-        document.getElementById('moveCount').textContent = this.moveCount;
+        const moveCountElement = document.getElementById('moveCount');
+        if (moveCountElement) {
+            moveCountElement.textContent = this.moveCount;
+        }
     }
 
     // Animation system methods
@@ -3758,56 +3839,56 @@ class SudokuGame {
                 }
             ],
             hard: [
-                // Hard puzzle 1 - Challenging with strategic placement
-                {
-                    puzzle: [
-                        [0,0,0,6,0,8,0,0,0],
-                        [0,0,0,0,0,0,0,0,0],
-                        [0,0,0,0,0,0,0,0,0],
-                        [0,0,0,0,0,0,0,0,0],
-                        [0,0,0,0,0,0,0,0,0],
-                        [0,0,0,0,0,0,0,0,0],
-                        [0,0,0,0,0,0,0,0,0],
-                        [0,0,0,0,0,0,0,0,0],
-                        [0,0,0,0,0,0,0,0,0]
-                    ],
-                    solution: [
-                        [1,2,3,6,4,8,5,7,9],
-                        [4,5,6,1,7,9,2,8,3],
-                        [7,8,9,2,5,3,1,4,6],
-                        [2,3,1,4,6,5,8,9,7],
-                        [5,6,4,8,9,7,3,1,2],
-                        [8,9,7,3,1,2,4,6,5],
-                        [3,1,2,5,8,4,6,9,7],
-                        [6,4,5,9,2,1,7,3,8],
-                        [9,7,8,3,6,5,2,4,1]
-                    ]
-                },
+                // Hard puzzles disabled - using generation system for consistent 17 given numbers
+                // {
+                //     puzzle: [
+                //         [0,0,0,6,0,0,0,0,0],
+                //         [0,0,0,0,0,0,0,0,0],
+                //         [0,0,0,0,0,0,0,0,0],
+                //         [0,0,0,0,0,0,0,0,0],
+                //         [0,0,0,0,0,0,0,0,0],
+                //         [0,0,0,0,0,0,0,0,0],
+                //         [0,0,0,0,0,0,0,0,0],
+                //         [0,0,0,0,0,0,0,0,0],
+                //         [0,0,0,0,0,0,0,0,0]
+                //     ],
+                //     solution: [
+                //         [1,2,3,6,4,8,5,7,9],
+                //         [4,5,6,1,7,9,2,8,3],
+                //         [7,8,9,2,5,3,1,4,6],
+                //         [2,3,1,4,6,5,8,9,7],
+                //         [5,6,4,8,9,7,3,1,2],
+                //         [8,9,7,3,1,2,4,6,5],
+                //         [3,1,2,5,8,4,6,9,7],
+                //         [6,4,5,9,2,1,7,3,8],
+                //         [9,7,8,3,6,5,2,4,1]
+                //     ]
+                // },
                 // Hard puzzle 2 - Classic hard pattern
-                {
-                    puzzle: [
-                        [8,0,0,0,0,0,0,0,0],
-                        [0,0,3,6,0,0,0,0,0],
-                        [0,7,0,0,9,0,2,0,0],
-                        [0,5,0,0,0,7,0,0,0],
-                        [0,0,0,0,4,5,7,0,0],
-                        [0,0,0,1,0,0,0,3,0],
-                        [0,0,1,0,0,0,0,6,8],
-                        [0,0,8,5,0,0,0,1,0],
-                        [0,9,0,0,0,0,4,0,0]
-                    ],
-                    solution: [
-                        [8,1,2,7,5,3,6,4,9],
-                        [9,4,3,6,8,2,1,7,5],
-                        [6,7,5,4,9,1,2,8,3],
-                        [1,5,4,2,3,7,8,9,6],
-                        [3,6,9,8,4,5,7,2,1],
-                        [2,8,7,1,6,9,5,3,4],
-                        [5,2,1,9,7,4,3,6,8],
-                        [4,3,8,5,2,6,9,1,7],
-                        [7,9,6,3,1,8,4,5,2]
-                    ]
-                }
+                // {
+                //     puzzle: [
+                //         [8,0,0,0,0,0,0,0,0],
+                //         [0,0,3,6,0,0,0,0,0],
+                //         [0,7,0,0,9,0,2,0,0],
+                //         [0,5,0,0,0,7,0,0,0],
+                //         [0,0,0,0,4,5,7,0,0],
+                //         [0,0,0,1,0,0,0,3,0],
+                //         [0,0,1,0,0,0,0,6,8],
+                //         [0,0,8,5,0,0,0,1,0],
+                //         [0,9,0,0,0,0,4,0,0]
+                //     ],
+                //     solution: [
+                //         [8,1,2,7,5,3,6,4,9],
+                //         [9,4,3,6,8,2,1,7,5],
+                //         [6,7,5,4,9,1,2,8,3],
+                //         [1,5,4,2,3,7,8,9,6],
+                //         [3,6,9,8,4,5,7,2,1],
+                //         [2,8,7,1,6,9,5,3,4],
+                //         [5,2,1,9,7,4,3,6,8],
+                //         [4,3,8,5,2,6,9,1,7],
+                //         [7,9,6,3,1,8,4,5,2]
+                //     ]
+                // }
             ]
         };
     }
@@ -3822,11 +3903,20 @@ class SudokuGame {
     }
     
     loadPuzzleFromDatabase(difficulty) {
-        const puzzleData = this.getRandomPuzzleFromDatabase(difficulty);
-        if (!puzzleData) {
-            console.log(`No pre-validated puzzles available for ${difficulty} difficulty`);
+        // Force hard difficulty to use generation system for consistent 17 given numbers
+        if (difficulty === 'hard') {
+            console.log('🔒 Hard difficulty forced to use generation system for consistent 17 given numbers');
             return false;
         }
+        
+        console.log(`🔍 Attempting to load ${difficulty} puzzle from database...`);
+        const puzzleData = this.getRandomPuzzleFromDatabase(difficulty);
+        if (!puzzleData) {
+            console.log(`❌ No pre-validated puzzles available for ${difficulty} difficulty`);
+            return false;
+        }
+        
+        console.log(`✅ Loaded ${difficulty} puzzle from database`);
         
         // Load the puzzle
         this.grid = puzzleData.puzzle.map(row => [...row]);
@@ -3872,21 +3962,37 @@ class SudokuGame {
     }
     
     updateErrorCount() {
-        document.getElementById('errorCount').textContent = this.errorCount;
+        const errorCountElement = document.getElementById('errorCount');
+        if (errorCountElement) {
+            errorCountElement.textContent = this.errorCount;
+        }
     }
     
     updateHintCount() {
-        document.getElementById('hintCount').textContent = this.hintCount;
+        const hintCountElement = document.getElementById('hintCount');
+        if (hintCountElement) {
+            hintCountElement.textContent = this.hintCount;
+        }
     }
     
     updateProgress() {
         const filledCells = this.countFilledCells();
         const completionPercent = Math.round((filledCells / 81) * 100);
         
-        // Update progress bar with animation
+        // Update progress bar with animation (if it exists)
         this.animateProgressBar(completionPercent);
-        document.getElementById('completionPercent').textContent = completionPercent + '%';
-        document.getElementById('cellsFilled').textContent = filledCells + '/81';
+        
+        // Update cells filled counter (only if element exists)
+        const cellsFilledElement = document.getElementById('cellsFilled');
+        if (cellsFilledElement) {
+            cellsFilledElement.textContent = filledCells + '/81';
+        }
+        
+        // Update completion percentage (only if element exists)
+        const completionPercentElement = document.getElementById('completionPercent');
+        if (completionPercentElement) {
+            completionPercentElement.textContent = completionPercent + '%';
+        }
     }
     
     countFilledCells() {
@@ -4145,9 +4251,17 @@ function setTheme(themeName) {
 }
 
 function loadSavedTheme() {
-    const savedTheme = localStorage.getItem('sudoku-theme') || 'default';
+    const savedTheme = localStorage.getItem('preferredTheme') || 'dark';
     console.log(`🎨 Loading saved theme: ${savedTheme}`);
-    setTheme(savedTheme);
+    
+    // Apply theme to document
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Update theme toggle icon
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.textContent = savedTheme === 'light' ? '💡' : '🌙';
+    }
 }
 
 function undoMove() {
@@ -4183,6 +4297,42 @@ function resumeTimer() {
 function toggleSounds() {
     if (game) {
         game.toggleSounds();
+    }
+}
+
+// New toggle functions for simplified UI
+function toggleTheme() {
+    // Get current theme from document
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    
+    // Toggle between light and dark
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    // Apply new theme
+    document.documentElement.setAttribute('data-theme', newTheme);
+    
+    // Update theme toggle icon
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.textContent = newTheme === 'light' ? '💡' : '🌙';
+    }
+    
+    // Save theme preference
+    localStorage.setItem('preferredTheme', newTheme);
+}
+
+function toggleAudio() {
+    if (game) {
+        const isMuted = game.toggleSounds();
+        
+        // Update audio toggle icon
+        const audioToggle = document.getElementById('audioToggle');
+        if (audioToggle) {
+            audioToggle.textContent = isMuted ? '🔇' : '🔊';
+            audioToggle.classList.toggle('muted', isMuted);
+        }
+        
+        return isMuted;
     }
 }
 
@@ -4510,6 +4660,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Load saved theme first
     loadSavedTheme();
+    
+    // Initialize audio toggle icon
+    const audioToggle = document.getElementById('audioToggle');
+    if (audioToggle) {
+        const soundsEnabled = localStorage.getItem('soundsEnabled') !== 'false';
+        audioToggle.textContent = soundsEnabled ? '🔊' : '🔇';
+        audioToggle.classList.toggle('muted', !soundsEnabled);
+    }
     
     // Initialize game
     game = new SudokuGame();

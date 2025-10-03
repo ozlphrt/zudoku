@@ -116,7 +116,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.6rem;
+            font-size: 2.8rem;
             font-weight: 600;
             cursor: crosshair;
             transition: all 0.3s ease;
@@ -305,14 +305,14 @@
         }
 
         .cell.notes {
-            font-size: 0.7rem;
+            font-size: 1.0rem;
             color: rgba(255, 255, 255, 0.7);
             line-height: 1.2;
         }
 
         .cell.notes .note-number {
             display: inline-block;
-            width: 30%;
+            width: 50%;
             text-align: center;
             transition: all 0.3s ease;
             color: var(--text-primary);
@@ -384,102 +384,10 @@
             animation: loadingPulse 1s ease-in-out infinite;
         }
 
-        /* Daily Challenge CSS */
-        .challenge-completion-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            backdrop-filter: blur(5px);
-        }
 
-        .challenge-completion-content {
-            background: var(--bg-secondary);
-            border: 2px solid var(--accent-color);
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(100, 181, 246, 0.5);
-            animation: numberPlace 0.5s ease-out;
-        }
 
-        .challenge-completion-content h2 {
-            color: var(--accent-color);
-            margin-bottom: 10px;
-            font-size: 2rem;
-        }
 
-        .challenge-completion-content h3 {
-            color: var(--text-primary);
-            margin-bottom: 15px;
-            font-size: 1.5rem;
-        }
 
-        .challenge-completion-content p {
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-
-        .challenge-results {
-            margin: 20px 0;
-            padding: 15px;
-            background: var(--bg-tertiary);
-            border-radius: 10px;
-        }
-
-        .result-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .result-item:last-child {
-            border-bottom: none;
-        }
-
-        .result-item.passed {
-            color: var(--success-color);
-        }
-
-        .result-item.failed {
-            color: var(--error-color);
-        }
-
-        .challenge-reward {
-            margin: 20px 0;
-            padding: 15px;
-            background: linear-gradient(135deg, var(--accent-color), var(--success-color));
-            border-radius: 10px;
-            color: white;
-        }
-
-        .challenge-reward h4 {
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-        }
-
-        .challenge-stats {
-            margin: 20px 0;
-            padding: 15px;
-            background: var(--bg-tertiary);
-            border-radius: 10px;
-        }
-
-        .challenge-stats p {
-            margin: 5px 0;
-            font-weight: 600;
-        }
 
         /* Reset button styling */
         .reset-btn {
@@ -665,6 +573,38 @@
             cursor: not-allowed;
         }
 
+        /* Theme and Audio Toggle Icons */
+        .toggle-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            justify-content: flex-end;
+        }
+
+        .theme-toggle, .audio-toggle {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover, .audio-toggle:hover {
+            background: var(--bg-accent);
+            transform: scale(1.05);
+        }
+
+        .audio-toggle.muted {
+            opacity: 0.6;
+        }
+
         .action-btn:not(:disabled) {
             opacity: 1;
             cursor: pointer;
@@ -682,87 +622,12 @@
             padding: 3px 6px;
         }
 
-        .audio-controls {
-            margin-bottom: 6px;
-        }
-
-        .audio-btn {
-            font-size: 0.7rem;
-            padding: 3px 6px;
-            min-width: 40px;
-        }
 
 
-        .theme-selector {
-            margin-bottom: 6px;
-        }
 
-        .theme-btn {
-            width: 100%;
-            margin-bottom: 2px;
-            text-align: left;
-            font-size: 0.7rem;
-            padding: 3px 6px;
-        }
-
-        .theme-btn.active {
-            background: var(--bg-accent);
-            border-color: var(--accent-color);
-        }
-
-        /* Theme-specific button visibility */
-        [data-theme="light"] .theme-btn {
-            background: rgba(59, 130, 246, 0.1) !important;
-            border: 1px solid rgba(59, 130, 246, 0.3) !important;
-            color: #1e40af !important;
-        }
-
-        [data-theme="light"] .theme-btn:hover {
-            background: rgba(59, 130, 246, 0.2) !important;
-            border-color: rgba(59, 130, 246, 0.5) !important;
-        }
-
-        [data-theme="light"] .theme-btn.active {
-            background: rgba(59, 130, 246, 0.3) !important;
-            border-color: #1e40af !important;
-            color: #1e40af !important;
-            font-weight: 600 !important;
-        }
-
-        [data-theme="dark"] .theme-btn {
-            background: rgba(100, 181, 246, 0.15) !important;
-            border: 1px solid rgba(100, 181, 246, 0.4) !important;
-            color: #64b5f6 !important;
-        }
-
-        [data-theme="dark"] .theme-btn:hover {
-            background: rgba(100, 181, 246, 0.25) !important;
-            border-color: rgba(100, 181, 246, 0.6) !important;
-        }
-
-        [data-theme="dark"] .theme-btn.active {
-            background: rgba(100, 181, 246, 0.35) !important;
-            border-color: #64b5f6 !important;
-            color: #64b5f6 !important;
-            font-weight: 600 !important;
-        }
 
         /* CSS Variables for Themes */
         :root {
-            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            --bg-secondary: rgba(255, 255, 255, 0.1);
-            --bg-tertiary: rgba(255, 255, 255, 0.05);
-            --bg-accent: rgba(100, 181, 246, 0.3);
-            --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.8);
-            --border-color: rgba(255, 255, 255, 0.1);
-            --accent-color: #64b5f6;
-            --success-color: #4caf50;
-            --error-color: #f44336;
-        }
-
-        /* Theme: Dark */
-        [data-theme="dark"] {
             --bg-primary: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%);
             --bg-secondary: rgba(255, 255, 255, 0.08);
             --bg-tertiary: rgba(255, 255, 255, 0.03);
@@ -944,7 +809,7 @@
             
             .cell {
                 min-height: 45px;
-                font-size: 1.3rem;
+                font-size: 2.3rem;
             }
             
             .sudoku-grid {
@@ -1003,52 +868,13 @@
             <div class="stats-section">
                 <h2 class="stats-title">Progress</h2>
                 <div class="progress-item">
-                    <span class="stat-label">Completion:</span>
-                    <span class="stat-value" id="completionPercent">0%</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div class="progress-item">
                     <span class="stat-label">Cells Filled:</span>
                     <span class="stat-value" id="cellsFilled">0/81</span>
                 </div>
             </div>
             
-            <div class="stats-section">
-                <h2 class="stats-title">Theme</h2>
-                <div class="theme-selector">
-                    <button class="btn theme-btn active" onclick="setTheme('default')" data-theme="default">Default</button>
-                    <button class="btn theme-btn" onclick="setTheme('dark')" data-theme="dark">Dark</button>
-                    <button class="btn theme-btn" onclick="setTheme('light')" data-theme="light">Light</button>
-                </div>
-            </div>
             
-            <div class="stats-section">
-                <h2 class="stats-title">Audio</h2>
-                <div class="audio-controls">
-                    <div class="stat-item">
-                        <span class="stat-label">Sounds:</span>
-                        <button class="btn audio-btn" onclick="toggleSounds()" id="soundToggle">On</button>
-                    </div>
-                </div>
-            </div>
             
-            <div class="stats-section">
-                <h2 class="stats-title">Daily Challenge</h2>
-                <div class="challenge-info">
-                    <div class="stat-item">
-                        <span class="stat-label">Streak:</span>
-                        <span class="stat-value" id="challengeStreak">0 days</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Today:</span>
-                        <span class="stat-value" id="todayChallenge">--</span>
-                    </div>
-                    <button class="btn challenge-btn" onclick="startDailyChallenge()">Start Challenge</button>
-                    <button class="btn challenge-btn" onclick="showChallengeHistory()" style="margin-top: 5px;">History</button>
-                </div>
-            </div>
             
             <div class="instructions">
                 <h3>How to Play</h3>
@@ -1070,6 +896,14 @@
         <div class="right-panel">
             <div class="stats-section">
                 <h2 class="stats-title">Actions</h2>
+                <div class="toggle-controls">
+                    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Light/Dark Theme">
+                        🌙
+                    </button>
+                    <button class="audio-toggle" id="audioToggle" onclick="toggleAudio()" title="Toggle Sounds">
+                        🔊
+                    </button>
+                </div>
                 <div class="action-buttons">
                     <button class="btn action-btn" onclick="undoMove()" id="undoBtn" disabled>Undo</button>
                     <button class="btn action-btn" onclick="redoMove()" id="redoBtn" disabled>Redo</button>
