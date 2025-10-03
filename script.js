@@ -370,6 +370,13 @@ class SudokuGame {
             return;
         }
         
+        // If cell has a filled number, erase it
+        if (this.grid[row][col] !== 0) {
+            this.setNumber(row, col, 0);
+            this.updateDisplay();
+            return;
+        }
+        
         // If we're already in note mode and clicking an empty cell, just select it
         if (this.isNoteMode && this.grid[row][col] === 0) {
             this.clearSelection();
@@ -458,8 +465,8 @@ class SudokuGame {
         const oldValue = this.grid[row][col];
         this.grid[row][col] = number;
         
-        // Check if the move is valid
-        if (this.isValidMove(row, col, number)) {
+        // Check if the move is valid (erasing is always valid)
+        if (number === 0 || this.isValidMove(row, col, number)) {
             // Add to move history
             this.addToHistory({
                 type: 'number',
