@@ -280,8 +280,6 @@ class SudokuGame {
         const cell = document.querySelector(`[data-index="${index}"]`);
         cell.classList.add('selected');
         
-        // Update erase button state
-        this.updateEraseButton();
     }
     
     clearSelection() {
@@ -4056,41 +4054,6 @@ class SudokuGame {
         }
     }
 
-    eraseCell() {
-        if (this.selectedCell !== null && !this.isGameWon) {
-            const row = Math.floor(this.selectedCell / 9);
-            const col = this.selectedCell % 9;
-            
-            // Only erase if the cell is not a given cell
-            if (!this.givenCells[row][col]) {
-                const oldValue = this.grid[row][col];
-                if (oldValue !== 0) {
-                    // Add to history
-                    this.addToHistory({
-                        type: 'erase',
-                        row: row,
-                        col: col,
-                        oldValue: oldValue,
-                        newValue: 0
-                    });
-                    
-                    // Clear the cell
-                    this.grid[row][col] = 0;
-                    this.notes[row][col] = [];
-                    
-                    // Update display
-                    this.updateDisplay();
-                    this.playSound('erase');
-                    
-                    // Update undo/redo buttons
-                    this.updateUndoRedoButtons();
-                    
-                    // Update erase button state
-                    this.updateEraseButton();
-                }
-            }
-        }
-    }
     
     executeMove(move, isUndo) {
         const { type, row, col, value, oldValue, noteNumber, action } = move;
@@ -4138,20 +4101,8 @@ class SudokuGame {
         undoBtn.disabled = this.historyIndex < 0;
         redoBtn.disabled = this.historyIndex >= this.moveHistory.length - 1;
         
-        // Also update erase button state
-        this.updateEraseButton();
     }
 
-    updateEraseButton() {
-        const eraseBtn = document.getElementById('eraseBtn');
-        if (eraseBtn) {
-            const canErase = this.selectedCell !== null && 
-                           !this.isGameWon && 
-                           this.givenCells[Math.floor(this.selectedCell / 9)][this.selectedCell % 9] === false &&
-                           this.grid[Math.floor(this.selectedCell / 9)][this.selectedCell % 9] !== 0;
-            eraseBtn.disabled = !canErase;
-        }
-    }
     
     clearHistory() {
         this.moveHistory = [];
@@ -4283,11 +4234,6 @@ function redoMove() {
     }
 }
 
-function eraseCell() {
-    if (game) {
-        game.eraseCell();
-    }
-}
 
 function pauseTimer() {
     if (game) {
