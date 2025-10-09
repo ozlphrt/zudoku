@@ -98,7 +98,7 @@
             display: grid;
             grid-template-columns: repeat(9, 1fr);
             grid-template-rows: repeat(9, 1fr);
-            gap: 3px;
+            gap: 4px;
             background: var(--bg-secondary);
             padding: 10px;
             border-radius: 12px;
@@ -447,12 +447,12 @@
 
         /* 3x3 block separators */
         .cell:nth-child(3n) {
-            border-right: 2px solid rgba(255, 255, 255, 0.3);
+            border-right: 3px solid rgba(255, 255, 255, 0.5);
         }
 
         .cell:nth-child(n+19):nth-child(-n+27),
         .cell:nth-child(n+46):nth-child(-n+54) {
-            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            border-bottom: 3px solid rgba(255, 255, 255, 0.5);
         }
 
 
@@ -812,8 +812,19 @@
                 font-size: 2.3rem;
             }
             
+            /* Stronger 3x3 block separators on mobile */
+            .cell:nth-child(3n) {
+                border-right: 4px solid rgba(255, 255, 255, 0.6);
+            }
+
+            .cell:nth-child(n+19):nth-child(-n+27),
+            .cell:nth-child(n+46):nth-child(-n+54) {
+                border-bottom: 4px solid rgba(255, 255, 255, 0.6);
+            }
+            
             .sudoku-grid {
                 max-width: min(95vw, 95vh - 220px);
+                gap: 5px;
             }
             
             .stats-section {
