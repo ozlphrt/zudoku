@@ -137,29 +137,25 @@
 
         .cell:hover {
             background: var(--bg-secondary);
-            transform: scale(1.05);
         }
 
         .cell.selected {
             background: var(--bg-accent);
             border-color: var(--accent-color);
-            box-shadow: 0 0 20px var(--bg-accent);
         }
 
         .cell.paint-target {
             background: rgba(100, 181, 246, 0.2);
             border-color: rgba(100, 181, 246, 0.6);
-            box-shadow: 0 0 15px rgba(100, 181, 246, 0.4);
-            transform: scale(1.02);
             animation: paintTargetPulse 2s ease-in-out infinite;
         }
 
         @keyframes paintTargetPulse {
             0%, 100% { 
-                box-shadow: 0 0 15px rgba(100, 181, 246, 0.4);
+                opacity: 0.8;
             }
             50% { 
-                box-shadow: 0 0 25px rgba(100, 181, 246, 0.6);
+                opacity: 1;
             }
         }
 
@@ -167,15 +163,12 @@
         @keyframes numberPlace {
             0% {
                 opacity: 0;
-                transform: scale(0.3) rotate(-10deg);
             }
             50% {
                 opacity: 1;
-                transform: scale(1.2) rotate(5deg);
             }
             100% {
                 opacity: 1;
-                transform: scale(1) rotate(0deg);
             }
         }
 
@@ -187,35 +180,28 @@
 
         @keyframes successRipple {
             0% {
-                transform: scale(1);
                 opacity: 1;
             }
             100% {
-                transform: scale(1.2);
                 opacity: 0;
             }
         }
 
         @keyframes victoryCelebration {
             0% {
-                transform: scale(1) rotate(0deg);
-                box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+                opacity: 0.9;
             }
             25% {
-                transform: scale(1.05) rotate(1deg);
-                box-shadow: 0 0 30px rgba(76, 175, 80, 1);
+                opacity: 1;
             }
             50% {
-                transform: scale(1.1) rotate(0deg);
-                box-shadow: 0 0 40px rgba(76, 175, 80, 1);
+                opacity: 1;
             }
             75% {
-                transform: scale(1.05) rotate(-1deg);
-                box-shadow: 0 0 30px rgba(76, 175, 80, 1);
+                opacity: 1;
             }
             100% {
-                transform: scale(1) rotate(0deg);
-                box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+                opacity: 0.9;
             }
         }
 
@@ -237,10 +223,10 @@
 
         @keyframes hintGlow {
             0%, 100% {
-                box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+                opacity: 0.9;
             }
             50% {
-                box-shadow: 0 0 25px rgba(76, 175, 80, 1);
+                opacity: 1;
             }
         }
 
@@ -271,36 +257,30 @@
         .cell.hint-highlight {
             background: rgba(76, 175, 80, 0.4);
             border-color: #4caf50;
-            box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
             animation: hintPulse 2s ease-in-out;
         }
 
         .cell.completed-highlight {
             background: rgba(76, 175, 80, 0.6);
             border-color: #4caf50;
-            box-shadow: 0 0 15px rgba(76, 175, 80, 0.8);
             animation: completionPulse 1.5s ease-in-out;
         }
 
         @keyframes hintPulse {
             0%, 100% { 
-                transform: scale(1);
-                box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+                opacity: 0.9;
             }
             50% { 
-                transform: scale(1.1);
-                box-shadow: 0 0 30px rgba(76, 175, 80, 0.8);
+                opacity: 1;
             }
         }
 
         @keyframes completionPulse {
             0%, 100% { 
-                transform: scale(1);
-                box-shadow: 0 0 15px rgba(76, 175, 80, 0.8);
+                opacity: 0.9;
             }
             50% { 
-                transform: scale(1.08);
-                box-shadow: 0 0 25px rgba(76, 175, 80, 1);
+                opacity: 1;
             }
         }
 
@@ -324,8 +304,6 @@
             color: var(--text-primary) !important;
             border-radius: 3px;
             font-weight: 700 !important;
-            transform: scale(1.1);
-            box-shadow: 0 0 8px var(--accent-color);
         }
 
         .note-number-error {
@@ -405,37 +383,28 @@
         .reset-btn:hover {
             background: rgba(239, 68, 68, 0.2) !important;
             border-color: #ef4444 !important;
-            transform: scale(1.05) !important;
         }
 
         .reset-btn:active {
-            transform: scale(0.95) !important;
+            background: rgba(239, 68, 68, 0.25) !important;
         }
 
         @keyframes noteNumberErrorPulse {
             0%, 100% { 
                 background: var(--error-color) !important;
                 opacity: 0.8 !important;
-                transform: scale(1);
-                box-shadow: 0 0 8px var(--error-color);
             }
             25% { 
                 background: var(--error-color) !important;
                 opacity: 1 !important;
-                transform: scale(1.1);
-                box-shadow: 0 0 12px var(--error-color);
             }
             50% { 
                 background: var(--error-color) !important;
                 opacity: 1 !important;
-                transform: scale(1.2);
-                box-shadow: 0 0 16px var(--error-color);
             }
             75% { 
                 background: var(--error-color) !important;
                 opacity: 1 !important;
-                transform: scale(1.1);
-                box-shadow: 0 0 12px var(--error-color);
             }
         }
 
@@ -471,8 +440,6 @@
 
         .btn:hover {
             background: var(--bg-tertiary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .btn.primary {
@@ -529,7 +496,6 @@
             border-radius: 4px;
             width: 0%;
             transition: width 0.5s ease;
-            box-shadow: 0 0 10px var(--accent-color);
             opacity: 0.7;
         }
 
@@ -598,7 +564,6 @@
 
         .theme-toggle:hover, .audio-toggle:hover {
             background: var(--bg-accent);
-            transform: scale(1.05);
         }
 
         .audio-toggle.muted {
@@ -659,16 +624,12 @@
             background: rgba(37, 99, 235, 0.6) !important;
             border-color: #1e40af !important;
             border-width: 3px !important;
-            box-shadow: 0 0 30px rgba(37, 99, 235, 0.8) !important;
-            transform: scale(1.02) !important;
         }
 
         [data-theme="light"] .cell.paint-target {
             background: rgba(37, 99, 235, 0.5) !important;
             border-color: #1e40af !important;
             border-width: 3px !important;
-            box-shadow: 0 0 25px rgba(37, 99, 235, 0.7) !important;
-            transform: scale(1.01) !important;
         }
 
         [data-theme="light"] .cell.given {
@@ -683,30 +644,24 @@
             background: rgba(4, 120, 87, 0.6) !important;
             border-color: #064e3b !important;
             border-width: 3px !important;
-            box-shadow: 0 0 20px rgba(4, 120, 87, 0.6) !important;
         }
 
         [data-theme="light"] .cell.error {
             background: rgba(220, 38, 38, 0.6) !important;
             border-color: #991b1b !important;
             border-width: 3px !important;
-            box-shadow: 0 0 20px rgba(220, 38, 38, 0.6) !important;
         }
 
         [data-theme="light"] .cell.hint-highlight {
             background: rgba(4, 120, 87, 0.7) !important;
             border-color: #064e3b !important;
             border-width: 3px !important;
-            box-shadow: 0 0 30px rgba(4, 120, 87, 0.8) !important;
-            transform: scale(1.02) !important;
         }
 
         [data-theme="light"] .cell.completed-highlight {
             background: rgba(4, 120, 87, 0.75) !important;
             border-color: #064e3b !important;
             border-width: 3px !important;
-            box-shadow: 0 0 25px rgba(4, 120, 87, 0.9) !important;
-            transform: scale(1.01) !important;
         }
 
         [data-theme="light"] .note-number-highlight {
@@ -714,7 +669,6 @@
             color: #ffffff !important;
             border: 2px solid #1e3a8a !important;
             font-weight: 900 !important;
-            transform: scale(1.1) !important;
         }
 
         [data-theme="light"] .note-number-error {
@@ -722,7 +676,6 @@
             color: #ffffff !important;
             border: 2px solid #7f1d1d !important;
             font-weight: 900 !important;
-            transform: scale(1.1) !important;
         }
 
         /* Light theme same-number highlighting - Subtle */
@@ -730,28 +683,24 @@
             background: rgba(37, 99, 235, 0.25) !important;
             border-color: #1e40af !important;
             border-width: 1px !important;
-            box-shadow: 0 0 8px rgba(37, 99, 235, 0.3) !important;
         }
 
         [data-theme="light"] .cell.same-number-highlight {
             background: rgba(37, 99, 235, 0.25) !important;
             border-color: #1e40af !important;
             border-width: 1px !important;
-            box-shadow: 0 0 8px rgba(37, 99, 235, 0.3) !important;
         }
 
         [data-theme="light"] .cell.highlighted.given {
             background: rgba(37, 99, 235, 0.35) !important;
             border-color: #1e40af !important;
             border-width: 2px !important;
-            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4) !important;
         }
 
         [data-theme="light"] .cell.same-number-highlight.given {
             background: rgba(37, 99, 235, 0.35) !important;
             border-color: #1e40af !important;
             border-width: 2px !important;
-            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4) !important;
         }
 
 
