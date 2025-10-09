@@ -77,10 +77,7 @@
             font-size: 1.2rem;
             font-weight: 300;
             margin-bottom: 8px;
-            background: linear-gradient(45deg, var(--accent-color), #42a5f5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--accent-color);
         }
 
         .game-content {
@@ -592,7 +589,7 @@
 
         /* CSS Variables for Themes */
         :root {
-            --bg-primary: linear-gradient(135deg, #323943 0%, #46494e 50%, #44464b 100%);
+            --bg-primary: #323943;
             --bg-secondary: #19222e;
             --bg-tertiary: #2c2f35;
             --bg-accent: rgba(132, 147, 164, 0.3);
@@ -606,7 +603,7 @@
 
         /* Theme: Light */
         [data-theme="light"] {
-            --bg-primary: linear-gradient(135deg, #dbdbdb 0%, #7e848b 50%, #3e4c60 100%);
+            --bg-primary: #dbdbdb;
             --bg-secondary: #a6a6a6;
             --bg-tertiary: #8a8e93;
             --bg-accent: rgba(0, 0, 0, 0.2);
@@ -736,7 +733,6 @@
             border-left: 2px solid var(--border-color);
             z-index: 10000;
             overflow-y: auto;
-            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
         }
 
         .color-editor-content {
@@ -920,7 +916,6 @@
                 right: 0;
                 border-left: none;
                 border-top: 2px solid var(--border-color);
-                box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
             }
             
             .color-row {
@@ -1140,9 +1135,7 @@
         // Color Editor Functionality
         const colorVariables = {
             dark: {
-                '--bg-primary-start': '#323943',
-                '--bg-primary-mid': '#46494e',
-                '--bg-primary-end': '#44464b',
+                '--bg-primary': '#323943',
                 '--bg-secondary': '#19222e',
                 '--bg-tertiary': '#2c2f35',
                 '--text-primary': '#d1d9e0',
@@ -1152,9 +1145,7 @@
                 '--error-color': '#3e1614'
             },
             light: {
-                '--bg-primary-start': '#dbdbdb',
-                '--bg-primary-mid': '#7e848b',
-                '--bg-primary-end': '#3e4c60',
+                '--bg-primary': '#dbdbdb',
                 '--bg-secondary': '#a6a6a6',
                 '--bg-tertiary': '#8a8e93',
                 '--text-primary': '#000000',
@@ -1193,9 +1184,7 @@
             
             const colors = currentColors[currentEditingTheme];
             const labels = {
-                '--bg-primary-start': 'Background Gradient Start',
-                '--bg-primary-mid': 'Background Gradient Middle',
-                '--bg-primary-end': 'Background Gradient End',
+                '--bg-primary': 'Primary Background',
                 '--bg-secondary': 'Secondary Background',
                 '--bg-tertiary': 'Cell Background',
                 '--text-primary': 'Text Color',
@@ -1262,7 +1251,7 @@
             const colors = currentColors[theme];
             
             if (theme === 'dark' && root.getAttribute('data-theme') !== 'light') {
-                root.style.setProperty('--bg-primary', `linear-gradient(135deg, ${colors['--bg-primary-start']}, ${colors['--bg-primary-mid']}, ${colors['--bg-primary-end']})`);
+                root.style.setProperty('--bg-primary', colors['--bg-primary']);
                 root.style.setProperty('--bg-secondary', colors['--bg-secondary']);
                 root.style.setProperty('--bg-tertiary', colors['--bg-tertiary']);
                 root.style.setProperty('--text-primary', colors['--text-primary']);
@@ -1271,7 +1260,7 @@
                 root.style.setProperty('--success-color', colors['--success-color']);
                 root.style.setProperty('--error-color', colors['--error-color']);
             } else if (theme === 'light' && root.getAttribute('data-theme') === 'light') {
-                root.style.setProperty('--bg-primary', `linear-gradient(135deg, ${colors['--bg-primary-start']}, ${colors['--bg-primary-mid']}, ${colors['--bg-primary-end']})`);
+                root.style.setProperty('--bg-primary', colors['--bg-primary']);
                 root.style.setProperty('--bg-secondary', colors['--bg-secondary']);
                 root.style.setProperty('--bg-tertiary', colors['--bg-tertiary']);
                 root.style.setProperty('--text-primary', colors['--text-primary']);
@@ -1290,7 +1279,7 @@
             
             // Dark theme
             css += `/* Dark Theme */\n:root {\n`;
-            css += `    --bg-primary: linear-gradient(135deg, ${currentColors.dark['--bg-primary-start']} 0%, ${currentColors.dark['--bg-primary-mid']} 50%, ${currentColors.dark['--bg-primary-end']} 100%);\n`;
+            css += `    --bg-primary: ${currentColors.dark['--bg-primary']};\n`;
             css += `    --bg-secondary: ${currentColors.dark['--bg-secondary']};\n`;
             css += `    --bg-tertiary: ${currentColors.dark['--bg-tertiary']};\n`;
             css += `    --text-primary: ${currentColors.dark['--text-primary']};\n`;
@@ -1302,7 +1291,7 @@
             
             // Light theme
             css += `/* Light Theme */\n[data-theme="light"] {\n`;
-            css += `    --bg-primary: linear-gradient(135deg, ${currentColors.light['--bg-primary-start']} 0%, ${currentColors.light['--bg-primary-mid']} 50%, ${currentColors.light['--bg-primary-end']} 100%);\n`;
+            css += `    --bg-primary: ${currentColors.light['--bg-primary']};\n`;
             css += `    --bg-secondary: ${currentColors.light['--bg-secondary']};\n`;
             css += `    --bg-tertiary: ${currentColors.light['--bg-tertiary']};\n`;
             css += `    --text-primary: ${currentColors.light['--text-primary']};\n`;
