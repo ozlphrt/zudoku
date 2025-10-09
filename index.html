@@ -801,7 +801,7 @@
         .color-controls {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 6px;
             margin-bottom: 20px;
         }
 
@@ -809,9 +809,9 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px;
+            padding: 6px 8px;
             background: var(--bg-tertiary);
-            border-radius: 6px;
+            border-radius: 4px;
         }
 
         .color-row label {
@@ -823,14 +823,14 @@
 
         .color-input-wrapper {
             position: relative;
-            width: 32px;
-            height: 32px;
+            width: 20px;
+            height: 20px;
             flex-shrink: 0;
         }
 
         .color-input {
-            width: 32px;
-            height: 32px;
+            width: 20px;
+            height: 20px;
             border: none;
             border-radius: 50%;
             cursor: pointer;
@@ -842,22 +842,18 @@
         }
 
         .color-swatch {
-            width: 32px;
-            height: 32px;
-            border: 2px solid var(--border-color);
+            width: 20px;
+            height: 20px;
+            border: 1px solid var(--border-color);
             border-radius: 50%;
             cursor: pointer;
             position: relative;
             pointer-events: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
             transition: transform 0.2s ease;
         }
         
         .color-input-wrapper:hover .color-swatch {
-            transform: scale(1.1);
+            transform: scale(1.2);
         }
 
         .color-text-input {
@@ -1232,7 +1228,6 @@
                 const swatch = document.createElement('div');
                 swatch.className = 'color-swatch';
                 swatch.style.background = value;
-                swatch.innerHTML = '💧';
                 
                 inputWrapper.appendChild(input);
                 inputWrapper.appendChild(swatch);
