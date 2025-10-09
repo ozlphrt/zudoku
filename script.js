@@ -821,16 +821,12 @@ class SudokuGame {
         const numbers = Array.from(notes).sort();
         let html = '';
         
-        for (let i = 0; i < 9; i++) {
-            const num = i + 1;
-            if (numbers.includes(num)) {
-                html += `<span class="note-number">${num}</span>`;
+        // Create all 9 positions in a 3x3 grid (1-9)
+        for (let i = 1; i <= 9; i++) {
+            if (numbers.includes(i)) {
+                html += `<span class="note-number">${i}</span>`;
             } else {
                 html += '<span class="note-number"></span>';
-            }
-            
-            if ((i + 1) % 3 === 0 && i < 8) {
-                html += '<br>';
             }
         }
         

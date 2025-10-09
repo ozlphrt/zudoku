@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-primary);
+            background: var(--bg-primary) !important;
             height: 100vh;
             color: var(--text-primary);
             overflow: hidden;
@@ -23,6 +23,10 @@
             user-select: none;
             margin: 0;
             padding: 0;
+        }
+
+        html {
+            background: var(--bg-primary) !important;
         }
 
         .container {
@@ -35,15 +39,15 @@
 
         .left-panel {
             width: 280px;
-            background: var(--bg-tertiary);
-            border-radius: 10px;
-            padding: 8px;
+            background: var(--bg-secondary);
+            border-radius: 15px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             gap: 8px;
             overflow-y: auto;
             backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
         }
 
         .center-panel {
@@ -61,15 +65,15 @@
 
         .right-panel {
             width: 280px;
-            background: var(--bg-tertiary);
-            border-radius: 10px;
-            padding: 8px;
+            background: var(--bg-secondary);
+            border-radius: 15px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             gap: 8px;
             overflow-y: auto;
             backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
         }
 
         .game-title {
@@ -103,6 +107,8 @@
             aspect-ratio: 1;
             flex-shrink: 0;
             touch-action: manipulation;
+            overflow: hidden;
+            box-sizing: border-box;
         }
 
         .cell {
@@ -120,7 +126,8 @@
             min-height: 60px;
             touch-action: manipulation;
             pointer-events: auto;
-            overflow: visible;
+            overflow: hidden;
+            box-sizing: border-box;
         }
 
         .note-mode .cell {
@@ -282,33 +289,43 @@
 
         .cell.notes {
             font-size: 1.4rem;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--text-secondary);
             line-height: 1.2;
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 1px;
+            padding: 2px;
         }
 
         .cell.notes .note-number {
-            display: inline-block;
-            width: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             transition: all 0.3s ease;
             color: var(--text-primary);
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 0;
-            margin: 1px;
-            min-width: 20px;
-            min-height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            margin: 0;
+            min-width: 0;
+            min-height: 0;
+            font-size: 0.8rem;
+            aspect-ratio: 1;
+        }
+
+        .cell.notes .note-number:empty {
+            display: none;
         }
 
         .note-number-highlight {
-            background: var(--accent-color) !important;
-            opacity: 0.8 !important;
+            background: #dc2626 !important;
+            opacity: 1 !important;
             color: var(--text-primary) !important;
+            border: 2px solid #991b1b !important;
             border-radius: 0 !important;
-            font-weight: 700 !important;
+            font-weight: 900 !important;
         }
 
         .note-number-error {
@@ -463,9 +480,9 @@
         }
 
         .stats-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 4px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 6px;
             color: var(--accent-color);
         }
 
@@ -473,23 +490,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 2px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.8rem;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 0.95rem;
+            font-weight: 600;
         }
 
         .progress-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 4px 0;
-            font-size: 0.85rem;
+            padding: 6px 0;
+            font-size: 0.95rem;
+            font-weight: 600;
         }
 
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.1);
             border-radius: 4px;
             overflow: hidden;
             margin: 8px 0;
@@ -506,10 +525,11 @@
 
         .stat-label {
             color: var(--text-secondary);
+            font-weight: 700;
         }
 
         .stat-value {
-            font-weight: 600;
+            font-weight: 800;
             color: var(--text-primary);
         }
 
@@ -519,10 +539,11 @@
 
         .difficulty-btn {
             width: 100%;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
             text-align: left;
-            font-size: 0.7rem;
-            padding: 3px 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 6px 8px;
         }
 
         .difficulty-btn.active {
@@ -538,8 +559,9 @@
 
         .action-btn {
             flex: 1;
-            font-size: 0.7rem;
-            padding: 3px 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 6px 8px;
             opacity: 0.5;
             cursor: not-allowed;
         }
@@ -588,8 +610,9 @@
 
         .timer-btn {
             flex: 1;
-            font-size: 0.7rem;
-            padding: 3px 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 6px 8px;
         }
 
 
@@ -610,18 +633,17 @@
             --error-color: #3e1614;
         }
 
-        /* Theme: Light */
+        /* Light Theme */
         [data-theme="light"] {
-            --bg-primary: #dbdbdb;
-            --bg-secondary: #a6a6a6;
-            --bg-tertiary: #8a8e93;
-            --bg-accent: rgba(0, 0, 0, 0.2);
+            --bg-primary: #6f7376;
+            --bg-secondary: #7d7f82;
+            --bg-tertiary: #808285;
             --text-primary: #000000;
-            --text-secondary: rgba(0, 0, 0, 0.75);
+            --text-secondary: #374151;
             --border-color: #000000;
             --accent-color: #000000;
-            --success-color: #14bd88;
-            --error-color: #a53b31;
+            --success-color: #10654a;
+            --error-color: #981b10;
         }
 
         /* Light theme specific highlighting overrides - Maximum visibility */
@@ -670,16 +692,16 @@
         }
 
         [data-theme="light"] .note-number-highlight {
-            background: #1e40af !important;
-            color: #ffffff !important;
-            border: 2px solid #1e3a8a !important;
+            background: #a04040 !important;
+            color: var(--text-primary) !important;
+            border: 2px solid #702020 !important;
             border-radius: 0 !important;
             font-weight: 900 !important;
         }
 
         [data-theme="light"] .note-number-error {
             background: #991b1b !important;
-            color: #ffffff !important;
+            color: var(--text-primary) !important;
             border: 2px solid #7f1d1d !important;
             border-radius: 0 !important;
             font-weight: 900 !important;
@@ -710,9 +732,37 @@
             border-width: 2px !important;
         }
 
+        /* Remove emboss effect from light theme - uniform borders */
+        [data-theme="light"] .cell {
+            border: 1px solid var(--border-color) !important;
+            border-top-color: var(--border-color) !important;
+            border-right-color: var(--border-color) !important;
+            border-bottom-color: var(--border-color) !important;
+            border-left-color: var(--border-color) !important;
+        }
+
+        /* Dark lines between 3x3 blocks in light theme */
+        [data-theme="light"] .cell:nth-child(3n) {
+            border-right: 3px solid #000000 !important;
+        }
+
+        [data-theme="light"] .cell:nth-child(n+19):nth-child(-n+27),
+        [data-theme="light"] .cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 3px solid #000000 !important;
+        }
+
+        /* Ensure stat values use dark grey in light theme */
+        [data-theme="light"] .stat-value {
+            color: #374151 !important;
+        }
+
+        [data-theme="light"] .progress-item .stat-value {
+            color: #374151 !important;
+        }
+
 
         .instructions {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.05);
             border-radius: 8px;
             padding: 6px;
             margin-top: 6px;
@@ -768,7 +818,7 @@
         .close-btn {
             background: var(--error-color);
             border: none;
-            color: white;
+            color: var(--text-primary);
             width: 32px;
             height: 32px;
             border-radius: 50%;
