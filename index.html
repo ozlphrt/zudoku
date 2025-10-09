@@ -725,6 +725,170 @@
         }
 
 
+        /* Color Editor Panel */
+        .color-editor-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+
+        .color-editor-content {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .color-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .color-editor-header h2 {
+            margin: 0;
+            color: var(--accent-color);
+        }
+
+        .close-btn {
+            background: var(--error-color);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            opacity: 0.8;
+        }
+
+        .theme-selector {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+
+        .theme-selector label {
+            color: var(--text-primary);
+            margin-right: 10px;
+            font-weight: 600;
+        }
+
+        .theme-selector select {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .color-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .color-row {
+            display: grid;
+            grid-template-columns: 2fr 60px 100px;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+        }
+
+        .color-row label {
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        .color-input {
+            width: 50px;
+            height: 40px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .color-text-input {
+            width: 100%;
+            padding: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .color-editor-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .color-editor-footer .btn {
+            flex: 1;
+        }
+
+        .export-output {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+
+        .export-output h3 {
+            margin: 0 0 10px 0;
+            color: var(--accent-color);
+            font-size: 14px;
+        }
+
+        .export-output textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 10px;
+            background: #000;
+            color: #0f0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 11px;
+            resize: vertical;
+        }
+
+        .export-output .btn {
+            margin-top: 10px;
+            width: 100%;
+        }
+
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -866,6 +1030,9 @@
                     <button class="audio-toggle" id="audioToggle" onclick="toggleAudio()" title="Toggle Sounds">
                         🔊
                     </button>
+                    <button class="theme-toggle" id="colorEditorToggle" onclick="toggleColorEditor()" title="Customize Colors">
+                        🎨
+                    </button>
                 </div>
                 <div class="action-buttons">
                     <button class="btn action-btn" onclick="undoMove()" id="undoBtn" disabled>Undo</button>
@@ -889,7 +1056,216 @@
         </div>
     </div>
 
+    <!-- Color Editor Panel -->
+    <div id="colorEditorPanel" class="color-editor-panel" style="display: none;">
+        <div class="color-editor-content">
+            <div class="color-editor-header">
+                <h2>🎨 Color Customizer</h2>
+                <button class="close-btn" onclick="toggleColorEditor()">✕</button>
+            </div>
+            
+            <div class="theme-selector">
+                <label>Editing: </label>
+                <select id="editingTheme" onchange="switchEditingTheme()">
+                    <option value="dark">Dark Theme</option>
+                    <option value="light">Light Theme</option>
+                </select>
+            </div>
+            
+            <div id="colorControls" class="color-controls"></div>
+            
+            <div class="color-editor-footer">
+                <button class="btn primary" onclick="exportColors()">📋 Print CSS Code</button>
+                <button class="btn" onclick="resetColors()">🔄 Reset</button>
+            </div>
+            
+            <div id="exportOutput" class="export-output" style="display: none;">
+                <h3>Copy this CSS code:</h3>
+                <textarea id="exportTextarea" readonly></textarea>
+                <button class="btn" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Remove the sudoku-gen library for now -->
     <script src="script.js"></script>
+    <script>
+        // Color Editor Functionality
+        const colorVariables = {
+            dark: {
+                '--bg-primary-start': '#1e2530',
+                '--bg-primary-mid': '#252d3a',
+                '--bg-primary-end': '#2d3543',
+                '--bg-secondary': '#2a3340',
+                '--bg-tertiary': '#212936',
+                '--text-primary': '#b8c4d0',
+                '--border-color': '#3d4856',
+                '--accent-color': '#4a9eff',
+                '--success-color': '#2ea043',
+                '--error-color': '#e5534b'
+            },
+            light: {
+                '--bg-primary-start': '#a8b3bf',
+                '--bg-primary-mid': '#97a3b0',
+                '--bg-primary-end': '#8691a0',
+                '--bg-secondary': '#9aa6b3',
+                '--bg-tertiary': '#b0bac6',
+                '--text-primary': '#1a2332',
+                '--border-color': '#6d7885',
+                '--accent-color': '#2563eb',
+                '--success-color': '#0d7c59',
+                '--error-color': '#c5392d'
+            }
+        };
+
+        let currentColors = JSON.parse(JSON.stringify(colorVariables));
+        let currentEditingTheme = 'dark';
+
+        function toggleColorEditor() {
+            const panel = document.getElementById('colorEditorPanel');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'flex';
+                initColorEditor();
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        function initColorEditor() {
+            renderColorControls();
+        }
+
+        function switchEditingTheme() {
+            currentEditingTheme = document.getElementById('editingTheme').value;
+            renderColorControls();
+        }
+
+        function renderColorControls() {
+            const container = document.getElementById('colorControls');
+            container.innerHTML = '';
+            
+            const colors = currentColors[currentEditingTheme];
+            const labels = {
+                '--bg-primary-start': 'Background Gradient Start',
+                '--bg-primary-mid': 'Background Gradient Middle',
+                '--bg-primary-end': 'Background Gradient End',
+                '--bg-secondary': 'Secondary Background',
+                '--bg-tertiary': 'Cell Background',
+                '--text-primary': 'Text Color',
+                '--border-color': 'Border Color',
+                '--accent-color': 'Accent Color',
+                '--success-color': 'Success Color',
+                '--error-color': 'Error Color'
+            };
+
+            Object.entries(colors).forEach(([varName, value]) => {
+                const row = document.createElement('div');
+                row.className = 'color-row';
+                
+                const label = document.createElement('label');
+                label.textContent = labels[varName];
+                
+                const input = document.createElement('input');
+                input.type = 'color';
+                input.value = value;
+                input.className = 'color-input';
+                input.addEventListener('input', (e) => updateColor(varName, e.target.value));
+                
+                const textInput = document.createElement('input');
+                textInput.type = 'text';
+                textInput.value = value;
+                textInput.className = 'color-text-input';
+                textInput.addEventListener('input', (e) => {
+                    if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                        updateColor(varName, e.target.value);
+                        input.value = e.target.value;
+                    }
+                });
+                
+                row.appendChild(label);
+                row.appendChild(input);
+                row.appendChild(textInput);
+                container.appendChild(row);
+            });
+        }
+
+        function updateColor(varName, value) {
+            currentColors[currentEditingTheme][varName] = value;
+            applyColors();
+        }
+
+        function applyColors() {
+            const root = document.documentElement;
+            const theme = currentEditingTheme;
+            const colors = currentColors[theme];
+            
+            if (theme === 'dark' && root.getAttribute('data-theme') !== 'light') {
+                root.style.setProperty('--bg-primary', `linear-gradient(135deg, ${colors['--bg-primary-start']}, ${colors['--bg-primary-mid']}, ${colors['--bg-primary-end']})`);
+                root.style.setProperty('--bg-secondary', colors['--bg-secondary']);
+                root.style.setProperty('--bg-tertiary', colors['--bg-tertiary']);
+                root.style.setProperty('--text-primary', colors['--text-primary']);
+                root.style.setProperty('--border-color', colors['--border-color']);
+                root.style.setProperty('--accent-color', colors['--accent-color']);
+                root.style.setProperty('--success-color', colors['--success-color']);
+                root.style.setProperty('--error-color', colors['--error-color']);
+            } else if (theme === 'light' && root.getAttribute('data-theme') === 'light') {
+                root.style.setProperty('--bg-primary', `linear-gradient(135deg, ${colors['--bg-primary-start']}, ${colors['--bg-primary-mid']}, ${colors['--bg-primary-end']})`);
+                root.style.setProperty('--bg-secondary', colors['--bg-secondary']);
+                root.style.setProperty('--bg-tertiary', colors['--bg-tertiary']);
+                root.style.setProperty('--text-primary', colors['--text-primary']);
+                root.style.setProperty('--border-color', colors['--border-color']);
+                root.style.setProperty('--accent-color', colors['--accent-color']);
+                root.style.setProperty('--success-color', colors['--success-color']);
+                root.style.setProperty('--error-color', colors['--error-color']);
+            }
+        }
+
+        function exportColors() {
+            const output = document.getElementById('exportOutput');
+            const textarea = document.getElementById('exportTextarea');
+            
+            let css = '';
+            
+            // Dark theme
+            css += `/* Dark Theme */\n:root {\n`;
+            css += `    --bg-primary: linear-gradient(135deg, ${currentColors.dark['--bg-primary-start']} 0%, ${currentColors.dark['--bg-primary-mid']} 50%, ${currentColors.dark['--bg-primary-end']} 100%);\n`;
+            css += `    --bg-secondary: ${currentColors.dark['--bg-secondary']};\n`;
+            css += `    --bg-tertiary: ${currentColors.dark['--bg-tertiary']};\n`;
+            css += `    --text-primary: ${currentColors.dark['--text-primary']};\n`;
+            css += `    --border-color: ${currentColors.dark['--border-color']};\n`;
+            css += `    --accent-color: ${currentColors.dark['--accent-color']};\n`;
+            css += `    --success-color: ${currentColors.dark['--success-color']};\n`;
+            css += `    --error-color: ${currentColors.dark['--error-color']};\n`;
+            css += `}\n\n`;
+            
+            // Light theme
+            css += `/* Light Theme */\n[data-theme="light"] {\n`;
+            css += `    --bg-primary: linear-gradient(135deg, ${currentColors.light['--bg-primary-start']} 0%, ${currentColors.light['--bg-primary-mid']} 50%, ${currentColors.light['--bg-primary-end']} 100%);\n`;
+            css += `    --bg-secondary: ${currentColors.light['--bg-secondary']};\n`;
+            css += `    --bg-tertiary: ${currentColors.light['--bg-tertiary']};\n`;
+            css += `    --text-primary: ${currentColors.light['--text-primary']};\n`;
+            css += `    --border-color: ${currentColors.light['--border-color']};\n`;
+            css += `    --accent-color: ${currentColors.light['--accent-color']};\n`;
+            css += `    --success-color: ${currentColors.light['--success-color']};\n`;
+            css += `    --error-color: ${currentColors.light['--error-color']};\n`;
+            css += `}\n`;
+            
+            textarea.value = css;
+            output.style.display = 'block';
+        }
+
+        function copyToClipboard() {
+            const textarea = document.getElementById('exportTextarea');
+            textarea.select();
+            document.execCommand('copy');
+            alert('CSS code copied to clipboard!');
+        }
+
+        function resetColors() {
+            currentColors = JSON.parse(JSON.stringify(colorVariables));
+            renderColorControls();
+            applyColors();
+        }
+    </script>
 </body>
 </html>
