@@ -806,37 +806,70 @@
         }
 
         .color-row {
-            display: grid;
-            grid-template-columns: 2fr 60px 100px;
-            gap: 10px;
+            display: flex;
             align-items: center;
-            padding: 10px;
+            gap: 8px;
+            padding: 8px;
             background: var(--bg-tertiary);
             border-radius: 6px;
         }
 
         .color-row label {
             color: var(--text-primary);
-            font-size: 13px;
+            font-size: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .color-input-wrapper {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
         }
 
         .color-input {
-            width: 50px;
-            height: 40px;
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
             cursor: pointer;
+            padding: 0;
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .color-swatch {
+            width: 32px;
+            height: 32px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: transform 0.2s ease;
+        }
+        
+        .color-input-wrapper:hover .color-swatch {
+            transform: scale(1.1);
         }
 
         .color-text-input {
-            width: 100%;
-            padding: 8px;
+            width: 90px;
+            padding: 6px 8px;
             background: var(--bg-secondary);
             color: var(--text-primary);
             border: 1px solid var(--border-color);
             border-radius: 4px;
             font-family: monospace;
-            font-size: 12px;
+            font-size: 11px;
+            flex-shrink: 0;
         }
 
         .color-editor-footer {
@@ -895,8 +928,17 @@
             }
             
             .color-row {
-                grid-template-columns: 1fr 50px 90px;
+                gap: 6px;
+                padding: 6px;
+            }
+            
+            .color-row label {
                 font-size: 11px;
+            }
+            
+            .color-text-input {
+                width: 80px;
+                font-size: 10px;
             }
             
             .container {
@@ -1174,11 +1216,26 @@
                 const label = document.createElement('label');
                 label.textContent = labels[varName];
                 
+                const inputWrapper = document.createElement('div');
+                inputWrapper.className = 'color-input-wrapper';
+                
                 const input = document.createElement('input');
                 input.type = 'color';
                 input.value = value;
                 input.className = 'color-input';
-                input.addEventListener('input', (e) => updateColor(varName, e.target.value));
+                input.addEventListener('input', (e) => {
+                    updateColor(varName, e.target.value);
+                    swatch.style.background = e.target.value;
+                    textInput.value = e.target.value;
+                });
+                
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.background = value;
+                swatch.innerHTML = '💧';
+                
+                inputWrapper.appendChild(input);
+                inputWrapper.appendChild(swatch);
                 
                 const textInput = document.createElement('input');
                 textInput.type = 'text';
@@ -1188,11 +1245,12 @@
                     if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
                         updateColor(varName, e.target.value);
                         input.value = e.target.value;
+                        swatch.style.background = e.target.value;
                     }
                 });
                 
                 row.appendChild(label);
-                row.appendChild(input);
+                row.appendChild(inputWrapper);
                 row.appendChild(textInput);
                 container.appendChild(row);
             });
