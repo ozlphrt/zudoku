@@ -281,7 +281,7 @@
         }
 
         .cell.notes {
-            font-size: 1.0rem;
+            font-size: 1.4rem;
             color: rgba(255, 255, 255, 0.7);
             line-height: 1.2;
         }
@@ -292,13 +292,22 @@
             text-align: center;
             transition: all 0.3s ease;
             color: var(--text-primary);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0;
+            margin: 1px;
+            min-width: 20px;
+            min-height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .note-number-highlight {
             background: var(--accent-color) !important;
             opacity: 0.8 !important;
             color: var(--text-primary) !important;
-            border-radius: 3px;
+            border-radius: 0 !important;
             font-weight: 700 !important;
         }
 
@@ -306,7 +315,7 @@
             background: var(--error-color) !important;
             opacity: 0.9 !important;
             color: var(--text-primary) !important;
-            border-radius: 3px;
+            border-radius: 0 !important;
             font-weight: 700 !important;
             animation: noteNumberErrorPulse 0.6s ease-in-out;
         }
@@ -664,6 +673,7 @@
             background: #1e40af !important;
             color: #ffffff !important;
             border: 2px solid #1e3a8a !important;
+            border-radius: 0 !important;
             font-weight: 900 !important;
         }
 
@@ -671,6 +681,7 @@
             background: #991b1b !important;
             color: #ffffff !important;
             border: 2px solid #7f1d1d !important;
+            border-radius: 0 !important;
             font-weight: 900 !important;
         }
 
