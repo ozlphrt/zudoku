@@ -2037,12 +2037,15 @@
             }
             
             // Disable paint mode when clicking on buttons or UI elements
+            // But don't interfere with the Test Colors button
             if (event.target.classList.contains('btn') || 
                 event.target.classList.contains('num-btn') ||
                 event.target.closest('.left-panel') ||
                 event.target.closest('.right-panel')) {
                 // Don't disable paint mode for numpad buttons - they should enable it
-                if (!event.target.classList.contains('num-btn')) {
+                // Don't disable paint mode for Test Colors button - let it work normally
+                if (!event.target.classList.contains('num-btn') && 
+                    event.target.textContent !== 'Test Colors') {
                     disablePaintMode();
                 }
             }
