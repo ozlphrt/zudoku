@@ -31,10 +31,11 @@ class SudokuGame {
         this.initAudio();
         
         // Client-side generation difficulty system
+        // Adjusted to match available puzzle database
         this.DIFFICULTY_LEVELS = {
-            easy: { label: 'Easy', givenNumbers: 42 },      // 42 clues (39-45 range)
-            medium: { label: 'Medium', givenNumbers: 33 },  // 33 clues (30-36 range)
-            hard: { label: 'Hard', givenNumbers: 20 }       // 20 clues (17-23 range)
+            easy: { label: 'Easy', givenNumbers: 30 },      // 30 clues (27-33 range)
+            medium: { label: 'Medium', givenNumbers: 22 },  // 22 clues (19-25 range)
+            hard: { label: 'Hard', givenNumbers: 17 }       // 17 clues (14-20 range)
         };
         
         // Puzzle database - initialize immediately
