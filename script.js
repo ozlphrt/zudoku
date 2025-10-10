@@ -110,34 +110,38 @@ class SudokuGame {
     generateValidPuzzle(difficulty) {
         console.log(`🎯 Generating ${difficulty} puzzle client-side...`);
         
-        // Step 1: Generate a complete valid grid
-        const completeGrid = this.generateCompleteGrid();
-        console.log('Complete grid generated:', completeGrid);
-        
-        if (!completeGrid || !Array.isArray(completeGrid)) {
-            console.error('❌ Failed to generate complete grid');
-            return null;
+        // Try multiple times for reliability
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            console.log(`Attempt ${attempt}/3...`);
+            
+            // Step 1: Generate a complete valid grid
+            const completeGrid = this.generateCompleteGrid();
+            
+            if (!completeGrid || !Array.isArray(completeGrid)) {
+                console.log(`❌ Attempt ${attempt}: Failed to generate complete grid`);
+                continue;
+            }
+            
+            // Step 2: Remove cells based on difficulty (more conservative for reliability)
+            const cellsToRemove = {
+                easy: 30,    // 51 clues remaining (easier to generate)
+                medium: 40,  // 41 clues remaining
+                hard: 50,    // 31 clues remaining
+                expert: 55   // 26 clues remaining
+            };
+            
+            const puzzle = this.removeNumbers(completeGrid, cellsToRemove[difficulty] || 30);
+            
+            if (puzzle && Array.isArray(puzzle)) {
+                console.log(`✅ Generated ${difficulty} puzzle with ${81 - (cellsToRemove[difficulty] || 30)} clues`);
+                return puzzle;
+            }
+            
+            console.log(`❌ Attempt ${attempt}: Failed to remove numbers from grid`);
         }
         
-        // Step 2: Remove cells based on difficulty
-        const cellsToRemove = {
-            easy: 35,    // 46 clues remaining
-            medium: 45,  // 36 clues remaining  
-            hard: 52,    // 29 clues remaining
-            expert: 57   // 24 clues remaining
-        };
-        
-        const puzzle = this.removeNumbers(completeGrid, cellsToRemove[difficulty] || 35);
-        console.log('Puzzle after removal:', puzzle);
-        
-        if (!puzzle || !Array.isArray(puzzle)) {
-            console.error('❌ Failed to remove numbers from grid');
-            return null;
-        }
-        
-        console.log(`✅ Generated ${difficulty} puzzle with ${81 - (cellsToRemove[difficulty] || 35)} clues`);
-        
-        return puzzle;
+        console.error('❌ All generation attempts failed');
+        return null;
     }
     
     // Generate a complete valid Sudoku grid
@@ -187,24 +191,38 @@ class SudokuGame {
         let attempts = 0;
         const maxAttempts = 1000;
         
-        while (removed < count && attempts < maxAttempts) {
-            const row = Math.floor(Math.random() * 9);
-            const col = Math.floor(Math.random() * 9);
+        // Create list of all positions to try removing
+        const positions = [];
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                positions.push({ row, col });
+            }
+        }
+        
+        // Shuffle positions for random removal
+        this.shuffleArray(positions);
+        
+        for (let pos of positions) {
+            if (removed >= count) break;
             
+            const { row, col } = pos;
             if (puzzle[row][col] !== 0) {
                 const backup = puzzle[row][col];
                 puzzle[row][col] = 0;
                 
-                // Check if puzzle still has unique solution
-                if (this.hasUniqueSolution(puzzle)) {
+                // Simplified check - just ensure puzzle is still solvable
+                if (this.isSolvable(puzzle)) {
                     removed++;
                 } else {
                     puzzle[row][col] = backup;
                 }
             }
             attempts++;
+            
+            if (attempts >= maxAttempts) break;
         }
         
+        console.log(`Removed ${removed} numbers out of ${count} requested`);
         return puzzle;
     }
     
@@ -234,8 +252,8 @@ class SudokuGame {
     
     // Check if puzzle has unique solution (simplified version)
     hasUniqueSolution(grid) {
-        // For now, use a simplified check - in a real implementation,
-        // you'd count all possible solutions and ensure exactly 1 exists
+        // Simplified version - just check if it's solvable
+        // In a full implementation, you'd count solutions and ensure exactly 1
         return this.isSolvable(grid);
     }
     
