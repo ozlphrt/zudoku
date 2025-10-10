@@ -40,6 +40,13 @@ class SudokuGame {
         // Pre-validated puzzle database
         this.puzzleDatabase = this.loadPuzzleDatabase();
         
+        // External puzzle databases
+        this.externalDatabases = {
+            tdoku: 'https://raw.githubusercontent.com/t-dillon/tdoku/master/benchmarks/',
+            humanRated: 'https://raw.githubusercontent.com/synnwang/sudoku_dataset_difficulty/main/',
+            sudokuBench: 'https://pub.sakana.ai/sudoku/'
+        };
+        
         // Validate and set initial difficulty
         this.difficulty = this.isValidDifficulty(this.difficulty) ? this.difficulty : 'easy';
         
@@ -85,6 +92,73 @@ class SudokuGame {
     
     getDifficultyLabel() {
         return this.DIFFICULTY_LEVELS[this.difficulty]?.label || 'Easy';
+    }
+    
+    // Fetch puzzle from external database
+    async fetchExternalPuzzle(difficulty) {
+        try {
+            console.log(`🌐 Attempting to fetch ${difficulty} puzzle from external database...`);
+            
+            // Try Tdoku dataset first (most reliable)
+            const tdokuUrl = `${this.externalDatabases.tdoku}${difficulty}_puzzles.txt`;
+            const response = await fetch(tdokuUrl);
+            
+            if (response.ok) {
+                const text = await response.text();
+                const puzzles = text.trim().split('\n').filter(line => line.length === 81);
+                
+                if (puzzles.length > 0) {
+                    const randomPuzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
+                    const puzzle = this.parseTdokuPuzzle(randomPuzzle);
+                    
+                    if (puzzle && this.validatePuzzleFormat(puzzle)) {
+                        console.log(`✅ Loaded ${difficulty} puzzle from Tdoku database`);
+                        return puzzle;
+                    }
+                }
+            }
+            
+            console.log(`❌ Failed to load from external database, using generation`);
+            return null;
+            
+        } catch (error) {
+            console.log(`❌ Error fetching external puzzle: ${error.message}`);
+            return null;
+        }
+    }
+    
+    // Parse Tdoku format puzzle (81 characters: 0-9, dots, or spaces)
+    parseTdokuPuzzle(puzzleString) {
+        if (!puzzleString || puzzleString.length !== 81) {
+            return null;
+        }
+        
+        const grid = [];
+        for (let i = 0; i < 9; i++) {
+            const row = [];
+            for (let j = 0; j < 9; j++) {
+                const char = puzzleString[i * 9 + j];
+                const num = parseInt(char);
+                row.push(isNaN(num) ? 0 : num);
+            }
+            grid.push(row);
+        }
+        
+        return grid;
+    }
+    
+    // Validate puzzle format
+    validatePuzzleFormat(grid) {
+        if (!grid || grid.length !== 9) return false;
+        
+        for (let row of grid) {
+            if (!row || row.length !== 9) return false;
+            for (let cell of row) {
+                if (typeof cell !== 'number' || cell < 0 || cell > 9) return false;
+            }
+        }
+        
+        return true;
     }
     
     createGrid() {
@@ -1412,17 +1486,27 @@ class SudokuGame {
         this.showLoadingAnimation();
         
         // Small delay to show loading animation
-        setTimeout(() => {
-            // Try to load from pre-validated database first
-            console.log('🔍 Attempting to load from database...');
-            const loadedFromDatabase = this.loadPuzzleFromDatabase(this.difficulty);
+        setTimeout(async () => {
+            // Try external database first (most reliable)
+            console.log('🌐 Attempting to load from external database...');
+            const externalPuzzle = await this.fetchExternalPuzzle(this.difficulty);
             
-            if (!loadedFromDatabase) {
-                console.log(`Falling back to varied puzzle generation for ${this.difficulty} difficulty...`);
-                // Generate a varied puzzle using our enhanced system
-                this.generateReliablePuzzle();
+            if (externalPuzzle) {
+                this.grid = externalPuzzle;
+                this.solution = null; // Will be generated if needed
+                console.log('✅ Loaded puzzle from external database');
             } else {
-                console.log('✅ Loaded puzzle from database');
+                // Try to load from pre-validated database
+                console.log('🔍 Attempting to load from local database...');
+                const loadedFromDatabase = this.loadPuzzleFromDatabase(this.difficulty);
+                
+                if (!loadedFromDatabase) {
+                    console.log(`Falling back to varied puzzle generation for ${this.difficulty} difficulty...`);
+                    // Generate a varied puzzle using our enhanced system
+                    this.generateReliablePuzzle();
+                } else {
+                    console.log('✅ Loaded puzzle from local database');
+                }
             }
             
             // Debug: Check if grid has numbers
