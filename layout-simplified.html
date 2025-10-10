@@ -707,27 +707,10 @@
         }
 
         /* ========================================
-           TABLET/IPAD STYLES (768px - 1024px)
-        ======================================== */
-        
-        @media (min-width: 768px) and (max-width: 1024px) {
-            .sudoku-grid {
-                width: min(85vw, 85vh);
-                height: min(85vw, 85vh);
-                max-width: 800px;
-                max-height: 800px;
-            }
-            
-            .cell {
-                font-size: 56px;
-            }
-        }
-        
-        /* ========================================
            MOBILE SWIPE INTERFACE
         ======================================== */
         
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .container {
                 display: flex;
                 flex-direction: row;
@@ -776,6 +759,21 @@
             
             .num-btn {
                 font-size: 24px;
+            }
+        }
+        
+        /* ========================================
+           TABLET/IPAD OVERRIDE (768px - 1024px)
+        ======================================== */
+        
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .sudoku-grid {
+                max-width: 700px !important;
+                max-height: 700px !important;
+            }
+            
+            .cell {
+                font-size: 52px !important;
             }
         }
 
