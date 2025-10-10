@@ -156,16 +156,30 @@ class SudokuGame {
     
     // All validation and solving methods removed - using pre-generated database instead
     
-    // Get random puzzle from database
+    // Get random puzzle from database with difficulty validation
     getRandomPuzzle(difficulty) {
         const puzzles = this.puzzleDatabase[difficulty.toLowerCase()];
         if (!puzzles || puzzles.length === 0) {
             throw new Error(`No puzzles found for difficulty: ${difficulty}`);
         }
         
-        const randomIndex = Math.floor(Math.random() * puzzles.length);
-        console.log(`🎲 Selected puzzle ${randomIndex + 1} of ${puzzles.length} for ${difficulty} difficulty`);
-        return puzzles[randomIndex];
+        // Filter puzzles that meet the difficulty requirements
+        const targetClues = this.DIFFICULTY_LEVELS[difficulty.toLowerCase()].givenNumbers;
+        const validPuzzles = puzzles.filter(puzzle => {
+            const clueCount = puzzle.puzzle.flat().filter(num => num !== 0).length;
+            // Allow ±3 tolerance for clue count
+            return Math.abs(clueCount - targetClues) <= 3;
+        });
+        
+        if (validPuzzles.length === 0) {
+            console.warn(`No puzzles found matching ${difficulty} difficulty (${targetClues} clues), using any available puzzle`);
+            const randomIndex = Math.floor(Math.random() * puzzles.length);
+            return puzzles[randomIndex];
+        }
+        
+        const randomIndex = Math.floor(Math.random() * validPuzzles.length);
+        console.log(`🎲 Selected puzzle ${randomIndex + 1} of ${validPuzzles.length} valid puzzles for ${difficulty} difficulty`);
+        return validPuzzles[randomIndex];
     }
     
     // Built-in puzzle database with pre-validated puzzles (100+ puzzles)
