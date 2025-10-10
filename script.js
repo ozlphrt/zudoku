@@ -137,7 +137,7 @@ class SudokuGame {
     // All validation and solving methods removed - using pre-generated database instead
     
     // Load puzzle database
-    async loadPuzzleDatabase() {
+    loadPuzzleDatabase() {
         if (!this.puzzleDatabase) {
             try {
                 // Use built-in puzzle database
@@ -153,8 +153,9 @@ class SudokuGame {
     
     // Get random puzzle from database
     getRandomPuzzle(difficulty) {
+        // Ensure database is loaded
         if (!this.puzzleDatabase) {
-            throw new Error('Puzzle database not loaded');
+            this.loadPuzzleDatabase();
         }
         
         const puzzles = this.puzzleDatabase[difficulty.toLowerCase()];
@@ -163,6 +164,7 @@ class SudokuGame {
         }
         
         const randomIndex = Math.floor(Math.random() * puzzles.length);
+        console.log(`🎲 Selected puzzle ${randomIndex + 1} of ${puzzles.length} for ${difficulty} difficulty`);
         return puzzles[randomIndex];
     }
     
@@ -1859,11 +1861,8 @@ class SudokuGame {
         this.loadPuzzleFromDatabase();
     }
     
-    async loadPuzzleFromDatabase() {
+    loadPuzzleFromDatabase() {
         try {
-            // Ensure database is loaded
-            await this.loadPuzzleDatabase();
-            
             // Load puzzle from pre-generated database
             const puzzleData = this.getRandomPuzzle(this.difficulty);
             
