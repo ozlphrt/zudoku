@@ -12,10 +12,17 @@
             box-sizing: border-box;
         }
 
+        html {
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: var(--bg-primary) !important;
             height: 100vh;
+            width: 100vw;
             color: var(--text-primary);
             overflow: hidden;
             touch-action: manipulation;
@@ -33,9 +40,11 @@
         .container {
             display: flex;
             height: 100vh;
+            width: 100vw;
             padding: 5px;
             gap: 8px;
             overflow: hidden;
+            box-sizing: border-box;
         }
 
         .left-panel {
