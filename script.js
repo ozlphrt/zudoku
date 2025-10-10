@@ -1448,7 +1448,8 @@ class SudokuGame {
     }
 
     generateReliablePuzzle() {
-        console.log('🎯 Generating reliable puzzle...');
+        console.log(`🎯 Generating reliable puzzle for difficulty: ${this.difficulty}`);
+        console.log(`🎯 Target given numbers: ${this.getTargetGivenNumbers()}`);
         
         // Try varied generation first, fall back to simple if needed
         if (!this.generateVariedPuzzle(this.difficulty)) {
@@ -1456,7 +1457,9 @@ class SudokuGame {
             this.generateSimplePuzzle();
         }
         
-        console.log(`✅ Generated ${this.difficulty} puzzle`);
+        // Verify final result
+        const finalCount = this.grid.flat().filter(num => num !== 0).length;
+        console.log(`✅ Generated ${this.difficulty} puzzle with ${finalCount} given numbers (target: ${this.getTargetGivenNumbers()})`);
     }
 
     generateSimplePuzzle() {
@@ -3927,56 +3930,7 @@ class SudokuGame {
                 }
             ],
             hard: [
-                // Hard puzzles disabled - using generation system for consistent 17 given numbers
-                // {
-                //     puzzle: [
-                //         [0,0,0,6,0,0,0,0,0],
-                //         [0,0,0,0,0,0,0,0,0],
-                //         [0,0,0,0,0,0,0,0,0],
-                //         [0,0,0,0,0,0,0,0,0],
-                //         [0,0,0,0,0,0,0,0,0],
-                //         [0,0,0,0,0,0,0,0,0],
-                //         [0,0,0,0,0,0,0,0,0],
-                //         [0,0,0,0,0,0,0,0,0],
-                //         [0,0,0,0,0,0,0,0,0]
-                //     ],
-                //     solution: [
-                //         [1,2,3,6,4,8,5,7,9],
-                //         [4,5,6,1,7,9,2,8,3],
-                //         [7,8,9,2,5,3,1,4,6],
-                //         [2,3,1,4,6,5,8,9,7],
-                //         [5,6,4,8,9,7,3,1,2],
-                //         [8,9,7,3,1,2,4,6,5],
-                //         [3,1,2,5,8,4,6,9,7],
-                //         [6,4,5,9,2,1,7,3,8],
-                //         [9,7,8,3,6,5,2,4,1]
-                //     ]
-                // },
-                // Hard puzzle 2 - Classic hard pattern
-                // {
-                //     puzzle: [
-                //         [8,0,0,0,0,0,0,0,0],
-                //         [0,0,3,6,0,0,0,0,0],
-                //         [0,7,0,0,9,0,2,0,0],
-                //         [0,5,0,0,0,7,0,0,0],
-                //         [0,0,0,0,4,5,7,0,0],
-                //         [0,0,0,1,0,0,0,3,0],
-                //         [0,0,1,0,0,0,0,6,8],
-                //         [0,0,8,5,0,0,0,1,0],
-                //         [0,9,0,0,0,0,4,0,0]
-                //     ],
-                //     solution: [
-                //         [8,1,2,7,5,3,6,4,9],
-                //         [9,4,3,6,8,2,1,7,5],
-                //         [6,7,5,4,9,1,2,8,3],
-                //         [1,5,4,2,3,7,8,9,6],
-                //         [3,6,9,8,4,5,7,2,1],
-                //         [2,8,7,1,6,9,5,3,4],
-                //         [5,2,1,9,7,4,3,6,8],
-                //         [4,3,8,5,2,6,9,1,7],
-                //         [7,9,6,3,1,8,4,5,2]
-                //     ]
-                // }
+                // Hard puzzles completely disabled - using generation system for consistent 17 given numbers
             ]
         };
     }
@@ -3991,6 +3945,8 @@ class SudokuGame {
     }
     
     loadPuzzleFromDatabase(difficulty) {
+        console.log(`🔍 loadPuzzleFromDatabase called with difficulty: ${difficulty}`);
+        
         // Force hard difficulty to use generation system for consistent 17 given numbers
         if (difficulty === 'hard') {
             console.log('🔒 Hard difficulty forced to use generation system for consistent 17 given numbers');
