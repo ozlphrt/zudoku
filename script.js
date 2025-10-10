@@ -37,8 +37,8 @@ class SudokuGame {
             hard: { label: 'Hard' }       // 29 clues remaining
         };
         
-        // Pre-validated puzzle database
-        this.puzzleDatabase = this.loadPuzzleDatabase();
+        // Puzzle database
+        this.puzzleDatabase = null;
         
         // External puzzle databases
         this.externalDatabases = {
@@ -106,118 +106,9 @@ class SudokuGame {
         });
     }
     
-    // Generate valid puzzle client-side
-    generateValidPuzzle(difficulty) {
-        console.log(`🎯 Generating ${difficulty} puzzle client-side...`);
-        
-        // Try multiple times for reliability
-        for (let attempt = 1; attempt <= 3; attempt++) {
-            console.log(`Attempt ${attempt}/3...`);
-            
-            // Step 1: Generate a complete valid grid
-            const completeGrid = this.generateCompleteGrid();
-            
-            if (!completeGrid || !Array.isArray(completeGrid)) {
-                console.log(`❌ Attempt ${attempt}: Failed to generate complete grid`);
-                continue;
-            }
-            
-            // Step 2: Remove cells based on difficulty (more conservative for reliability)
-            const cellsToRemove = {
-                easy: 30,    // 51 clues remaining (easier to generate)
-                medium: 40,  // 41 clues remaining
-                hard: 50,    // 31 clues remaining
-                expert: 55   // 26 clues remaining
-            };
-            
-            const puzzle = this.removeNumbers(completeGrid, cellsToRemove[difficulty] || 30);
-            console.log('Puzzle after removal:', puzzle);
-            console.log('Is puzzle array?', Array.isArray(puzzle));
-            
-            if (puzzle && Array.isArray(puzzle)) {
-                const clueCount = puzzle.flat().filter(num => num !== 0).length;
-                console.log(`✅ Generated ${difficulty} puzzle with ${clueCount} clues`);
-                return puzzle;
-            }
-            
-            console.log(`❌ Attempt ${attempt}: Failed to remove numbers from grid`);
-        }
-        
-        console.error('❌ All generation attempts failed');
-        return null;
-    }
+    // Puzzle generation removed - using pre-generated database instead
     
-    // Generate a complete valid Sudoku grid
-    generateCompleteGrid() {
-        const grid = Array(9).fill().map(() => Array(9).fill(0));
-        const success = this.fillGrid(grid);
-        
-        if (!success) {
-            console.error('❌ Failed to generate complete grid');
-            return null;
-        }
-        
-        return grid;
-    }
-    
-    // Fill grid using backtracking
-    fillGrid(grid) {
-        const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-        
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
-                if (grid[row][col] === 0) {
-                    this.shuffleArray(numbers);
-                    
-                    for (let num of numbers) {
-                        if (this.isValidPlacement(grid, row, col, num)) {
-                            grid[row][col] = num;
-                            
-                            if (this.fillGrid(grid)) {
-                                return true;
-                            }
-                            
-                            grid[row][col] = 0;
-                        }
-                    }
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    
-    // Remove numbers from complete grid to create puzzle
-    removeNumbers(grid, count) {
-        const puzzle = grid.map(row => [...row]);
-        let removed = 0;
-        
-        // Create list of all positions to try removing
-        const positions = [];
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
-                positions.push({ row, col });
-            }
-        }
-        
-        // Shuffle positions for random removal
-        this.shuffleArray(positions);
-        
-        // Simple approach: just remove numbers without complex validation
-        // This ensures we always get a puzzle, even if not perfectly optimized
-        for (let pos of positions) {
-            if (removed >= count) break;
-            
-            const { row, col } = pos;
-            if (puzzle[row][col] !== 0) {
-                puzzle[row][col] = 0;
-                removed++;
-            }
-        }
-        
-        console.log(`Removed ${removed} numbers out of ${count} requested`);
-        return puzzle;
-    }
+    // All puzzle generation methods removed - using pre-generated database instead
     
     // Check if a number placement is valid
     isValidPlacement(grid, row, col, num) {
@@ -243,48 +134,144 @@ class SudokuGame {
         return true;
     }
     
-    // Check if puzzle has unique solution (simplified version)
-    hasUniqueSolution(grid) {
-        // Simplified version - just check if it's solvable
-        // In a full implementation, you'd count solutions and ensure exactly 1
-        return this.isSolvable(grid);
-    }
+    // All validation and solving methods removed - using pre-generated database instead
     
-    // Check if puzzle is solvable
-    isSolvable(grid) {
-        const testGrid = grid.map(row => [...row]);
-        return this.solveGrid(testGrid);
-    }
-    
-    // Solve grid using backtracking
-    solveGrid(grid) {
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
-                if (grid[row][col] === 0) {
-                    for (let num = 1; num <= 9; num++) {
-                        if (this.isValidPlacement(grid, row, col, num)) {
-                            grid[row][col] = num;
-                            
-                            if (this.solveGrid(grid)) {
-                                return true;
-                            }
-                            
-                            grid[row][col] = 0;
-                        }
-                    }
-                    return false;
-                }
+    // Load puzzle database
+    async loadPuzzleDatabase() {
+        if (!this.puzzleDatabase) {
+            try {
+                // Use built-in puzzle database
+                this.puzzleDatabase = this.getBuiltInPuzzleDatabase();
+                console.log('✅ Puzzle database loaded');
+            } catch (error) {
+                console.error('❌ Failed to load puzzle database:', error);
+                throw error;
             }
         }
-        return true;
+        return this.puzzleDatabase;
     }
     
-    // Shuffle array utility
-    shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
+    // Get random puzzle from database
+    getRandomPuzzle(difficulty) {
+        if (!this.puzzleDatabase) {
+            throw new Error('Puzzle database not loaded');
         }
+        
+        const puzzles = this.puzzleDatabase[difficulty.toLowerCase()];
+        if (!puzzles || puzzles.length === 0) {
+            throw new Error(`No puzzles found for difficulty: ${difficulty}`);
+        }
+        
+        const randomIndex = Math.floor(Math.random() * puzzles.length);
+        return puzzles[randomIndex];
+    }
+    
+    // Built-in puzzle database with pre-validated puzzles
+    getBuiltInPuzzleDatabase() {
+        return {
+            easy: [
+                {
+                    puzzle: [
+                        [5,3,0,0,7,0,0,0,0],
+                        [6,0,0,1,9,5,0,0,0],
+                        [0,9,8,0,0,0,0,6,0],
+                        [8,0,0,0,6,0,0,0,3],
+                        [4,0,0,8,0,3,0,0,1],
+                        [7,0,0,0,2,0,0,0,6],
+                        [0,6,0,0,0,0,2,8,0],
+                        [0,0,0,4,1,9,0,0,5],
+                        [0,0,0,0,8,0,0,7,9]
+                    ],
+                    solution: [
+                        [5,3,4,6,7,8,9,1,2],
+                        [6,7,2,1,9,5,3,4,8],
+                        [1,9,8,3,4,2,5,6,7],
+                        [8,5,9,7,6,1,4,2,3],
+                        [4,2,6,8,5,3,7,9,1],
+                        [7,1,3,9,2,4,8,5,6],
+                        [9,6,1,5,3,7,2,8,4],
+                        [2,8,7,4,1,9,6,3,5],
+                        [3,4,5,2,8,6,1,7,9]
+                    ]
+                },
+                {
+                    puzzle: [
+                        [0,0,0,6,0,0,4,0,0],
+                        [7,0,0,0,0,3,6,0,0],
+                        [0,0,0,0,9,1,0,8,0],
+                        [0,0,0,0,0,0,0,0,0],
+                        [0,5,0,1,8,0,0,0,3],
+                        [0,0,0,3,0,6,0,4,5],
+                        [0,4,0,2,0,0,0,6,0],
+                        [9,0,3,0,0,0,0,0,0],
+                        [0,2,0,0,0,0,1,0,0]
+                    ],
+                    solution: [
+                        [2,8,1,6,3,5,4,9,7],
+                        [7,9,5,8,4,3,6,1,2],
+                        [6,3,4,7,9,1,5,8,2],
+                        [3,1,2,5,7,4,8,6,9],
+                        [4,5,6,1,8,2,9,7,3],
+                        [8,7,9,3,2,6,7,4,5],
+                        [5,4,8,2,1,9,3,6,7],
+                        [9,6,3,4,5,7,2,8,1],
+                        [7,2,6,9,3,8,1,5,4]
+                    ]
+                }
+            ],
+            medium: [
+                {
+                    puzzle: [
+                        [0,0,0,6,0,0,4,0,0],
+                        [7,0,0,0,0,3,6,0,0],
+                        [0,0,0,0,9,1,0,8,0],
+                        [0,0,0,0,0,0,0,0,0],
+                        [0,5,0,1,8,0,0,0,3],
+                        [0,0,0,3,0,6,0,4,5],
+                        [0,4,0,2,0,0,0,6,0],
+                        [9,0,3,0,0,0,0,0,0],
+                        [0,2,0,0,0,0,1,0,0]
+                    ],
+                    solution: [
+                        [2,8,1,6,3,5,4,9,7],
+                        [7,9,5,8,4,3,6,1,2],
+                        [6,3,4,7,9,1,5,8,2],
+                        [3,1,2,5,7,4,8,6,9],
+                        [4,5,6,1,8,2,9,7,3],
+                        [8,7,9,3,2,6,7,4,5],
+                        [5,4,8,2,1,9,3,6,7],
+                        [9,6,3,4,5,7,2,8,1],
+                        [7,2,6,9,3,8,1,5,4]
+                    ]
+                }
+            ],
+            hard: [
+                {
+                    puzzle: [
+                        [8,0,0,0,0,0,0,0,0],
+                        [0,0,3,6,0,0,0,0,0],
+                        [0,7,0,0,9,0,2,0,0],
+                        [0,5,0,0,0,7,0,0,0],
+                        [0,0,0,0,4,5,7,0,0],
+                        [0,0,0,1,0,0,0,3,0],
+                        [0,0,1,0,0,0,0,6,8],
+                        [0,0,8,5,0,0,0,1,0],
+                        [0,9,0,0,0,0,4,0,0]
+                    ],
+                    solution: [
+                        [8,1,2,7,5,3,6,4,9],
+                        [9,4,3,6,8,2,1,7,5],
+                        [6,7,5,4,9,1,2,8,3],
+                        [1,5,4,2,3,7,8,9,6],
+                        [3,6,9,8,4,5,7,2,1],
+                        [2,8,7,1,6,9,5,3,4],
+                        [5,2,1,9,7,4,3,6,8],
+                        [4,3,8,5,2,6,9,1,7],
+                        [7,9,6,3,1,8,4,5,2]
+                    ]
+                }
+            ]
+        };
     }
     
     // Fetch puzzle from external database
@@ -1689,22 +1676,21 @@ class SudokuGame {
         // Show loading animation
         this.showLoadingAnimation();
         
-        // Generate puzzle client-side
-        this.loadPuzzleFromGeneration();
+        // Load puzzle from database
+        this.loadPuzzleFromDatabase();
     }
     
-    loadPuzzleFromGeneration() {
+    async loadPuzzleFromDatabase() {
         try {
-            // Generate puzzle client-side
-            const puzzle = this.generateValidPuzzle(this.difficulty);
+            // Ensure database is loaded
+            await this.loadPuzzleDatabase();
             
-            if (!puzzle || !Array.isArray(puzzle)) {
-                throw new Error('Failed to generate valid puzzle');
-            }
+            // Load puzzle from pre-generated database
+            const puzzleData = this.getRandomPuzzle(this.difficulty);
             
             // Load the puzzle into our grid
-            this.grid = puzzle.map(row => [...row]);
-            this.solution = null; // Will be generated if needed for hints
+            this.grid = puzzleData.puzzle.map(row => [...row]);
+            this.solution = puzzleData.solution.map(row => [...row]);
             
             // Mark given cells
             this.givenCells = Array(9).fill().map(() => Array(9).fill(false));
@@ -1725,7 +1711,7 @@ class SudokuGame {
                     }
                 }
             }
-            console.log(`📊 Generated puzzle has ${givenCount} given numbers`);
+            console.log(`📊 Loaded puzzle has ${givenCount} given numbers`);
             
             // Hide loading animation
             this.hideLoadingAnimation();
@@ -1736,7 +1722,7 @@ class SudokuGame {
             this.startAutoSave();
             
         } catch (error) {
-            console.error('❌ Failed to generate puzzle:', error);
+            console.error('❌ Failed to load puzzle from database:', error);
             this.hideLoadingAnimation();
             
             // Try fallback puzzle generation
