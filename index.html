@@ -269,6 +269,10 @@
             animation: completionPulse 1.5s ease-in-out;
         }
 
+        .cell.completion-celebration {
+            animation: completionCelebration 0.4s ease-in-out;
+        }
+
         @keyframes hintPulse {
             0%, 100% { 
                 opacity: 0.9;
@@ -284,6 +288,49 @@
             }
             50% { 
                 opacity: 1;
+            }
+        }
+
+        @keyframes completionCelebration {
+            0% {
+                background: var(--success-color);
+                transform: scale(1) translateX(0);
+            }
+            10% {
+                background: rgba(76, 175, 80, 0.9);
+                transform: scale(1.1) translateX(-2px);
+            }
+            20% {
+                background: var(--success-color);
+                transform: scale(1.15) translateX(2px);
+            }
+            30% {
+                background: rgba(76, 175, 80, 0.9);
+                transform: scale(1.1) translateX(-1px);
+            }
+            40% {
+                background: var(--success-color);
+                transform: scale(1.15) translateX(1px);
+            }
+            50% {
+                background: rgba(76, 175, 80, 0.9);
+                transform: scale(1.1) translateX(-1px);
+            }
+            60% {
+                background: var(--success-color);
+                transform: scale(1.15) translateX(1px);
+            }
+            70% {
+                background: rgba(76, 175, 80, 0.9);
+                transform: scale(1.1) translateX(0);
+            }
+            80% {
+                background: var(--success-color);
+                transform: scale(1.05) translateX(0);
+            }
+            100% {
+                background: var(--success-color);
+                transform: scale(1) translateX(0);
             }
         }
 
@@ -1232,7 +1279,6 @@
                 <div class="difficulty-selector">
                     <button class="btn difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
                     <button class="btn difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
-                    <button class="btn difficulty-btn" onclick="setDifficulty('advanced')">Advanced</button>
                     <button class="btn difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
                 </div>
                 <button class="btn" onclick="solveHint()" style="margin-top: 6px; width: 100%;">Hint</button>

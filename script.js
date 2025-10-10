@@ -31,10 +31,9 @@ class SudokuGame {
         this.initAudio();
         
         this.difficulties = {
-            easy: 35,
-            medium: 28,
-            advanced: 22,
-            hard: 17
+            easy: 30,      // Most given numbers = easiest
+            medium: 23,    // Moderate given numbers
+            hard: 17       // Fewest given numbers = hardest (minimum for unique solution)
         };
         
         // Pre-validated puzzle database
@@ -87,6 +86,7 @@ class SudokuGame {
             
             // Touch support - let browser handle pointer events naturally
             let longPressTimer = null;
+            let longPressTriggered = false;
             let touchStartX = 0;
             let touchStartY = 0;
             let touchStartTime = 0;
@@ -95,10 +95,12 @@ class SudokuGame {
                 touchStartX = e.touches[0].clientX;
                 touchStartY = e.touches[0].clientY;
                 touchStartTime = Date.now();
+                longPressTriggered = false;
                 
                 // Start long press timer
                 longPressTimer = setTimeout(() => {
                     this.handleLongPress(i);
+                    longPressTriggered = true;
                 }, 800);
             }, { passive: true });
             
@@ -112,18 +114,33 @@ class SudokuGame {
                     longPressTimer = null;
                 }
                 
-                // Check for flick gesture (quick swipe right) - original logic
+                // If long press was triggered, don't process other touch events
+                if (longPressTriggered) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+                
+                // Check for flick gestures (quick swipe left/right)
                 if (touchDuration < 300 && e.changedTouches.length > 0) {
                     const touchEndX = e.changedTouches[0].clientX;
                     const touchEndY = e.changedTouches[0].clientY;
                     const deltaX = touchEndX - touchStartX;
                     const deltaY = touchEndY - touchStartY;
                     
-                    // Flick right: deltaX > 20 and |deltaY| < 60 (original values)
+                    // Flick right: deltaX > 20 and |deltaY| < 60 (note mode)
                     if (deltaX > 20 && Math.abs(deltaY) < 60) {
                         e.preventDefault();
                         e.stopPropagation();
                         this.handleFlickRight(i);
+                        return;
+                    }
+                    
+                    // Flick left: deltaX < -20 and |deltaY| < 60 (undo)
+                    if (deltaX < -20 && Math.abs(deltaY) < 60) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.handleFlickLeft();
                         return;
                     }
                 }
@@ -136,6 +153,7 @@ class SudokuGame {
                     clearTimeout(longPressTimer);
                     longPressTimer = null;
                 }
+                longPressTriggered = false;
             }, { passive: true });
             
             
@@ -447,6 +465,14 @@ class SudokuGame {
         }
     }
     
+    // Handle flick left gesture for undo
+    handleFlickLeft() {
+        if (this.isGameWon) return;
+        
+        // Perform undo action
+        this.undoMove();
+    }
+    
     addNote(number) {
         if (this.selectedCell === null || this.isGameWon) return;
         
@@ -509,8 +535,10 @@ class SudokuGame {
             this.clearSelection();
             }
             
-            // Check for completed rows/columns/blocks
-            this.checkCompletion();
+            // Check for completed rows/columns/blocks (only if placing a number, not erasing)
+            if (number !== 0) {
+                this.checkCompletion(row, col, number);
+            }
             
             // Check for win
             if (this.checkWin()) {
@@ -780,7 +808,7 @@ class SudokuGame {
             if (noteError.parentNode) {
                 noteError.parentNode.removeChild(noteError);
             }
-        }, 600);
+        }, 400);
     }
     
     updateDisplay() {
@@ -833,29 +861,37 @@ class SudokuGame {
         return html;
     }
     
-    checkCompletion() {
-        // Check rows
-        for (let row = 0; row < 9; row++) {
-            if (this.isRowComplete(row)) {
-                this.highlightRow(row);
-            }
+    checkCompletion(lastMoveRow, lastMoveCol, lastMoveNumber) {
+        // Only check the specific row, column, block, and number that was just affected
+        let highlighted = false;
+        
+        // Check if the row was just completed
+        if (this.isRowComplete(lastMoveRow)) {
+            this.highlightRow(lastMoveRow);
+            highlighted = true;
         }
         
-        // Check columns
-        for (let col = 0; col < 9; col++) {
-            if (this.isColumnComplete(col)) {
-                this.highlightColumn(col);
-            }
+        // Check if the column was just completed
+        if (this.isColumnComplete(lastMoveCol)) {
+            this.highlightColumn(lastMoveCol);
+            highlighted = true;
         }
         
-        // Check 3x3 blocks
-        for (let blockRow = 0; blockRow < 3; blockRow++) {
-            for (let blockCol = 0; blockCol < 3; blockCol++) {
-                if (this.isBlockComplete(blockRow, blockCol)) {
-                    this.highlightBlock(blockRow, blockCol);
-                }
-            }
+        // Check if the 3x3 block was just completed
+        const blockRow = Math.floor(lastMoveRow / 3);
+        const blockCol = Math.floor(lastMoveCol / 3);
+        if (this.isBlockComplete(blockRow, blockCol)) {
+            this.highlightBlock(blockRow, blockCol);
+            highlighted = true;
         }
+        
+        // Check if the number was just completed across the entire grid
+        if (this.isNumberComplete(lastMoveNumber)) {
+            this.highlightNumber(lastMoveNumber);
+            highlighted = true;
+        }
+        
+        return highlighted;
     }
     
     isRowComplete(row) {
@@ -894,32 +930,32 @@ class SudokuGame {
         for (let col = 0; col < 9; col++) {
             const index = row * 9 + col;
             const cell = document.querySelector(`[data-index="${index}"]`);
-            cell.classList.add('completed-highlight');
+            cell.classList.add('completion-celebration');
         }
         
         setTimeout(() => {
             for (let col = 0; col < 9; col++) {
                 const index = row * 9 + col;
                 const cell = document.querySelector(`[data-index="${index}"]`);
-                cell.classList.remove('completed-highlight');
+                cell.classList.remove('completion-celebration');
             }
-        }, 1500);
+        }, 400);
     }
     
     highlightColumn(col) {
         for (let row = 0; row < 9; row++) {
             const index = row * 9 + col;
             const cell = document.querySelector(`[data-index="${index}"]`);
-            cell.classList.add('completed-highlight');
+            cell.classList.add('completion-celebration');
         }
         
         setTimeout(() => {
             for (let row = 0; row < 9; row++) {
                 const index = row * 9 + col;
                 const cell = document.querySelector(`[data-index="${index}"]`);
-                cell.classList.remove('completed-highlight');
+                cell.classList.remove('completion-celebration');
             }
-        }, 1500);
+        }, 400);
     }
     
     clearAllHighlights() {
@@ -962,7 +998,7 @@ class SudokuGame {
             for (let col = startCol; col < startCol + 3; col++) {
                 const index = row * 9 + col;
                 const cell = document.querySelector(`[data-index="${index}"]`);
-                cell.classList.add('completed-highlight');
+                cell.classList.add('completion-celebration');
             }
         }
         
@@ -971,10 +1007,46 @@ class SudokuGame {
                 for (let col = startCol; col < startCol + 3; col++) {
                     const index = row * 9 + col;
                     const cell = document.querySelector(`[data-index="${index}"]`);
-                    cell.classList.remove('completed-highlight');
+                    cell.classList.remove('completion-celebration');
                 }
             }
-        }, 1500);
+        }, 400);
+    }
+    
+    isNumberComplete(number) {
+        let count = 0;
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (this.grid[row][col] === number) {
+                    count++;
+                }
+            }
+        }
+        return count === 9; // All 9 instances of the number are placed
+    }
+    
+    highlightNumber(number) {
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (this.grid[row][col] === number) {
+                    const index = row * 9 + col;
+                    const cell = document.querySelector(`[data-index="${index}"]`);
+                    cell.classList.add('completion-celebration');
+                }
+            }
+        }
+        
+        setTimeout(() => {
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (this.grid[row][col] === number) {
+                        const index = row * 9 + col;
+                        const cell = document.querySelector(`[data-index="${index}"]`);
+                        cell.classList.remove('completion-celebration');
+                    }
+                }
+            }
+        }, 400);
     }
 
     checkWin() {
@@ -1325,8 +1397,8 @@ class SudokuGame {
             const loadedFromDatabase = this.loadPuzzleFromDatabase(this.difficulty);
             
             if (!loadedFromDatabase) {
-                console.log(`Falling back to puzzle generation for ${this.difficulty} difficulty...`);
-                // Generate a reliable puzzle using our own system
+                console.log(`Falling back to varied puzzle generation for ${this.difficulty} difficulty...`);
+                // Generate a varied puzzle using our enhanced system
                 this.generateReliablePuzzle();
             } else {
                 console.log('✅ Loaded puzzle from database');
@@ -1357,8 +1429,11 @@ class SudokuGame {
     generateReliablePuzzle() {
         console.log('🎯 Generating reliable puzzle...');
         
-        // Use a simple, guaranteed approach
-        this.generateSimplePuzzle();
+        // Try varied generation first, fall back to simple if needed
+        if (!this.generateVariedPuzzle(this.difficulty)) {
+            console.log('🔄 Varied generation failed, using simple approach...');
+            this.generateSimplePuzzle();
+        }
         
         console.log(`✅ Generated ${this.difficulty} puzzle`);
     }
@@ -3160,7 +3235,7 @@ class SudokuGame {
             cell.classList.add('number-place-animation');
             setTimeout(() => {
                 cell.classList.remove('number-place-animation');
-            }, 600);
+            }, 400);
         } else {
             console.warn(`⚠️ Cell not found for animation at [${row}, ${col}]`);
         }
@@ -3190,7 +3265,7 @@ class SudokuGame {
             cell.classList.add('success-ripple');
             setTimeout(() => {
                 cell.classList.remove('success-ripple');
-            }, 600);
+            }, 400);
         }
     }
     
@@ -3960,6 +4035,184 @@ class SudokuGame {
     // Method to get puzzle count by difficulty
     getPuzzleCount(difficulty) {
         return this.puzzleDatabase[difficulty] ? this.puzzleDatabase[difficulty].length : 0;
+    }
+    
+    // Generate varied puzzles with more diversity
+    generateVariedPuzzle(difficulty) {
+        console.log(`🎲 Generating varied ${difficulty} puzzle...`);
+        
+        // Try multiple generation attempts for variety
+        const maxAttempts = 5;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            console.log(`Attempt ${attempt}/${maxAttempts} for ${difficulty} puzzle...`);
+            
+            // Generate a complete solution with variety
+            this.generateCompleteSolution();
+            
+            // Store the solution
+            this.solution = this.grid.map(row => [...row]);
+            
+            // Create puzzle with varied removal patterns
+            if (this.createVariedPuzzle(difficulty)) {
+                console.log(`✅ Successfully generated varied ${difficulty} puzzle on attempt ${attempt}`);
+                return true;
+            }
+        }
+        
+        console.log(`❌ Failed to generate varied ${difficulty} puzzle after ${maxAttempts} attempts`);
+        return false;
+    }
+    
+    // Create puzzle with varied removal patterns
+    createVariedPuzzle(difficulty) {
+        const targetGivenCount = this.difficulties[difficulty];
+        const targetRemovalCount = 81 - targetGivenCount;
+        
+        // Create varied removal patterns
+        const removalPatterns = [
+            'random',      // Random removal
+            'blockwise',   // Remove from specific blocks first
+            'rowwise',     // Remove from specific rows first
+            'columnwise',  // Remove from specific columns first
+            'spiral',      // Spiral pattern removal
+            'checkerboard' // Checkerboard pattern removal
+        ];
+        
+        // Randomly select a removal pattern
+        const pattern = removalPatterns[Math.floor(Math.random() * removalPatterns.length)];
+        console.log(`Using ${pattern} removal pattern for ${difficulty}`);
+        
+        let removedCount = 0;
+        const positions = this.generateRemovalPositions(pattern);
+        
+        for (const pos of positions) {
+            if (removedCount >= targetRemovalCount) break;
+            
+            const row = pos.row;
+            const col = pos.col;
+            const originalValue = this.grid[row][col];
+            
+            // Try removing this number
+            this.grid[row][col] = 0;
+            
+            // Check if puzzle still has unique solution
+            if (this.hasUniqueSolution()) {
+                removedCount++;
+            } else {
+                // Restore the number if removal breaks uniqueness
+                this.grid[row][col] = originalValue;
+            }
+        }
+        
+        // Mark given cells
+        this.givenCells = Array(9).fill().map(() => Array(9).fill(false));
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (this.grid[row][col] !== 0) {
+                    this.givenCells[row][col] = true;
+                }
+            }
+        }
+        
+        // Clear notes
+        this.notes = Array(9).fill().map(() => Array(9).fill().map(() => new Set()));
+        
+        // Update display
+        this.updateDisplay();
+        
+        const actualGivenCount = 81 - removedCount;
+        console.log(`✅ Created ${difficulty} puzzle with ${actualGivenCount} given numbers (target: ${targetGivenCount})`);
+        
+        return actualGivenCount >= targetGivenCount * 0.9; // Allow some flexibility
+    }
+    
+    // Generate removal positions based on pattern
+    generateRemovalPositions(pattern) {
+        const positions = [];
+        
+        // Create all possible positions
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                positions.push({ row, col });
+            }
+        }
+        
+        switch (pattern) {
+            case 'random':
+                // Shuffle randomly
+                return this.shuffleArray(positions);
+                
+            case 'blockwise':
+                // Remove from blocks in order
+                return this.shuffleArray(positions).sort((a, b) => {
+                    const blockA = Math.floor(a.row / 3) * 3 + Math.floor(a.col / 3);
+                    const blockB = Math.floor(b.row / 3) * 3 + Math.floor(b.col / 3);
+                    return blockA - blockB;
+                });
+                
+            case 'rowwise':
+                // Remove from rows in order
+                return positions.sort((a, b) => a.row - b.row);
+                
+            case 'columnwise':
+                // Remove from columns in order
+                return positions.sort((a, b) => a.col - b.col);
+                
+            case 'spiral':
+                // Spiral pattern from center outward
+                return this.generateSpiralPositions();
+                
+            case 'checkerboard':
+                // Checkerboard pattern
+                return positions.filter(pos => (pos.row + pos.col) % 2 === 0);
+                
+            default:
+                return this.shuffleArray(positions);
+        }
+    }
+    
+    // Generate spiral positions from center outward
+    generateSpiralPositions() {
+        const positions = [];
+        const center = 4; // Center of 9x9 grid
+        
+        // Start from center and spiral outward
+        const visited = Array(9).fill().map(() => Array(9).fill(false));
+        const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]; // right, down, left, up
+        let dir = 0;
+        let steps = 1;
+        let row = center, col = center;
+        
+        positions.push({ row, col });
+        visited[row][col] = true;
+        
+        while (positions.length < 81) {
+            for (let i = 0; i < 2; i++) { // Each direction is used twice before increasing steps
+                for (let j = 0; j < steps; j++) {
+                    row += directions[dir][0];
+                    col += directions[dir][1];
+                    
+                    if (row >= 0 && row < 9 && col >= 0 && col < 9 && !visited[row][col]) {
+                        positions.push({ row, col });
+                        visited[row][col] = true;
+                    }
+                }
+                dir = (dir + 1) % 4;
+            }
+            steps++;
+        }
+        
+        return positions;
+    }
+    
+    // Shuffle array utility
+    shuffleArray(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
     }
     
     updateErrorCount() {
