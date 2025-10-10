@@ -1553,7 +1553,7 @@
                 </div>
                 <button class="btn" onclick="solveHint()" style="margin-top: 6px; width: 100%;">Hint</button>
                 <button class="btn" onclick="solvePuzzle()" style="margin-top: 4px; width: 100%;">Solve</button>
-                <button class="btn" onclick="openPaletteSelector()" style="margin-top: 4px; width: 100%; background: #6b7280; border-color: #6b7280;">Test Colors</button>
+                <button class="btn" id="test-colors-btn" style="margin-top: 4px; width: 100%; background: #6b7280; border-color: #6b7280;">Test Colors</button>
             </div>
         </div>
     </div>
@@ -1942,12 +1942,36 @@
         };
 
         function openPaletteSelector() {
-            document.getElementById('palette-selector').style.display = 'block';
+            console.log('Opening palette selector...');
+            const selector = document.getElementById('palette-selector');
+            if (selector) {
+                selector.style.display = 'block';
+                console.log('Palette selector opened');
+            } else {
+                console.error('Palette selector element not found!');
+            }
         }
 
         function closePaletteSelector() {
             document.getElementById('palette-selector').style.display = 'none';
         }
+
+        // Make functions globally accessible
+        window.openPaletteSelector = openPaletteSelector;
+        window.closePaletteSelector = closePaletteSelector;
+
+        // Add event listener for Test Colors button
+        document.addEventListener('DOMContentLoaded', function() {
+            const testColorsBtn = document.getElementById('test-colors-btn');
+            if (testColorsBtn) {
+                testColorsBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Test Colors button clicked');
+                    openPaletteSelector();
+                });
+            }
+        });
 
         function testPalette(paletteName) {
             const palette = colorPalettes[paletteName];
