@@ -1297,6 +1297,21 @@
         let isEyedropperActive = false;
         let colorInfoTooltip = null;
 
+        // Define function immediately to avoid any issues
+        window.toggleColorEditor = function() {
+            alert('Button clicked!'); // Simple test
+            console.log('=== toggleColorEditor called ===');
+            console.log('isEyedropperActive:', isEyedropperActive);
+            
+            if (isEyedropperActive) {
+                console.log('Deactivating eyedropper...');
+                deactivateEyedropper();
+            } else {
+                console.log('Activating eyedropper...');
+                activateEyedropper();
+            }
+        };
+
         // Test function to verify JavaScript is working
         function testEyedropper() {
             console.log('Test function called!');
@@ -1306,21 +1321,6 @@
 
         // Make functions globally accessible for testing
         window.testEyedropper = testEyedropper;
-        window.toggleColorEditor = toggleColorEditor;
-
-        function toggleColorEditor() {
-            console.log('=== toggleColorEditor called ===');
-            console.log('isEyedropperActive:', isEyedropperActive);
-            console.log('Button clicked:', event.target);
-            
-            if (isEyedropperActive) {
-                console.log('Deactivating eyedropper...');
-                deactivateEyedropper();
-            } else {
-                console.log('Activating eyedropper...');
-                activateEyedropper();
-            }
-        }
 
         function activateEyedropper() {
             console.log('=== activateEyedropper called ===');
