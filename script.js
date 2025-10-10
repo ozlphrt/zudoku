@@ -846,9 +846,14 @@ class SudokuGame {
                     cell.classList.add('number-selected');
                 }
             } else if (this.grid[row][col] === 0 && this.notes[row][col].has(number)) {
-                // Red highlight for cells that have this number in notes
+                // Highlight the specific note number (not the whole cell)
                 if (cell) {
-                    cell.classList.add('note-selected');
+                    const noteNumbers = cell.querySelectorAll('.note-number');
+                    noteNumbers.forEach(noteSpan => {
+                        if (noteSpan.textContent === number.toString()) {
+                            noteSpan.classList.add('note-number-highlight');
+                        }
+                    });
                 }
             }
         }
@@ -894,7 +899,7 @@ class SudokuGame {
     clearHighlights() {
         const cells = document.querySelectorAll('.cell');
         cells.forEach(cell => {
-            cell.classList.remove('highlighted', 'number-selected', 'note-selected');
+            cell.classList.remove('highlighted', 'number-selected');
         });
         this.clearNumberCursor();
     }
