@@ -700,100 +700,6 @@
             transform: scale(1.3);
         }
 
-        /* Color Palette Test Selector (Temporary) */
-        .palette-selector {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            border-radius: 15px;
-            padding: 20px;
-            z-index: 2000;
-            max-width: 90vw;
-            max-height: 90vh;
-            overflow-y: auto;
-            display: none;
-        }
-
-        .palette-selector h3 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: var(--text-primary);
-        }
-
-        .palette-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .palette-option {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 8px;
-            transition: background 0.2s;
-        }
-
-        .palette-option:hover {
-            background: var(--bg-tertiary);
-        }
-
-        .palette-preview {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            border: 2px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .palette-preview::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 20px;
-            background: var(--palette-primary);
-        }
-
-        .palette-preview::after {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--palette-secondary);
-        }
-
-        .palette-option span {
-            font-size: 0.9rem;
-            color: var(--text-primary);
-            text-align: center;
-        }
-
-        .close-palette-btn {
-            width: 100%;
-            padding: 10px;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .close-palette-btn:hover {
-            background: var(--bg-primary);
-        }
 
         .action-buttons {
             display: flex;
@@ -1553,7 +1459,6 @@
                 </div>
                 <button class="btn" onclick="solveHint()" style="margin-top: 6px; width: 100%;">Hint</button>
                 <button class="btn" onclick="solvePuzzle()" style="margin-top: 4px; width: 100%;">Solve</button>
-                <button class="btn" id="test-colors-btn" style="margin-top: 4px; width: 100%; background: #6b7280; border-color: #6b7280;">Test Colors</button>
             </div>
         </div>
     </div>
@@ -1565,53 +1470,6 @@
         <div class="panel-dot" onclick="switchPanel(2)"></div>
     </div>
 
-    <!-- Color Palette Test Selector (Temporary) -->
-    <div id="palette-selector" class="palette-selector">
-        <h3>Color Palette Test</h3>
-        <div class="palette-grid">
-            <div class="palette-option" onclick="testPalette('soft-day')">
-                <div class="palette-preview soft-day"></div>
-                <span>Soft Day</span>
-            </div>
-            <div class="palette-option" onclick="testPalette('warm-day')">
-                <div class="palette-preview warm-day"></div>
-                <span>Warm Day</span>
-            </div>
-            <div class="palette-option" onclick="testPalette('cool-day')">
-                <div class="palette-preview cool-day"></div>
-                <span>Cool Day</span>
-            </div>
-            <div class="palette-option" onclick="testPalette('gentle-night')">
-                <div class="palette-preview gentle-night"></div>
-                <span>Gentle Night</span>
-            </div>
-            <div class="palette-option" onclick="testPalette('warm-night')">
-                <div class="palette-preview warm-night"></div>
-                <span>Warm Night</span>
-            </div>
-            <div class="palette-option" onclick="testPalette('cool-night')">
-                <div class="palette-preview cool-night"></div>
-                <span>Cool Night</span>
-            </div>
-            <div class="palette-option" onclick="testPalette('balanced-day')">
-                <div class="palette-preview balanced-day"></div>
-                <span>Balanced Day</span>
-            </div>
-            <div class="palette-option" onclick="testPalette('balanced-night')">
-                <div class="palette-preview balanced-night"></div>
-                <span>Balanced Night</span>
-            </div>
-            <div class="palette-option" onclick="testPalette('minimal-day')">
-                <div class="palette-preview minimal-day"></div>
-                <span>Minimal Day</span>
-            </div>
-            <div class="palette-option" onclick="testPalette('minimal-night')">
-                <div class="palette-preview minimal-night"></div>
-                <span>Minimal Night</span>
-            </div>
-        </div>
-        <button onclick="closePaletteSelector()" class="close-palette-btn">Close</button>
-    </div>
 
     <!-- Color Editor Panel -->
     <div id="colorEditorPanel" class="color-editor-panel" style="display: none;">
@@ -1836,157 +1694,6 @@
         let paintMode = false;
         let isPainting = false;
 
-        // Color Palette Test Functions (Temporary)
-        const colorPalettes = {
-            'soft-day': {
-                '--bg-primary': '#f5f5f5',
-                '--bg-secondary': '#e8e8e8',
-                '--bg-tertiary': '#dcdcdc',
-                '--text-primary': '#2d2d2d',
-                '--border-color': '#b0b0b0',
-                '--accent-color': '#4a90e2',
-                '--success-color': '#2e7d32',
-                '--error-color': '#d32f2f'
-            },
-            'warm-day': {
-                '--bg-primary': '#faf9f7',
-                '--bg-secondary': '#f0ede8',
-                '--bg-tertiary': '#e6e2db',
-                '--text-primary': '#3a3a3a',
-                '--border-color': '#c7c0b8',
-                '--accent-color': '#e67e22',
-                '--success-color': '#27ae60',
-                '--error-color': '#e74c3c'
-            },
-            'cool-day': {
-                '--bg-primary': '#f8fafc',
-                '--bg-secondary': '#e2e8f0',
-                '--bg-tertiary': '#cbd5e0',
-                '--text-primary': '#2d3748',
-                '--border-color': '#a0aec0',
-                '--accent-color': '#3182ce',
-                '--success-color': '#38a169',
-                '--error-color': '#e53e3e'
-            },
-            'gentle-night': {
-                '--bg-primary': '#2d3748',
-                '--bg-secondary': '#4a5568',
-                '--bg-tertiary': '#718096',
-                '--text-primary': '#f7fafc',
-                '--border-color': '#1a202c',
-                '--accent-color': '#63b3ed',
-                '--success-color': '#68d391',
-                '--error-color': '#fc8181'
-            },
-            'warm-night': {
-                '--bg-primary': '#3d2f2f',
-                '--bg-secondary': '#4a3838',
-                '--bg-tertiary': '#5a4a4a',
-                '--text-primary': '#f5f5f5',
-                '--border-color': '#2a1f1f',
-                '--accent-color': '#ff8c69',
-                '--success-color': '#7dd87d',
-                '--error-color': '#ff6b6b'
-            },
-            'cool-night': {
-                '--bg-primary': '#2a3a4a',
-                '--bg-secondary': '#3a4a5a',
-                '--bg-tertiary': '#4a5a6a',
-                '--text-primary': '#f0f4f8',
-                '--border-color': '#1a2a3a',
-                '--accent-color': '#6bb6ff',
-                '--success-color': '#4fd1c7',
-                '--error-color': '#f56565'
-            },
-            'balanced-day': {
-                '--bg-primary': '#f1f3f4',
-                '--bg-secondary': '#e8eaed',
-                '--bg-tertiary': '#dadce0',
-                '--text-primary': '#3c4043',
-                '--border-color': '#9aa0a6',
-                '--accent-color': '#5f6368',
-                '--success-color': '#137333',
-                '--error-color': '#d93025'
-            },
-            'balanced-night': {
-                '--bg-primary': '#3c4043',
-                '--bg-secondary': '#5f6368',
-                '--bg-tertiary': '#80868b',
-                '--text-primary': '#e8eaed',
-                '--border-color': '#202124',
-                '--accent-color': '#8ab4f8',
-                '--success-color': '#81c995',
-                '--error-color': '#f28b82'
-            },
-            'minimal-day': {
-                '--bg-primary': '#ffffff',
-                '--bg-secondary': '#f8f9fa',
-                '--bg-tertiary': '#e9ecef',
-                '--text-primary': '#212529',
-                '--border-color': '#dee2e6',
-                '--accent-color': '#6c757d',
-                '--success-color': '#198754',
-                '--error-color': '#dc3545'
-            },
-            'minimal-night': {
-                '--bg-primary': '#212529',
-                '--bg-secondary': '#343a40',
-                '--bg-tertiary': '#495057',
-                '--text-primary': '#f8f9fa',
-                '--border-color': '#0d1117',
-                '--accent-color': '#6c757d',
-                '--success-color': '#20c997',
-                '--error-color': '#dc3545'
-            },
-        };
-
-        function openPaletteSelector() {
-            console.log('Opening palette selector...');
-            const selector = document.getElementById('palette-selector');
-            if (selector) {
-                selector.style.display = 'block';
-                console.log('Palette selector opened');
-            } else {
-                console.error('Palette selector element not found!');
-            }
-        }
-
-        function closePaletteSelector() {
-            document.getElementById('palette-selector').style.display = 'none';
-        }
-
-        // Make functions globally accessible
-        window.openPaletteSelector = openPaletteSelector;
-        window.closePaletteSelector = closePaletteSelector;
-
-        // Add event listener for Test Colors button
-        document.addEventListener('DOMContentLoaded', function() {
-            const testColorsBtn = document.getElementById('test-colors-btn');
-            if (testColorsBtn) {
-                testColorsBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Test Colors button clicked');
-                    alert('Test Colors button clicked!'); // Temporary debug
-                    openPaletteSelector();
-                });
-            } else {
-                console.error('Test Colors button not found!');
-            }
-        });
-
-        function testPalette(paletteName) {
-            const palette = colorPalettes[paletteName];
-            if (!palette) return;
-
-            // Apply the palette to CSS variables
-            const root = document.documentElement;
-            Object.entries(palette).forEach(([property, value]) => {
-                root.style.setProperty(property, value);
-            });
-
-            console.log(`Applied ${paletteName} palette`);
-        }
 
 
         // Disable paint mode when clicking on UI elements
@@ -2006,23 +1713,15 @@
             }
         }
 
-        // Close palette selector when clicking outside
+        // Disable paint mode when clicking on UI elements
         document.addEventListener('click', function(event) {
-            const selector = document.getElementById('palette-selector');
-            if (event.target === selector) {
-                closePaletteSelector();
-            }
-            
             // Disable paint mode when clicking on buttons or UI elements
-            // But don't interfere with the Test Colors button
             if (event.target.classList.contains('btn') || 
                 event.target.classList.contains('num-btn') ||
                 event.target.closest('.left-panel') ||
                 event.target.closest('.right-panel')) {
                 // Don't disable paint mode for numpad buttons - they should enable it
-                // Don't disable paint mode for Test Colors button - let it work normally
-                if (!event.target.classList.contains('num-btn') && 
-                    event.target.textContent !== 'Test Colors') {
+                if (!event.target.classList.contains('num-btn')) {
                     disablePaintMode();
                 }
             }
