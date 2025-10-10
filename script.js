@@ -1128,8 +1128,10 @@ class SudokuGame {
             this.errorCount++;
             this.updateErrorCount();
             
-            // Clear selection after invalid move
-            this.clearSelection();
+            // Keep highlighting if in paint mode, otherwise clear selection
+            if (!this.isPaintMode) {
+                this.clearSelection();
+            }
         }
     }
     
@@ -3726,21 +3728,10 @@ class SudokuGame {
             cell.classList.add('shake');
             setTimeout(() => {
                 cell.classList.remove('shake');
-            }, 300);
+            }, 150);
         } else {
             console.warn(`⚠️ Cell not found for error animation at [${row}, ${col}]`);
         }
-        
-        // Show error message
-        const errorMsg = document.createElement('div');
-        errorMsg.className = 'error-message';
-        errorMsg.textContent = 'Invalid move!';
-        document.body.appendChild(errorMsg);
-        
-        // Remove error message after animation
-        setTimeout(() => {
-            errorMsg.remove();
-        }, 2000);
     }
     
     animateSuccess(row, col) {
