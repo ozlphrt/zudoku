@@ -849,16 +849,16 @@ class SudokuGame {
     }
     
     setNumberCursor(number) {
-        // Set cursor for all cells
+        // Set cursor for all cells - bigger size (48x48), thicker outline (4px), larger font (28px)
         const cells = document.querySelectorAll('.cell');
-        const cursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="rgba(0,255,0,0.8)" stroke="white" stroke-width="2"/><text x="16" y="20" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="white">${number}</text></svg>`;
+        const cursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="rgba(0,200,0,0.8)" stroke="white" stroke-width="4"/><text x="24" y="32" text-anchor="middle" font-family="Arial" font-size="28" font-weight="900" fill="white">${number}</text></svg>`;
         
         cells.forEach(cell => {
-            cell.style.cursor = `url('${cursorSvg}'), auto`;
+            cell.style.cursor = `url('${cursorSvg}') 24 24, auto`;
         });
         
         // Also set on document body
-        document.body.style.cursor = `url('${cursorSvg}'), auto`;
+        document.body.style.cursor = `url('${cursorSvg}') 24 24, auto`;
     }
     
     clearNumberCursor() {
