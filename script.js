@@ -1335,6 +1335,11 @@ class SudokuGame {
                 cell.textContent = '';
             }
         }
+        
+        // Update number pad counts
+        if (typeof updateNumberCounts === 'function') {
+            updateNumberCounts();
+        }
     }
     
     formatNotes(notes) {
@@ -4603,6 +4608,7 @@ class SudokuGame {
 
 // Global functions
 let game;
+let selectedPadNumber = null;
 
 function newGame() {
     game.newGame();
@@ -4611,6 +4617,133 @@ function newGame() {
 function inputNumber(number) {
     game.inputNumber(number);
 }
+
+function selectNumber(number) {
+    selectedPadNumber = number;
+    
+    // Update visual state of number pad buttons
+    document.querySelectorAll('.num-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    if (number > 0) {
+        const btn = document.querySelector(`.num-btn[data-number="${number}"]`);
+        if (btn) {
+            btn.classList.add('selected');
+        }
+    }
+    
+    // If a cell is already selected, place the number immediately
+    if (game && game.selectedCell !== null) {
+        const row = Math.floor(game.selectedCell / 9);
+        const col = game.selectedCell % 9;
+        
+        if (!game.givenCells[row][col]) {
+            if (number === 0) {
+                game.setNumber(row, col, 0);
+            } else {
+                game.setNumber(row, col, number);
+            }
+        }
+    }
+}
+
+function updateNumberCounts() {
+    if (!game) return;
+    
+    // Count how many of each number are placed
+    const counts = Array(10).fill(0);
+    
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            const num = game.grid[row][col];
+            if (num > 0) {
+                counts[num]++;
+            }
+        }
+    }
+    
+    // Update the count displays and mark completed numbers
+    for (let num = 1; num <= 9; num++) {
+        const remaining = 9 - counts[num];
+        const countEl = document.getElementById(`count-${num}`);
+        const btn = document.querySelector(`.num-btn[data-number="${num}"]`);
+        
+        if (countEl) {
+            countEl.textContent = remaining;
+        }
+        
+        if (btn) {
+            if (remaining === 0) {
+                btn.classList.add('completed');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('completed');
+                btn.disabled = false;
+            }
+        }
+    }
+}
+
+// Panel switching for mobile
+let currentPanel = 1; // 0 = left, 1 = center, 2 = right
+
+function switchPanel(panelIndex) {
+    currentPanel = panelIndex;
+    const container = document.querySelector('.container');
+    const dots = document.querySelectorAll('.panel-dot');
+    
+    // Update container position
+    container.classList.remove('show-left', 'show-center', 'show-right');
+    if (panelIndex === 0) {
+        container.classList.add('show-left');
+    } else if (panelIndex === 1) {
+        container.classList.add('show-center');
+    } else if (panelIndex === 2) {
+        container.classList.add('show-right');
+    }
+    
+    // Update dots
+    dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === panelIndex);
+    });
+}
+
+// Swipe gesture detection
+let touchStartX = 0;
+let touchEndX = 0;
+
+function handleSwipe() {
+    const swipeThreshold = 50;
+    const diff = touchStartX - touchEndX;
+    
+    if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0 && currentPanel < 2) {
+            // Swipe left - go to next panel
+            switchPanel(currentPanel + 1);
+        } else if (diff < 0 && currentPanel > 0) {
+            // Swipe right - go to previous panel
+            switchPanel(currentPanel - 1);
+        }
+    }
+}
+
+// Initialize swipe listeners on container
+document.addEventListener('DOMContentLoaded', () => {
+    const container = document.querySelector('.container');
+    
+    container.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+    
+    container.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+    
+    // Start on center panel
+    switchPanel(1);
+});
 
 function addNote(number) {
     game.addNote(number);

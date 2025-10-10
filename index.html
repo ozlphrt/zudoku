@@ -599,6 +599,103 @@
             border-color: var(--accent-color);
         }
 
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .num-btn {
+            aspect-ratio: 1;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1.4rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 4px;
+        }
+
+        .num-btn:hover {
+            background: var(--bg-secondary);
+            transform: scale(1.05);
+            border-color: var(--accent-color);
+        }
+
+        .num-btn:active {
+            transform: scale(0.95);
+        }
+
+        .num-btn.selected {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .num-btn.completed {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .num-btn.completed:hover {
+            transform: none;
+        }
+
+        .num-value {
+            font-size: 1.4rem;
+            line-height: 1;
+        }
+
+        .num-count {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .delete-btn {
+            grid-column: span 1;
+        }
+
+        .delete-btn .num-value {
+            font-size: 1.2rem;
+        }
+
+        .panel-indicators {
+            display: none;
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .panel-dot.active {
+            background: var(--accent-color);
+            transform: scale(1.3);
+        }
+
         .action-buttons {
             display: flex;
             gap: 4px;
@@ -1019,38 +1116,58 @@
         @media (max-width: 480px) {
             /* iPhone and small mobile devices */
             .container {
-                flex-direction: column;
-                padding: 1px;
+                flex-direction: row;
+                padding: 0;
                 height: 100vh;
+                width: 300vw;
+                transition: transform 0.3s ease-out;
+                position: relative;
+            }
+            
+            .container.show-left {
+                transform: translateX(0);
+            }
+            
+            .container.show-center {
+                transform: translateX(-100vw);
+            }
+            
+            .container.show-right {
+                transform: translateX(-200vw);
             }
             
             .left-panel {
-                width: 100%;
-                max-height: 90px;
-                order: 3;
-                flex-direction: row;
-                overflow-x: auto;
-                overflow-y: hidden;
-                padding: 3px;
+                width: 100vw;
+                min-width: 100vw;
+                height: 100vh;
+                flex-shrink: 0;
+                flex-direction: column;
+                overflow-y: auto;
+                overflow-x: hidden;
+                padding: 10px;
             }
             
             .center-panel {
-                order: 1;
-                flex: 1;
-                padding: 1px 3px;
+                width: 100vw;
+                min-width: 100vw;
+                height: 100vh;
+                flex-shrink: 0;
+                padding: 10px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                overflow: hidden;
             }
             
             .right-panel {
-                width: 100%;
-                max-height: 90px;
-                order: 2;
-                flex-direction: row;
-                overflow-x: auto;
-                overflow-y: hidden;
-                padding: 3px;
+                width: 100vw;
+                min-width: 100vw;
+                height: 100vh;
+                flex-shrink: 0;
+                flex-direction: column;
+                overflow-y: auto;
+                overflow-x: hidden;
+                padding: 10px;
             }
             
             .cell {
@@ -1091,6 +1208,10 @@
             .btn {
                 font-size: 0.75rem;
                 padding: 4px 6px;
+            }
+            
+            .panel-indicators {
+                display: flex;
             }
         }
 
@@ -1276,6 +1397,52 @@
             </div>
             
             <div class="stats-section">
+                <h2 class="stats-title">Number Pad</h2>
+                <div class="number-pad">
+                    <button class="num-btn" onclick="selectNumber(1)" data-number="1">
+                        <span class="num-value">1</span>
+                        <span class="num-count" id="count-1">9</span>
+                    </button>
+                    <button class="num-btn" onclick="selectNumber(2)" data-number="2">
+                        <span class="num-value">2</span>
+                        <span class="num-count" id="count-2">9</span>
+                    </button>
+                    <button class="num-btn" onclick="selectNumber(3)" data-number="3">
+                        <span class="num-value">3</span>
+                        <span class="num-count" id="count-3">9</span>
+                    </button>
+                    <button class="num-btn" onclick="selectNumber(4)" data-number="4">
+                        <span class="num-value">4</span>
+                        <span class="num-count" id="count-4">9</span>
+                    </button>
+                    <button class="num-btn" onclick="selectNumber(5)" data-number="5">
+                        <span class="num-value">5</span>
+                        <span class="num-count" id="count-5">9</span>
+                    </button>
+                    <button class="num-btn" onclick="selectNumber(6)" data-number="6">
+                        <span class="num-value">6</span>
+                        <span class="num-count" id="count-6">9</span>
+                    </button>
+                    <button class="num-btn" onclick="selectNumber(7)" data-number="7">
+                        <span class="num-value">7</span>
+                        <span class="num-count" id="count-7">9</span>
+                    </button>
+                    <button class="num-btn" onclick="selectNumber(8)" data-number="8">
+                        <span class="num-value">8</span>
+                        <span class="num-count" id="count-8">9</span>
+                    </button>
+                    <button class="num-btn" onclick="selectNumber(9)" data-number="9">
+                        <span class="num-value">9</span>
+                        <span class="num-count" id="count-9">9</span>
+                    </button>
+                    <button class="num-btn delete-btn" onclick="selectNumber(0)">
+                        <span class="num-value">⌫</span>
+                        <span class="num-count"></span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="stats-section">
                 <h2 class="stats-title">Difficulty</h2>
                 <div class="difficulty-selector">
                     <button class="btn difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
@@ -1287,6 +1454,13 @@
                 <button class="btn" onclick="cleanupNotes()" style="margin-top: 4px; width: 100%;">Clean Notes</button>
             </div>
         </div>
+    </div>
+
+    <!-- Panel Indicators (Mobile Only) -->
+    <div class="panel-indicators">
+        <div class="panel-dot" onclick="switchPanel(0)"></div>
+        <div class="panel-dot active" onclick="switchPanel(1)"></div>
+        <div class="panel-dot" onclick="switchPanel(2)"></div>
     </div>
 
     <!-- Color Editor Panel -->
