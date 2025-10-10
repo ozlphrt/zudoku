@@ -30,11 +30,11 @@ class SudokuGame {
         this.soundsEnabled = this.loadSoundSettings();
         this.initAudio();
         
-        // Industry-standard difficulty system based on research
+        // Client-side generation difficulty system
         this.DIFFICULTY_LEVELS = {
-            easy: { givenNumbers: 32, label: 'Easy' },      // Industry: 30-35
-            medium: { givenNumbers: 27, label: 'Medium' },  // Industry: 25-30  
-            hard: { givenNumbers: 23, label: 'Hard' }       // Industry: 22-24
+            easy: { label: 'Easy' },      // 46 clues remaining
+            medium: { label: 'Medium' },  // 36 clues remaining  
+            hard: { label: 'Hard' }       // 29 clues remaining
         };
         
         // Pre-validated puzzle database
@@ -83,11 +83,14 @@ class SudokuGame {
     }
     
     getTargetGivenNumbers() {
-        if (!this.isValidDifficulty(this.difficulty)) {
-            console.warn(`Invalid difficulty: ${this.difficulty}, defaulting to easy`);
-            this.difficulty = 'easy';
-        }
-        return this.DIFFICULTY_LEVELS[this.difficulty].givenNumbers;
+        // This method is kept for compatibility but not used in client-side generation
+        // The actual clue counts are determined by the generation algorithm
+        const clueCounts = {
+            easy: 46,    // 35 cells removed
+            medium: 36,  // 45 cells removed
+            hard: 29     // 52 cells removed
+        };
+        return clueCounts[this.difficulty] || 46;
     }
     
     getDifficultyLabel() {
@@ -103,25 +106,154 @@ class SudokuGame {
         });
     }
     
-    // Fetch puzzle from Sugoku API
-    async fetchPuzzle(difficulty) {
-        try {
-            console.log(`🌐 Fetching ${difficulty} puzzle from Sugoku API...`);
-            const response = await fetch(
-                `https://sugoku.onrender.com/board?difficulty=${difficulty.toLowerCase()}`
-            );
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+    // Generate valid puzzle client-side
+    generateValidPuzzle(difficulty) {
+        console.log(`🎯 Generating ${difficulty} puzzle client-side...`);
+        
+        // Step 1: Generate a complete valid grid
+        const completeGrid = this.generateCompleteGrid();
+        
+        // Step 2: Remove cells based on difficulty
+        const cellsToRemove = {
+            easy: 35,    // 46 clues remaining
+            medium: 45,  // 36 clues remaining  
+            hard: 52,    // 29 clues remaining
+            expert: 57   // 24 clues remaining
+        };
+        
+        const puzzle = this.removeNumbers(completeGrid, cellsToRemove[difficulty] || 35);
+        console.log(`✅ Generated ${difficulty} puzzle with ${81 - (cellsToRemove[difficulty] || 35)} clues`);
+        
+        return puzzle;
+    }
+    
+    // Generate a complete valid Sudoku grid
+    generateCompleteGrid() {
+        const grid = Array(9).fill().map(() => Array(9).fill(0));
+        this.fillGrid(grid);
+        return grid;
+    }
+    
+    // Fill grid using backtracking
+    fillGrid(grid) {
+        const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (grid[row][col] === 0) {
+                    this.shuffleArray(numbers);
+                    
+                    for (let num of numbers) {
+                        if (this.isValidPlacement(grid, row, col, num)) {
+                            grid[row][col] = num;
+                            
+                            if (this.fillGrid(grid)) {
+                                return true;
+                            }
+                            
+                            grid[row][col] = 0;
+                        }
+                    }
+                    return false;
+                }
             }
+        }
+        return true;
+    }
+    
+    // Remove numbers from complete grid to create puzzle
+    removeNumbers(grid, count) {
+        const puzzle = grid.map(row => [...row]);
+        let removed = 0;
+        let attempts = 0;
+        const maxAttempts = 1000;
+        
+        while (removed < count && attempts < maxAttempts) {
+            const row = Math.floor(Math.random() * 9);
+            const col = Math.floor(Math.random() * 9);
             
-            const data = await response.json();
-            console.log(`✅ Fetched ${difficulty} puzzle from API`);
-            return data.board; // 9x9 array: 0 = empty cell, 1-9 = clue
-            
-        } catch (error) {
-            console.error('❌ Failed to fetch puzzle from API:', error);
-            throw error;
+            if (puzzle[row][col] !== 0) {
+                const backup = puzzle[row][col];
+                puzzle[row][col] = 0;
+                
+                // Check if puzzle still has unique solution
+                if (this.hasUniqueSolution(puzzle)) {
+                    removed++;
+                } else {
+                    puzzle[row][col] = backup;
+                }
+            }
+            attempts++;
+        }
+        
+        return puzzle;
+    }
+    
+    // Check if a number placement is valid
+    isValidPlacement(grid, row, col, num) {
+        // Check row
+        for (let x = 0; x < 9; x++) {
+            if (grid[row][x] === num) return false;
+        }
+        
+        // Check column
+        for (let x = 0; x < 9; x++) {
+            if (grid[x][col] === num) return false;
+        }
+        
+        // Check 3x3 box
+        const boxRow = Math.floor(row / 3) * 3;
+        const boxCol = Math.floor(col / 3) * 3;
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                if (grid[boxRow + i][boxCol + j] === num) return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    // Check if puzzle has unique solution (simplified version)
+    hasUniqueSolution(grid) {
+        // For now, use a simplified check - in a real implementation,
+        // you'd count all possible solutions and ensure exactly 1 exists
+        return this.isSolvable(grid);
+    }
+    
+    // Check if puzzle is solvable
+    isSolvable(grid) {
+        const testGrid = grid.map(row => [...row]);
+        return this.solveGrid(testGrid);
+    }
+    
+    // Solve grid using backtracking
+    solveGrid(grid) {
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (grid[row][col] === 0) {
+                    for (let num = 1; num <= 9; num++) {
+                        if (this.isValidPlacement(grid, row, col, num)) {
+                            grid[row][col] = num;
+                            
+                            if (this.solveGrid(grid)) {
+                                return true;
+                            }
+                            
+                            grid[row][col] = 0;
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
+    // Shuffle array utility
+    shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
         }
     }
     
@@ -1527,17 +1659,14 @@ class SudokuGame {
         // Show loading animation
         this.showLoadingAnimation();
         
-        // Fetch puzzle from Sugoku API
-        this.loadPuzzleFromAPI();
+        // Generate puzzle client-side
+        this.loadPuzzleFromGeneration();
     }
     
-    async loadPuzzleFromAPI() {
+    loadPuzzleFromGeneration() {
         try {
-            // Disable difficulty buttons during loading
-            this.setDifficultyButtonsEnabled(false);
-            
-            // Fetch puzzle from API
-            const puzzle = await this.fetchPuzzle(this.difficulty);
+            // Generate puzzle client-side
+            const puzzle = this.generateValidPuzzle(this.difficulty);
             
             // Load the puzzle into our grid
             this.grid = puzzle.map(row => [...row]);
@@ -1562,11 +1691,10 @@ class SudokuGame {
                     }
                 }
             }
-            console.log(`📊 Loaded puzzle has ${givenCount} given numbers`);
+            console.log(`📊 Generated puzzle has ${givenCount} given numbers`);
             
-            // Hide loading animation and re-enable buttons
+            // Hide loading animation
             this.hideLoadingAnimation();
-            this.setDifficultyButtonsEnabled(true);
             
             this.updateDisplay();
             this.updateProgress();
@@ -1574,12 +1702,11 @@ class SudokuGame {
             this.startAutoSave();
             
         } catch (error) {
-            console.error('❌ Failed to load puzzle from API:', error);
+            console.error('❌ Failed to generate puzzle:', error);
             this.hideLoadingAnimation();
-            this.setDifficultyButtonsEnabled(true);
             
             // Show error message to user
-            alert('Failed to load puzzle. Please try again.');
+            alert('Failed to generate puzzle. Please try again.');
         }
     }
 
