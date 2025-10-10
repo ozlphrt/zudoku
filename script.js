@@ -838,12 +838,17 @@ class SudokuGame {
         for (let i = 0; i < 81; i++) {
             const row = Math.floor(i / 9);
             const col = i % 9;
+            const cell = document.querySelector(`[data-index="${i}"]`);
             
             if (this.grid[row][col] === number) {
-                // Highlight cells that have this number
-                const cell = document.querySelector(`[data-index="${i}"]`);
+                // Green highlight for cells that have this number
                 if (cell) {
                     cell.classList.add('number-selected');
+                }
+            } else if (this.grid[row][col] === 0 && this.notes[row][col].has(number)) {
+                // Red highlight for cells that have this number in notes
+                if (cell) {
+                    cell.classList.add('note-selected');
                 }
             }
         }
@@ -889,7 +894,7 @@ class SudokuGame {
     clearHighlights() {
         const cells = document.querySelectorAll('.cell');
         cells.forEach(cell => {
-            cell.classList.remove('highlighted', 'number-selected');
+            cell.classList.remove('highlighted', 'number-selected', 'note-selected');
         });
         this.clearNumberCursor();
     }
