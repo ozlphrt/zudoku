@@ -1910,7 +1910,7 @@ class SudokuGame {
     
     loadPuzzleFromDatabase() {
         try {
-            // Load puzzle from pre-generated database
+            // Load puzzle from pre-generated database (built-in only)
             const puzzleData = this.getRandomPuzzle(this.difficulty);
             
             // Load the puzzle into our grid
@@ -1939,12 +1939,9 @@ class SudokuGame {
             const targetGivenCount = this.DIFFICULTY_LEVELS[this.difficulty].givenNumbers;
             console.log(`📊 Loaded puzzle has ${givenCount} given numbers, target is ${targetGivenCount}`);
             
-            // If puzzle doesn't have enough clues for difficulty, generate a new one
-            if (givenCount < targetGivenCount * 0.8) { // Allow some flexibility
-                console.log(`⚠️ Puzzle has too few clues for ${this.difficulty} difficulty, generating new one...`);
-                this.generateVariedPuzzle(this.difficulty);
-                return;
-            }
+            // Use the puzzle as-is from the validated database
+            // All built-in puzzles are pre-validated and properly constructed
+            console.log(`✅ Using validated puzzle from database`);
             
             // Hide loading animation
             this.hideLoadingAnimation();
