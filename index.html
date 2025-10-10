@@ -1115,6 +1115,10 @@
 
         @media (max-width: 480px) {
             /* iPhone and small mobile devices */
+            html {
+                overflow: hidden;
+            }
+            
             .container {
                 flex-direction: row;
                 padding: 0;
@@ -1122,6 +1126,7 @@
                 width: 300vw;
                 transition: transform 0.3s ease-out;
                 position: relative;
+                overflow: hidden;
             }
             
             .container.show-left {
@@ -1136,6 +1141,10 @@
                 transform: translateX(-200vw);
             }
             
+            body {
+                overflow: hidden;
+            }
+            
             .left-panel {
                 width: 100vw;
                 min-width: 100vw;
@@ -1145,6 +1154,7 @@
                 overflow-y: auto;
                 overflow-x: hidden;
                 padding: 10px;
+                box-sizing: border-box;
             }
             
             .center-panel {
@@ -1152,11 +1162,12 @@
                 min-width: 100vw;
                 height: 100vh;
                 flex-shrink: 0;
-                padding: 10px;
+                padding: 60px 10px 10px 10px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 overflow: hidden;
+                box-sizing: border-box;
             }
             
             .right-panel {
@@ -1168,6 +1179,7 @@
                 overflow-y: auto;
                 overflow-x: hidden;
                 padding: 10px;
+                box-sizing: border-box;
             }
             
             .cell {
@@ -1176,7 +1188,8 @@
             }
             
             .sudoku-grid {
-                max-width: min(98vw, calc(100vh - 170px));
+                max-width: min(92vw, calc(100vh - 140px));
+                max-height: min(92vw, calc(100vh - 140px));
                 gap: 2px;
                 padding: 0;
                 margin: 0;
