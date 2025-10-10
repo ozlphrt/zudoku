@@ -94,6 +94,37 @@ class SudokuGame {
         return this.DIFFICULTY_LEVELS[this.difficulty]?.label || 'Easy';
     }
     
+    // Enable/disable difficulty buttons during loading
+    setDifficultyButtonsEnabled(enabled) {
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.disabled = !enabled;
+            btn.style.opacity = enabled ? '1' : '0.5';
+            btn.style.cursor = enabled ? 'pointer' : 'not-allowed';
+        });
+    }
+    
+    // Fetch puzzle from Sugoku API
+    async fetchPuzzle(difficulty) {
+        try {
+            console.log(`🌐 Fetching ${difficulty} puzzle from Sugoku API...`);
+            const response = await fetch(
+                `https://sugoku.onrender.com/board?difficulty=${difficulty.toLowerCase()}`
+            );
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log(`✅ Fetched ${difficulty} puzzle from API`);
+            return data.board; // 9x9 array: 0 = empty cell, 1-9 = clue
+            
+        } catch (error) {
+            console.error('❌ Failed to fetch puzzle from API:', error);
+            throw error;
+        }
+    }
+    
     // Fetch puzzle from external database
     async fetchExternalPuzzle(difficulty) {
         try {
@@ -1496,18 +1527,30 @@ class SudokuGame {
         // Show loading animation
         this.showLoadingAnimation();
         
-        // Small delay to show loading animation
-        setTimeout(() => {
-            // Skip external database for now - focus on reliable generation
-            console.log('🔍 Attempting to load from local database...');
-            const loadedFromDatabase = this.loadPuzzleFromDatabase(this.difficulty);
+        // Fetch puzzle from Sugoku API
+        this.loadPuzzleFromAPI();
+    }
+    
+    async loadPuzzleFromAPI() {
+        try {
+            // Disable difficulty buttons during loading
+            this.setDifficultyButtonsEnabled(false);
             
-            if (!loadedFromDatabase) {
-                console.log(`Falling back to varied puzzle generation for ${this.difficulty} difficulty...`);
-                // Generate a varied puzzle using our enhanced system
-                this.generateReliablePuzzle();
-            } else {
-                console.log('✅ Loaded puzzle from local database');
+            // Fetch puzzle from API
+            const puzzle = await this.fetchPuzzle(this.difficulty);
+            
+            // Load the puzzle into our grid
+            this.grid = puzzle.map(row => [...row]);
+            this.solution = null; // Will be generated if needed for hints
+            
+            // Mark given cells
+            this.givenCells = Array(9).fill().map(() => Array(9).fill(false));
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (this.grid[row][col] !== 0) {
+                        this.givenCells[row][col] = true;
+                    }
+                }
             }
             
             // Debug: Check if grid has numbers
@@ -1516,20 +1559,28 @@ class SudokuGame {
                 for (let col = 0; col < 9; col++) {
                     if (this.grid[row][col] !== 0) {
                         givenCount++;
-                        this.givenCells[row][col] = true;
                     }
                 }
             }
-            console.log(`📊 Generated puzzle has ${givenCount} given numbers`);
+            console.log(`📊 Loaded puzzle has ${givenCount} given numbers`);
             
-            // Hide loading animation
+            // Hide loading animation and re-enable buttons
             this.hideLoadingAnimation();
-        
+            this.setDifficultyButtonsEnabled(true);
+            
             this.updateDisplay();
             this.updateProgress();
             this.startTimer();
             this.startAutoSave();
-        }, 100);
+            
+        } catch (error) {
+            console.error('❌ Failed to load puzzle from API:', error);
+            this.hideLoadingAnimation();
+            this.setDifficultyButtonsEnabled(true);
+            
+            // Show error message to user
+            alert('Failed to load puzzle. Please try again.');
+        }
     }
 
     generateReliablePuzzle() {
