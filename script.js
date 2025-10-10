@@ -4041,50 +4041,9 @@ class SudokuGame {
         };
     }
     
-    getRandomPuzzleFromDatabase(difficulty) {
-        const puzzles = this.puzzleDatabase[difficulty];
-        if (!puzzles || puzzles.length === 0) {
-            return null;
-        }
-        const randomIndex = Math.floor(Math.random() * puzzles.length);
-        return puzzles[randomIndex];
-    }
+    // Old getRandomPuzzleFromDatabase method removed - using getRandomPuzzle instead
     
-    loadPuzzleFromDatabase(difficulty) {
-        console.log(`🔍 loadPuzzleFromDatabase called with difficulty: ${difficulty}`);
-        
-        // Force hard difficulty to use generation system for consistent 17 given numbers
-        if (difficulty === 'hard') {
-            console.log('🔒 Hard difficulty forced to use generation system for consistent 17 given numbers');
-            return false;
-        }
-        
-        console.log(`🔍 Attempting to load ${difficulty} puzzle from database...`);
-        const puzzleData = this.getRandomPuzzleFromDatabase(difficulty);
-        if (!puzzleData) {
-            console.log(`❌ No pre-validated puzzles available for ${difficulty} difficulty`);
-            return false;
-        }
-        
-        console.log(`✅ Loaded ${difficulty} puzzle from database`);
-        
-        // Load the puzzle
-        this.grid = puzzleData.puzzle.map(row => [...row]);
-        this.solution = puzzleData.solution.map(row => [...row]);
-        
-        // Mark given cells
-        this.givenCells = Array(9).fill().map(() => Array(9).fill(false));
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
-                if (this.grid[row][col] !== 0) {
-                    this.givenCells[row][col] = true;
-                }
-            }
-        }
-        
-        console.log(`✅ Loaded pre-validated ${difficulty} puzzle from database`);
-        return true;
-    }
+    // Old loadPuzzleFromDatabase method removed - using new async version instead
     
     // Method to add more puzzles to the database
     addPuzzleToDatabase(difficulty, puzzle, solution) {
