@@ -3716,22 +3716,31 @@ class SudokuGame {
             console.warn(`⚠️ Cell not found for animation at [${row}, ${col}]`);
         }
     }
-    
+
     animateError(row, col) {
         const index = row * 9 + col;
         const cell = document.querySelector(`[data-index="${index}"]`);
         if (cell) {
             console.log(`🎬 Animating error shake at [${row}, ${col}]`);
-            // Use the existing error styling with our new animation
-            cell.classList.add('error');
-            cell.classList.add('error-shake');
+            // Add shake animation to cell
+            cell.classList.add('shake');
             setTimeout(() => {
-                cell.classList.remove('error');
-                cell.classList.remove('error-shake');
-            }, 800);
+                cell.classList.remove('shake');
+            }, 300);
         } else {
             console.warn(`⚠️ Cell not found for error animation at [${row}, ${col}]`);
         }
+        
+        // Show error message
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'error-message';
+        errorMsg.textContent = 'Invalid move!';
+        document.body.appendChild(errorMsg);
+        
+        // Remove error message after animation
+        setTimeout(() => {
+            errorMsg.remove();
+        }, 2000);
     }
     
     animateSuccess(row, col) {
