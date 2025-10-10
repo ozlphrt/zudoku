@@ -851,7 +851,7 @@ class SudokuGame {
     setNumberCursor(number) {
         // Set cursor for all cells - large size (64x64), subtle green outline (6px), large font (42px) with Fredoka font
         const cells = document.querySelectorAll('.cell');
-        const cursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="rgba(0,200,0,0.8)" stroke="rgb(0,150,50)" stroke-width="6"/><text x="32" y="44" text-anchor="middle" font-family="Fredoka,Nunito,Quicksand,Verdana,Arial Rounded MT Bold,Helvetica Rounded,Arial,sans-serif" font-size="42" font-weight="700" fill="white">${number}</text></svg>`;
+        const cursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="rgba(0,150,0,0.6)" stroke="rgb(0,150,50)" stroke-width="6"/><text x="32" y="44" text-anchor="middle" font-family="Fredoka,Nunito,Quicksand,Verdana,Arial Rounded MT Bold,Helvetica Rounded,Arial,sans-serif" font-size="42" font-weight="700" fill="white">${number}</text></svg>`;
         
         cells.forEach(cell => {
             cell.style.cursor = `url('${cursorSvg}') 32 32, auto`;
