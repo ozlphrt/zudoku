@@ -4825,14 +4825,13 @@ function selectNumber(number) {
         game.clearHighlights();
         game.clearNoteHighlights();
         
-        // Highlight all instances of this number (like clicking a number on the board)
-        game.highlightSameNumbers(number);
-        game.highlightSameNotes(number);
+        // Highlight all instances of this number with green (like clicking a number on the board)
+        game.highlightAllInstances(number);
+        game.setNumberCursor(number);
         
         // Enable paint mode for this number
         game.isPaintMode = true;
         game.paintNumber = number;
-        game.updateCursor();
         
     } else if (number === 0 && game) {
         // Handle delete/erase mode
