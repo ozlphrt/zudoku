@@ -933,34 +933,32 @@
         }
 
 
-        /* Color Editor Panel */
-        .color-editor-panel {
+        /* Simple Color Picker */
+        .simple-color-picker {
             position: fixed;
-            top: 0;
-            right: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             width: 400px;
-            height: 100vh;
+            max-width: 90vw;
             background: var(--bg-secondary);
-            border-left: 2px solid var(--border-color);
-            z-index: 10000;
-            overflow-y: auto;
-        }
-
-        .color-editor-content {
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
             padding: 20px;
-            height: 100%;
+            z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
-        .color-editor-header {
+        .picker-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
         }
 
-        .color-editor-header h2 {
+        .picker-header h3 {
             margin: 0;
             color: var(--accent-color);
         }
@@ -968,7 +966,7 @@
         .close-btn {
             background: var(--error-color);
             border: none;
-            color: var(--text-primary);
+            color: white;
             width: 32px;
             height: 32px;
             border-radius: 50%;
@@ -983,139 +981,160 @@
             opacity: 0.8;
         }
 
-        .theme-selector {
+        .picker-instructions {
             margin-bottom: 20px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        /* Magnifier */
+        .magnifier {
+            position: fixed;
+            width: 100px;
+            height: 100px;
+            border: 3px solid var(--accent-color);
+            border-radius: 50%;
+            z-index: 10001;
+            pointer-events: none;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .magnifier-lens {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(2px);
+        }
+
+        .magnifier-crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 2px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Color Wheel */
+        .color-wheel {
+            margin-top: 20px;
+        }
+
+        .wheel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
             padding: 10px;
             background: var(--bg-tertiary);
             border-radius: 8px;
         }
 
-        .theme-selector label {
-            color: var(--text-primary);
-            margin-right: 10px;
+        .wheel-header span {
             font-weight: 600;
+            color: var(--text-primary);
         }
 
-        .theme-selector select {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 8px 12px;
+        .ok-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
             border-radius: 6px;
-            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
         }
 
-        .color-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 20px;
+        .ok-btn:hover {
+            opacity: 0.8;
         }
 
-        .color-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 8px;
-            background: var(--bg-tertiary);
-            border-radius: 4px;
+        .wheel-content {
+            text-align: center;
         }
 
-        .color-row label {
-            color: var(--text-primary);
-            font-size: 12px;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .color-input-wrapper {
-            position: relative;
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-        }
-
-        .color-input {
-            width: 20px;
-            height: 20px;
+        #colorInput {
+            width: 80px;
+            height: 80px;
             border: none;
             border-radius: 50%;
             cursor: pointer;
-            padding: 0;
-            opacity: 0;
-            position: absolute;
-            top: 0;
-            left: 0;
+            margin-bottom: 15px;
         }
 
-        .color-swatch {
-            width: 20px;
-            height: 20px;
-            border: 1px solid var(--border-color);
-            border-radius: 50%;
-            cursor: pointer;
+        .color-preview {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .current-color, .new-color {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
             position: relative;
-            pointer-events: none;
-            transition: transform 0.2s ease;
-        }
-        
-        .color-input-wrapper:hover .color-swatch {
-            transform: scale(1.2);
         }
 
-        .color-text-input {
-            width: 90px;
-            padding: 6px 8px;
-            background: var(--bg-secondary);
+        .current-color::after {
+            content: 'Current';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
             color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 11px;
-            flex-shrink: 0;
         }
 
-        .color-editor-footer {
+        .new-color::after {
+            content: 'New';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--text-primary);
+        }
+
+        /* Change Summary */
+        .change-summary {
+            margin-top: 20px;
+        }
+
+        .change-summary h3 {
+            margin-bottom: 10px;
+            color: var(--accent-color);
+        }
+
+        #summaryText {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .summary-actions {
             display: flex;
             gap: 10px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid var(--border-color);
         }
 
-        .color-editor-footer .btn {
+        .summary-actions .btn {
             flex: 1;
-        }
-
-        .export-output {
-            margin-top: 20px;
-            padding: 15px;
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-        }
-
-        .export-output h3 {
-            margin: 0 0 10px 0;
-            color: var(--accent-color);
-            font-size: 14px;
-        }
-
-        .export-output textarea {
-            width: 100%;
-            min-height: 300px;
-            padding: 10px;
-            background: #000;
-            color: #0f0;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 11px;
-            resize: vertical;
-        }
-
-        .export-output .btn {
-            margin-top: 10px;
-            width: 100%;
         }
 
         @media (max-width: 480px) {
@@ -1471,33 +1490,42 @@
     </div>
 
 
-    <!-- Color Editor Panel -->
-    <div id="colorEditorPanel" class="color-editor-panel" style="display: none;">
-        <div class="color-editor-content">
-            <div class="color-editor-header">
-                <h2>🎨 Color Customizer</h2>
-                <button class="close-btn" onclick="toggleColorEditor()">✕</button>
+    <!-- Simple Color Picker -->
+    <div id="simpleColorPicker" class="simple-color-picker" style="display: none;">
+        <div class="picker-header">
+            <h3>🎨 Color Picker</h3>
+            <button class="close-btn" onclick="closeSimpleColorPicker()">×</button>
+        </div>
+        
+        <div class="picker-instructions">
+            <p>Hover over any color on the screen to pick it, then click to edit.</p>
+        </div>
+        
+        <div id="magnifier" class="magnifier" style="display: none;">
+            <div class="magnifier-lens"></div>
+            <div class="magnifier-crosshair"></div>
+        </div>
+        
+        <div id="colorWheel" class="color-wheel" style="display: none;">
+            <div class="wheel-header">
+                <span id="editingColorName">Primary Background</span>
+                <button class="ok-btn" onclick="confirmColorChange()">OK</button>
             </div>
-            
-            <div class="theme-selector">
-                <label>Editing: </label>
-                <select id="editingTheme" onchange="switchEditingTheme()">
-                    <option value="dark">Dark Theme</option>
-                    <option value="light">Light Theme</option>
-                </select>
+            <div class="wheel-content">
+                <input type="color" id="colorInput" oninput="updateColorRealtime()" />
+                <div class="color-preview">
+                    <div id="currentColor" class="current-color"></div>
+                    <div id="newColor" class="new-color"></div>
+                </div>
             </div>
-            
-            <div id="colorControls" class="color-controls"></div>
-            
-            <div class="color-editor-footer">
-                <button class="btn primary" onclick="exportColors()">📋 Print CSS Code</button>
-                <button class="btn" onclick="resetColors()">🔄 Reset</button>
-            </div>
-            
-            <div id="exportOutput" class="export-output" style="display: none;">
-                <h3>Copy this CSS code:</h3>
-                <textarea id="exportTextarea" readonly></textarea>
-                <button class="btn" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+        </div>
+        
+        <div id="changeSummary" class="change-summary" style="display: none;">
+            <h3>Changes Summary</h3>
+            <textarea id="summaryText" readonly></textarea>
+            <div class="summary-actions">
+                <button class="btn" onclick="saveAsDefaults()">Save as Defaults</button>
+                <button class="btn" onclick="discardChanges()">Discard Changes</button>
             </div>
         </div>
     </div>
@@ -1505,190 +1533,264 @@
     <!-- Remove the sudoku-gen library for now -->
     <script src="script.js"></script>
     <script>
-        // Color Editor Functionality
+        // Simple Color Picker Functionality
+        let isColorPickerOpen = false;
+        let isMagnifierActive = false;
+        let currentEditingVariable = null;
+        let originalColors = {};
+        let pendingChanges = {};
+
+        // Color variable mapping with user-friendly names
         const colorVariables = {
-            dark: {
-                '--bg-primary': '#323943',
-                '--bg-secondary': '#19222e',
-                '--bg-tertiary': '#2c2f35',
-                '--text-primary': '#d1d9e0',
-                '--border-color': '#453b3b',
-                '--accent-color': '#8493a4',
-                '--success-color': '#47714e',
-                '--error-color': '#3e1614'
-            },
-            light: {
-                '--bg-primary': '#dbdbdb',
-                '--bg-secondary': '#a6a6a6',
-                '--bg-tertiary': '#8a8e93',
-                '--text-primary': '#000000',
-                '--border-color': '#000000',
-                '--accent-color': '#000000',
-                '--success-color': '#14bd88',
-                '--error-color': '#a53b31'
-            }
+            '--bg-primary': 'Primary Background',
+            '--bg-secondary': 'Secondary Background', 
+            '--bg-tertiary': 'Cell Background',
+            '--text-primary': 'Text Color',
+            '--border-color': 'Border Color',
+            '--accent-color': 'Accent Color',
+            '--success-color': 'Success Color',
+            '--error-color': 'Error Color'
         };
 
-        let currentColors = JSON.parse(JSON.stringify(colorVariables));
-        let currentEditingTheme = 'dark';
-
         function toggleColorEditor() {
-            const panel = document.getElementById('colorEditorPanel');
-            if (panel.style.display === 'none') {
-                panel.style.display = 'flex';
-                initColorEditor();
+            const picker = document.getElementById('simpleColorPicker');
+            if (isColorPickerOpen) {
+                closeSimpleColorPicker();
             } else {
-                panel.style.display = 'none';
+                openSimpleColorPicker();
             }
         }
 
-        function initColorEditor() {
-            renderColorControls();
-        }
-
-        function switchEditingTheme() {
-            currentEditingTheme = document.getElementById('editingTheme').value;
-            renderColorControls();
-        }
-
-        function renderColorControls() {
-            const container = document.getElementById('colorControls');
-            container.innerHTML = '';
+        function openSimpleColorPicker() {
+            const picker = document.getElementById('simpleColorPicker');
+            picker.style.display = 'block';
+            isColorPickerOpen = true;
             
-            const colors = currentColors[currentEditingTheme];
-            const labels = {
-                '--bg-primary': 'Primary Background',
-                '--bg-secondary': 'Secondary Background',
-                '--bg-tertiary': 'Cell Background',
-                '--text-primary': 'Text Color',
-                '--border-color': 'Border Color',
-                '--accent-color': 'Accent Color',
-                '--success-color': 'Success Color',
-                '--error-color': 'Error Color'
-            };
-
-            Object.entries(colors).forEach(([varName, value]) => {
-                const row = document.createElement('div');
-                row.className = 'color-row';
-                
-                const label = document.createElement('label');
-                label.textContent = labels[varName];
-                
-                const inputWrapper = document.createElement('div');
-                inputWrapper.className = 'color-input-wrapper';
-                
-                const input = document.createElement('input');
-                input.type = 'color';
-                input.value = value;
-                input.className = 'color-input';
-                input.addEventListener('input', (e) => {
-                    updateColor(varName, e.target.value);
-                    swatch.style.background = e.target.value;
-                    textInput.value = e.target.value;
-                });
-                
-                const swatch = document.createElement('div');
-                swatch.className = 'color-swatch';
-                swatch.style.background = value;
-                
-                inputWrapper.appendChild(input);
-                inputWrapper.appendChild(swatch);
-                
-                const textInput = document.createElement('input');
-                textInput.type = 'text';
-                textInput.value = value;
-                textInput.className = 'color-text-input';
-                textInput.addEventListener('input', (e) => {
-                    if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
-                        updateColor(varName, e.target.value);
-                        input.value = e.target.value;
-                        swatch.style.background = e.target.value;
-                    }
-                });
-                
-                row.appendChild(label);
-                row.appendChild(inputWrapper);
-                row.appendChild(textInput);
-                container.appendChild(row);
-            });
-        }
-
-        function updateColor(varName, value) {
-            currentColors[currentEditingTheme][varName] = value;
-            applyColors();
-        }
-
-        function applyColors() {
+            // Store original colors
             const root = document.documentElement;
-            const theme = currentEditingTheme;
-            const colors = currentColors[theme];
+            Object.keys(colorVariables).forEach(varName => {
+                originalColors[varName] = getComputedStyle(root).getPropertyValue(varName).trim();
+            });
             
-            if (theme === 'dark' && root.getAttribute('data-theme') !== 'light') {
-                root.style.setProperty('--bg-primary', colors['--bg-primary']);
-                root.style.setProperty('--bg-secondary', colors['--bg-secondary']);
-                root.style.setProperty('--bg-tertiary', colors['--bg-tertiary']);
-                root.style.setProperty('--text-primary', colors['--text-primary']);
-                root.style.setProperty('--border-color', colors['--border-color']);
-                root.style.setProperty('--accent-color', colors['--accent-color']);
-                root.style.setProperty('--success-color', colors['--success-color']);
-                root.style.setProperty('--error-color', colors['--error-color']);
-            } else if (theme === 'light' && root.getAttribute('data-theme') === 'light') {
-                root.style.setProperty('--bg-primary', colors['--bg-primary']);
-                root.style.setProperty('--bg-secondary', colors['--bg-secondary']);
-                root.style.setProperty('--bg-tertiary', colors['--bg-tertiary']);
-                root.style.setProperty('--text-primary', colors['--text-primary']);
-                root.style.setProperty('--border-color', colors['--border-color']);
-                root.style.setProperty('--accent-color', colors['--accent-color']);
-                root.style.setProperty('--success-color', colors['--success-color']);
-                root.style.setProperty('--error-color', colors['--error-color']);
+            // Start magnifier
+            startMagnifier();
+        }
+
+        function closeSimpleColorPicker() {
+            const picker = document.getElementById('simpleColorPicker');
+            const magnifier = document.getElementById('magnifier');
+            const colorWheel = document.getElementById('colorWheel');
+            const changeSummary = document.getElementById('changeSummary');
+            
+            picker.style.display = 'none';
+            magnifier.style.display = 'none';
+            colorWheel.style.display = 'none';
+            changeSummary.style.display = 'none';
+            
+            isColorPickerOpen = false;
+            isMagnifierActive = false;
+            currentEditingVariable = null;
+            
+            // Remove event listeners
+            document.removeEventListener('mousemove', updateMagnifier);
+            document.removeEventListener('click', handleColorPick);
+        }
+
+        function startMagnifier() {
+            const magnifier = document.getElementById('magnifier');
+            magnifier.style.display = 'block';
+            isMagnifierActive = true;
+            
+            // Add event listeners
+            document.addEventListener('mousemove', updateMagnifier);
+            document.addEventListener('click', handleColorPick);
+        }
+
+        function updateMagnifier(e) {
+            if (!isMagnifierActive) return;
+            
+            const magnifier = document.getElementById('magnifier');
+            magnifier.style.left = (e.clientX - 50) + 'px';
+            magnifier.style.top = (e.clientY - 50) + 'px';
+        }
+
+        function handleColorPick(e) {
+            if (!isMagnifierActive) return;
+            
+            // Get the color at the clicked position
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 1;
+            canvas.height = 1;
+            
+            // This is a simplified approach - in a real implementation,
+            // you'd need to capture the screen or use a more sophisticated method
+            const element = document.elementFromPoint(e.clientX, e.clientY);
+            if (element) {
+                const computedStyle = getComputedStyle(element);
+                let color = computedStyle.backgroundColor;
+                
+                // Try to get color from various CSS properties
+                if (!color || color === 'rgba(0, 0, 0, 0)' || color === 'transparent') {
+                    color = computedStyle.color;
+                }
+                
+                if (color && color !== 'rgba(0, 0, 0, 0)' && color !== 'transparent') {
+                    // Convert to hex if needed
+                    const rgb = color.match(/\d+/g);
+                    if (rgb && rgb.length >= 3) {
+                        const hex = '#' + rgb.map(x => {
+                            const hex = parseInt(x).toString(16);
+                            return hex.length === 1 ? '0' + hex : hex;
+                        }).join('');
+                        
+                        openColorWheel(hex, getVariableFromElement(element));
+                    }
+                }
             }
         }
 
-        function exportColors() {
-            const output = document.getElementById('exportOutput');
-            const textarea = document.getElementById('exportTextarea');
+        function getVariableFromElement(element) {
+            // Try to determine which CSS variable this element uses
+            const computedStyle = getComputedStyle(element);
             
-            let css = '';
+            // Check background colors first
+            if (computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' && 
+                computedStyle.backgroundColor !== 'transparent') {
+                if (element.classList.contains('cell') || 
+                    element.closest('.sudoku-grid')) {
+                    return '--bg-tertiary';
+                }
+                if (element.closest('.left-panel') || 
+                    element.closest('.right-panel')) {
+                    return '--bg-secondary';
+                }
+                return '--bg-primary';
+            }
             
-            // Dark theme
-            css += `/* Dark Theme */\n:root {\n`;
-            css += `    --bg-primary: ${currentColors.dark['--bg-primary']};\n`;
-            css += `    --bg-secondary: ${currentColors.dark['--bg-secondary']};\n`;
-            css += `    --bg-tertiary: ${currentColors.dark['--bg-tertiary']};\n`;
-            css += `    --text-primary: ${currentColors.dark['--text-primary']};\n`;
-            css += `    --border-color: ${currentColors.dark['--border-color']};\n`;
-            css += `    --accent-color: ${currentColors.dark['--accent-color']};\n`;
-            css += `    --success-color: ${currentColors.dark['--success-color']};\n`;
-            css += `    --error-color: ${currentColors.dark['--error-color']};\n`;
-            css += `}\n\n`;
+            // Check text colors
+            if (element.tagName && ['P', 'SPAN', 'DIV', 'H1', 'H2', 'H3'].includes(element.tagName)) {
+                return '--text-primary';
+            }
             
-            // Light theme
-            css += `/* Light Theme */\n[data-theme="light"] {\n`;
-            css += `    --bg-primary: ${currentColors.light['--bg-primary']};\n`;
-            css += `    --bg-secondary: ${currentColors.light['--bg-secondary']};\n`;
-            css += `    --bg-tertiary: ${currentColors.light['--bg-tertiary']};\n`;
-            css += `    --text-primary: ${currentColors.light['--text-primary']};\n`;
-            css += `    --border-color: ${currentColors.light['--border-color']};\n`;
-            css += `    --accent-color: ${currentColors.light['--accent-color']};\n`;
-            css += `    --success-color: ${currentColors.light['--success-color']};\n`;
-            css += `    --error-color: ${currentColors.light['--error-color']};\n`;
-            css += `}\n`;
+            // Check border colors
+            if (computedStyle.borderColor !== 'rgba(0, 0, 0, 0)' && 
+                computedStyle.borderColor !== 'transparent') {
+                return '--border-color';
+            }
             
-            textarea.value = css;
-            output.style.display = 'block';
+            return '--bg-primary'; // default fallback
         }
 
-        function copyToClipboard() {
-            const textarea = document.getElementById('exportTextarea');
-            textarea.select();
-            document.execCommand('copy');
-            alert('CSS code copied to clipboard!');
+        function openColorWheel(currentColor, variableName) {
+            currentEditingVariable = variableName;
+            
+            const magnifier = document.getElementById('magnifier');
+            const colorWheel = document.getElementById('colorWheel');
+            const editingColorName = document.getElementById('editingColorName');
+            const colorInput = document.getElementById('colorInput');
+            const currentColorPreview = document.getElementById('currentColor');
+            const newColorPreview = document.getElementById('newColor');
+            
+            // Hide magnifier, show color wheel
+            magnifier.style.display = 'none';
+            colorWheel.style.display = 'block';
+            
+            // Update UI
+            editingColorName.textContent = colorVariables[variableName];
+            colorInput.value = currentColor;
+            currentColorPreview.style.backgroundColor = currentColor;
+            newColorPreview.style.backgroundColor = currentColor;
+            
+            isMagnifierActive = false;
         }
 
-        function resetColors() {
-            currentColors = JSON.parse(JSON.stringify(colorVariables));
-            renderColorControls();
-            applyColors();
+        function updateColorRealtime() {
+            const colorInput = document.getElementById('colorInput');
+            const newColor = colorInput.value;
+            const newColorPreview = document.getElementById('newColor');
+            
+            newColorPreview.style.backgroundColor = newColor;
+            
+            // Apply color change in real-time
+            if (currentEditingVariable) {
+                document.documentElement.style.setProperty(currentEditingVariable, newColor);
+                pendingChanges[currentEditingVariable] = newColor;
+            }
+        }
+
+        function confirmColorChange() {
+            // Store the change
+            if (currentEditingVariable) {
+                pendingChanges[currentEditingVariable] = document.getElementById('colorInput').value;
+            }
+            
+            // Go back to magnifier mode
+            const colorWheel = document.getElementById('colorWheel');
+            const magnifier = document.getElementById('magnifier');
+            
+            colorWheel.style.display = 'none';
+            magnifier.style.display = 'block';
+            
+            isMagnifierActive = true;
+            currentEditingVariable = null;
+            
+            // Check if we have enough changes to show summary
+            if (Object.keys(pendingChanges).length >= 3) {
+                showChangeSummary();
+            }
+        }
+
+        function showChangeSummary() {
+            const colorWheel = document.getElementById('colorWheel');
+            const changeSummary = document.getElementById('changeSummary');
+            const summaryText = document.getElementById('summaryText');
+            
+            colorWheel.style.display = 'none';
+            changeSummary.style.display = 'block';
+            
+            // Generate summary text
+            let summary = '/* Color Changes Summary */\n\n';
+            summary += `:root {\n`;
+            
+            Object.entries(pendingChanges).forEach(([variable, value]) => {
+                summary += `    ${variable}: ${value};\n`;
+            });
+            
+            summary += `}\n\n`;
+            summary += `/* Changes made:\n`;
+            
+            Object.entries(pendingChanges).forEach(([variable, value]) => {
+                const original = originalColors[variable];
+                summary += `- ${colorVariables[variable]}: ${original} → ${value}\n`;
+            });
+            
+            summary += `*/`;
+            
+            summaryText.value = summary;
+        }
+
+        function saveAsDefaults() {
+            // Save changes to localStorage or apply permanently
+            const root = document.documentElement;
+            Object.entries(pendingChanges).forEach(([variable, value]) => {
+                root.style.setProperty(variable, value);
+                // Save to localStorage for persistence
+                localStorage.setItem(`custom_${variable}`, value);
+            });
+            
+            alert('Colors saved as new defaults!');
+            closeSimpleColorPicker();
+        }
+
+        function discardChanges() {
+            // Revert all changes
+            const root = document.documentElement;
+            Object.entries(originalColors).forEach(([variable, value]) => {
+                root.style.setProperty(variable, value);
+            });
+            
+            closeSimpleColorPicker();
         }
         // Global variables
         let paintMode = false;
