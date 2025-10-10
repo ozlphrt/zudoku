@@ -513,7 +513,7 @@
             color: var(--text-primary);
             padding: 6px 12px;
             font-size: 0.8rem;
-            cursor: pointer;
+            cursor: pointer !important;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             touch-action: manipulation;
@@ -1834,6 +1834,8 @@
         }
         // Global variables
         let selectedPadNumber = null;
+        let paintMode = false;
+        let isPainting = false;
 
         // Color Palette Test Functions (Temporary)
         const colorPalettes = {
@@ -1974,6 +1976,13 @@
                 if (btn) {
                     btn.classList.add('selected');
                 }
+                // Enable paint mode for numbers 1-9
+                paintMode = true;
+                document.body.style.cursor = 'crosshair';
+            } else {
+                // Disable paint mode for delete (0)
+                paintMode = false;
+                document.body.style.cursor = 'default';
             }
             
             // If a cell is already selected, place the number immediately
@@ -1991,11 +2000,32 @@
             }
         }
 
+        // Disable paint mode when clicking on UI elements
+        function disablePaintMode() {
+            paintMode = false;
+            document.body.style.cursor = 'default';
+            document.querySelectorAll('.num-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            selectedPadNumber = null;
+        }
+
         // Close palette selector when clicking outside
         document.addEventListener('click', function(event) {
             const selector = document.getElementById('palette-selector');
             if (event.target === selector) {
                 closePaletteSelector();
+            }
+            
+            // Disable paint mode when clicking on buttons or UI elements
+            if (event.target.classList.contains('btn') || 
+                event.target.classList.contains('num-btn') ||
+                event.target.closest('.left-panel') ||
+                event.target.closest('.right-panel')) {
+                // Don't disable paint mode for numpad buttons - they should enable it
+                if (!event.target.classList.contains('num-btn')) {
+                    disablePaintMode();
+                }
             }
         });
     </script>
