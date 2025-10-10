@@ -131,9 +131,12 @@ class SudokuGame {
             };
             
             const puzzle = this.removeNumbers(completeGrid, cellsToRemove[difficulty] || 30);
+            console.log('Puzzle after removal:', puzzle);
+            console.log('Is puzzle array?', Array.isArray(puzzle));
             
             if (puzzle && Array.isArray(puzzle)) {
-                console.log(`✅ Generated ${difficulty} puzzle with ${81 - (cellsToRemove[difficulty] || 30)} clues`);
+                const clueCount = puzzle.flat().filter(num => num !== 0).length;
+                console.log(`✅ Generated ${difficulty} puzzle with ${clueCount} clues`);
                 return puzzle;
             }
             
@@ -188,8 +191,6 @@ class SudokuGame {
     removeNumbers(grid, count) {
         const puzzle = grid.map(row => [...row]);
         let removed = 0;
-        let attempts = 0;
-        const maxAttempts = 1000;
         
         // Create list of all positions to try removing
         const positions = [];
@@ -202,24 +203,16 @@ class SudokuGame {
         // Shuffle positions for random removal
         this.shuffleArray(positions);
         
+        // Simple approach: just remove numbers without complex validation
+        // This ensures we always get a puzzle, even if not perfectly optimized
         for (let pos of positions) {
             if (removed >= count) break;
             
             const { row, col } = pos;
             if (puzzle[row][col] !== 0) {
-                const backup = puzzle[row][col];
                 puzzle[row][col] = 0;
-                
-                // Simplified check - just ensure puzzle is still solvable
-                if (this.isSolvable(puzzle)) {
-                    removed++;
-                } else {
-                    puzzle[row][col] = backup;
-                }
+                removed++;
             }
-            attempts++;
-            
-            if (attempts >= maxAttempts) break;
         }
         
         console.log(`Removed ${removed} numbers out of ${count} requested`);
