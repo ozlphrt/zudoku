@@ -168,18 +168,25 @@ class SudokuGame {
         const validPuzzles = puzzles.filter(puzzle => {
             const clueCount = puzzle.puzzle.flat().filter(num => num !== 0).length;
             // Allow ±3 tolerance for clue count
-            return Math.abs(clueCount - targetClues) <= 3;
+            const isValid = Math.abs(clueCount - targetClues) <= 3;
+            if (!isValid) {
+                console.log(`❌ Rejecting puzzle with ${clueCount} clues (target: ${targetClues}±3)`);
+            }
+            return isValid;
         });
         
         if (validPuzzles.length === 0) {
-            console.warn(`No puzzles found matching ${difficulty} difficulty (${targetClues} clues), using any available puzzle`);
-            const randomIndex = Math.floor(Math.random() * puzzles.length);
-            return puzzles[randomIndex];
+            console.error(`⚠️ NO valid puzzles found for ${difficulty} difficulty (target: ${targetClues}±3 clues)`);
+            console.error(`Available puzzles have these clue counts:`, 
+                puzzles.map(p => p.puzzle.flat().filter(c => c !== 0).length));
+            throw new Error(`No valid puzzles available for ${difficulty} difficulty`);
         }
         
         const randomIndex = Math.floor(Math.random() * validPuzzles.length);
-        console.log(`🎲 Selected puzzle ${randomIndex + 1} of ${validPuzzles.length} valid puzzles for ${difficulty} difficulty`);
-        return validPuzzles[randomIndex];
+        const selectedPuzzle = validPuzzles[randomIndex];
+        const clueCount = selectedPuzzle.puzzle.flat().filter(num => num !== 0).length;
+        console.log(`✅ Selected puzzle with ${clueCount} clues (${randomIndex + 1}/${validPuzzles.length} valid puzzles for ${difficulty})`);
+        return selectedPuzzle;
     }
     
     // Built-in puzzle database with pre-validated puzzles (100+ puzzles)
