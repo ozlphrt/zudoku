@@ -37,8 +37,10 @@ class SudokuGame {
             hard: { label: 'Hard' }       // 29 clues remaining
         };
         
-        // Puzzle database
-        this.puzzleDatabase = null;
+        // Puzzle database - initialize immediately
+        this.puzzleDatabase = this.getBuiltInPuzzleDatabase();
+        console.log('✅ Puzzle database loaded with', 
+            Object.keys(this.puzzleDatabase).map(d => `${d}: ${this.puzzleDatabase[d].length}`).join(', '));
         
         // External puzzle databases
         this.externalDatabases = {
@@ -136,28 +138,8 @@ class SudokuGame {
     
     // All validation and solving methods removed - using pre-generated database instead
     
-    // Load puzzle database
-    loadPuzzleDatabase() {
-        if (!this.puzzleDatabase) {
-            try {
-                // Use built-in puzzle database
-                this.puzzleDatabase = this.getBuiltInPuzzleDatabase();
-                console.log('✅ Puzzle database loaded');
-            } catch (error) {
-                console.error('❌ Failed to load puzzle database:', error);
-                throw error;
-            }
-        }
-        return this.puzzleDatabase;
-    }
-    
     // Get random puzzle from database
     getRandomPuzzle(difficulty) {
-        // Ensure database is loaded
-        if (!this.puzzleDatabase) {
-            this.loadPuzzleDatabase();
-        }
-        
         const puzzles = this.puzzleDatabase[difficulty.toLowerCase()];
         if (!puzzles || puzzles.length === 0) {
             throw new Error(`No puzzles found for difficulty: ${difficulty}`);
