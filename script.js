@@ -1525,32 +1525,32 @@ class SudokuGame {
         for (let col = 0; col < 9; col++) {
             const index = row * 9 + col;
             const cell = document.querySelector(`[data-index="${index}"]`);
-            cell.classList.add('completion-celebration');
+            cell.classList.add('celebrate');
         }
         
         setTimeout(() => {
             for (let col = 0; col < 9; col++) {
                 const index = row * 9 + col;
                 const cell = document.querySelector(`[data-index="${index}"]`);
-                cell.classList.remove('completion-celebration');
+                cell.classList.remove('celebrate');
             }
-        }, 400);
+        }, 600);
     }
     
     highlightColumn(col) {
         for (let row = 0; row < 9; row++) {
             const index = row * 9 + col;
             const cell = document.querySelector(`[data-index="${index}"]`);
-            cell.classList.add('completion-celebration');
+            cell.classList.add('celebrate');
         }
         
         setTimeout(() => {
             for (let row = 0; row < 9; row++) {
                 const index = row * 9 + col;
                 const cell = document.querySelector(`[data-index="${index}"]`);
-                cell.classList.remove('completion-celebration');
+                cell.classList.remove('celebrate');
             }
-        }, 400);
+        }, 600);
     }
     
     clearAllHighlights() {
@@ -1593,7 +1593,7 @@ class SudokuGame {
             for (let col = startCol; col < startCol + 3; col++) {
                 const index = row * 9 + col;
                 const cell = document.querySelector(`[data-index="${index}"]`);
-                cell.classList.add('completion-celebration');
+                cell.classList.add('celebrate');
             }
         }
         
@@ -1602,10 +1602,10 @@ class SudokuGame {
                 for (let col = startCol; col < startCol + 3; col++) {
                     const index = row * 9 + col;
                     const cell = document.querySelector(`[data-index="${index}"]`);
-                    cell.classList.remove('completion-celebration');
+                    cell.classList.remove('celebrate');
                 }
             }
-        }, 400);
+        }, 600);
     }
     
     isNumberComplete(number) {
@@ -1626,7 +1626,7 @@ class SudokuGame {
                 if (this.grid[row][col] === number) {
                     const index = row * 9 + col;
                     const cell = document.querySelector(`[data-index="${index}"]`);
-                    cell.classList.add('completion-celebration');
+                    cell.classList.add('celebrate');
                 }
             }
         }
@@ -1637,11 +1637,11 @@ class SudokuGame {
                     if (this.grid[row][col] === number) {
                         const index = row * 9 + col;
                         const cell = document.querySelector(`[data-index="${index}"]`);
-                        cell.classList.remove('completion-celebration');
+                        cell.classList.remove('celebrate');
                     }
                 }
             }
-        }, 400);
+        }, 600);
     }
 
     checkWin() {

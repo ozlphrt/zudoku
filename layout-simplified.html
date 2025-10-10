@@ -449,6 +449,21 @@
             border-color: rgba(255, 0, 0, 0.8) !important;
         }
 
+        @keyframes celebration {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0px rgba(0, 255, 0, 0); }
+            10% { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 0, 0.8); }
+            20% { transform: scale(0.95); box-shadow: 0 0 15px rgba(0, 255, 0, 0.6); }
+            30% { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 0, 0.8); }
+            40% { transform: scale(0.95); box-shadow: 0 0 15px rgba(0, 255, 0, 0.6); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 0, 0.8); }
+            60% { transform: scale(1); box-shadow: 0 0 10px rgba(0, 255, 0, 0.4); }
+        }
+
+        .cell.celebrate {
+            animation: celebration 0.6s ease-in-out;
+            background: rgba(0, 255, 0, 0.2) !important;
+        }
+
         .error-message {
             position: fixed;
             top: 50%;
