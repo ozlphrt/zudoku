@@ -1298,18 +1298,27 @@
         let colorInfoTooltip = null;
 
         function toggleColorEditor() {
+            console.log('toggleColorEditor called, isEyedropperActive:', isEyedropperActive);
             if (isEyedropperActive) {
+                console.log('Deactivating eyedropper...');
                 deactivateEyedropper();
             } else {
+                console.log('Activating eyedropper...');
                 activateEyedropper();
             }
         }
 
         function activateEyedropper() {
+            console.log('Activating eyedropper...');
             isEyedropperActive = true;
             
-            // Change cursor to eyedropper
-            document.body.style.cursor = 'crosshair';
+            // Apply cursor to body and all elements with !important
+            document.body.style.setProperty('cursor', 'crosshair', 'important');
+            
+            // Also apply to all elements to override any existing cursor styles
+            document.querySelectorAll('*').forEach(el => {
+                el.style.setProperty('cursor', 'crosshair', 'important');
+            });
             
             // Create color info tooltip
             createColorTooltip();
@@ -1322,13 +1331,21 @@
             const button = document.getElementById('colorEditorToggle');
             button.style.backgroundColor = 'var(--accent-color)';
             button.style.color = 'white';
+            
+            console.log('Eyedropper activated, cursor set to crosshair');
         }
 
         function deactivateEyedropper() {
+            console.log('Deactivating eyedropper...');
             isEyedropperActive = false;
             
-            // Restore default cursor
-            document.body.style.cursor = 'default';
+            // Restore default cursors
+            document.body.style.removeProperty('cursor');
+            
+            // Remove cursor from all elements
+            document.querySelectorAll('*').forEach(el => {
+                el.style.removeProperty('cursor');
+            });
             
             // Remove tooltip
             if (colorInfoTooltip) {
@@ -1344,6 +1361,8 @@
             const button = document.getElementById('colorEditorToggle');
             button.style.backgroundColor = '';
             button.style.color = '';
+            
+            console.log('Eyedropper deactivated');
         }
 
         function createColorTooltip() {
