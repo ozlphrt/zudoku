@@ -628,7 +628,6 @@
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
@@ -663,12 +662,6 @@
         .num-value {
             font-size: 1.4rem;
             line-height: 1;
-        }
-
-        .num-count {
-            font-size: 0.65rem;
-            opacity: 0.7;
-            margin-top: 2px;
         }
 
         .delete-btn {
@@ -1520,43 +1513,33 @@
                 <div class="number-pad">
                     <button class="num-btn" onclick="selectNumber(1)" data-number="1">
                         <span class="num-value">1</span>
-                        <span class="num-count" id="count-1">9</span>
                     </button>
                     <button class="num-btn" onclick="selectNumber(2)" data-number="2">
                         <span class="num-value">2</span>
-                        <span class="num-count" id="count-2">9</span>
                     </button>
                     <button class="num-btn" onclick="selectNumber(3)" data-number="3">
                         <span class="num-value">3</span>
-                        <span class="num-count" id="count-3">9</span>
                     </button>
                     <button class="num-btn" onclick="selectNumber(4)" data-number="4">
                         <span class="num-value">4</span>
-                        <span class="num-count" id="count-4">9</span>
                     </button>
                     <button class="num-btn" onclick="selectNumber(5)" data-number="5">
                         <span class="num-value">5</span>
-                        <span class="num-count" id="count-5">9</span>
                     </button>
                     <button class="num-btn" onclick="selectNumber(6)" data-number="6">
                         <span class="num-value">6</span>
-                        <span class="num-count" id="count-6">9</span>
                     </button>
                     <button class="num-btn" onclick="selectNumber(7)" data-number="7">
                         <span class="num-value">7</span>
-                        <span class="num-count" id="count-7">9</span>
                     </button>
                     <button class="num-btn" onclick="selectNumber(8)" data-number="8">
                         <span class="num-value">8</span>
-                        <span class="num-count" id="count-8">9</span>
                     </button>
                     <button class="num-btn" onclick="selectNumber(9)" data-number="9">
                         <span class="num-value">9</span>
-                        <span class="num-count" id="count-9">9</span>
                     </button>
                     <button class="num-btn delete-btn" onclick="selectNumber(0)">
                         <span class="num-value">⌫</span>
-                        <span class="num-count"></span>
                     </button>
                 </div>
             </div>
@@ -1849,6 +1832,9 @@
             renderColorControls();
             applyColors();
         }
+        // Global variables
+        let selectedPadNumber = null;
+
         // Color Palette Test Functions (Temporary)
         const colorPalettes = {
             'warm-gray': {
@@ -1972,6 +1958,37 @@
             });
 
             console.log(`Applied ${paletteName} palette`);
+        }
+
+        // Number pad selection function
+        function selectNumber(number) {
+            selectedPadNumber = number;
+            
+            // Update visual state of number pad buttons
+            document.querySelectorAll('.num-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            if (number > 0) {
+                const btn = document.querySelector(`.num-btn[data-number="${number}"]`);
+                if (btn) {
+                    btn.classList.add('selected');
+                }
+            }
+            
+            // If a cell is already selected, place the number immediately
+            if (game && game.selectedCell !== null) {
+                const row = Math.floor(game.selectedCell / 9);
+                const col = game.selectedCell % 9;
+                
+                if (!game.givenCells[row][col]) {
+                    if (number === 0) {
+                        game.setNumber(row, col, 0);
+                    } else {
+                        game.setNumber(row, col, number);
+                    }
+                }
+            }
         }
 
         // Close palette selector when clicking outside
