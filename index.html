@@ -3,8 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Zudoku - Glassmorphism</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <meta http-equiv="refresh" content="0; url=layout-simplified.html">
+    <title>Zudoku</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=86">
+    <script>
+    (function(){
+        try {
+            var target = 'layout-simplified.html' + location.search + location.hash;
+            if (document.visibilityState !== 'prerender') {
+                location.replace(target);
+            }
+        } catch (e) {}
+    })();
+    </script>
     <style>
         * {
             margin: 0;

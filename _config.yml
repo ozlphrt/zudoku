@@ -20,5 +20,6 @@ exclude:
 # Include only necessary files
 include:
   - index.html
+  - layout-simplified.html
   - script.js
   - _config.yml
