@@ -5390,8 +5390,27 @@ document.addEventListener('DOMContentLoaded', () => {
         audioToggle.classList.toggle('muted', !soundsEnabled);
     }
     
-    // Game is initialized in layout-simplified.html, just reference it
-    game = window.game;
+    // Game is initialized in layout-simplified.html, wait for it if needed
+    if (window.game) {
+        game = window.game;
+    } else {
+        // Wait for game to be initialized
+        const checkGame = setInterval(() => {
+            if (window.game) {
+                game = window.game;
+                clearInterval(checkGame);
+                console.log('🎮 Game found after waiting');
+            }
+        }, 50);
+        
+        // Timeout after 2 seconds
+        setTimeout(() => {
+            if (!window.game) {
+                clearInterval(checkGame);
+                console.error('❌ Game initialization timeout');
+            }
+        }, 2000);
+    }
     
     // Check for saved games and update UI
     setTimeout(() => {
