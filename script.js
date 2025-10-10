@@ -1124,7 +1124,11 @@ class SudokuGame {
             this.updateErrorCount();
             
             // Keep highlighting if in paint mode, otherwise clear selection
-            if (!this.isPaintMode) {
+            if (this.isPaintMode && this.paintNumber) {
+                // Re-apply green highlighting after error
+                this.highlightAllInstances(this.paintNumber);
+                this.setNumberCursor(this.paintNumber);
+            } else {
                 this.clearSelection();
             }
         }
