@@ -775,6 +775,9 @@ class SudokuGame {
         if (cellValue !== 0) {
             this.highlightAllInstances(cellValue);
             this.setNumberCursor(cellValue);
+            // Enable paint mode so clicking on empty cells will place this number
+            this.isPaintMode = true;
+            this.paintNumber = cellValue;
             return;
         }
         
