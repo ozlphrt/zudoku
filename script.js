@@ -30,11 +30,11 @@ class SudokuGame {
         this.soundsEnabled = this.loadSoundSettings();
         this.initAudio();
         
-        // Clean difficulty system - 3 levels only
+        // Industry-standard difficulty system based on research
         this.DIFFICULTY_LEVELS = {
-            easy: { givenNumbers: 30, label: 'Easy' },
-            medium: { givenNumbers: 23, label: 'Medium' },
-            hard: { givenNumbers: 17, label: 'Hard' }
+            easy: { givenNumbers: 32, label: 'Easy' },      // Industry: 30-35
+            medium: { givenNumbers: 27, label: 'Medium' },  // Industry: 25-30  
+            hard: { givenNumbers: 23, label: 'Hard' }       // Industry: 22-24
         };
         
         // Pre-validated puzzle database
