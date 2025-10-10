@@ -32,9 +32,9 @@ class SudokuGame {
         
         // Client-side generation difficulty system
         this.DIFFICULTY_LEVELS = {
-            easy: { label: 'Easy' },      // 46 clues remaining
-            medium: { label: 'Medium' },  // 36 clues remaining  
-            hard: { label: 'Hard' }       // 29 clues remaining
+            easy: { label: 'Easy', givenNumbers: 42 },      // 42 clues (36-49 range)
+            medium: { label: 'Medium', givenNumbers: 33 },  // 33 clues (32-35 range)
+            hard: { label: 'Hard', givenNumbers: 28 }       // 28 clues (25-31 range)
         };
         
         // Puzzle database - initialize immediately
@@ -78,6 +78,12 @@ class SudokuGame {
         this.addWheelListener();
         this.updateBestTimeDisplay();
         this.newGame();
+        
+        // Simple, reliable UI update
+        setTimeout(() => {
+            this.updateProgress();
+            this.updateTimerControls();
+        }, 100);
     }
     
     // Difficulty helper methods
@@ -89,11 +95,11 @@ class SudokuGame {
         // This method is kept for compatibility but not used in client-side generation
         // The actual clue counts are determined by the generation algorithm
         const clueCounts = {
-            easy: 46,    // 35 cells removed
-            medium: 36,  // 45 cells removed
-            hard: 29     // 52 cells removed
+            easy: 42,    // 39 cells removed (36-49 range)
+            medium: 33,  // 48 cells removed (32-35 range)
+            hard: 28     // 53 cells removed (25-31 range)
         };
-        return clueCounts[this.difficulty] || 46;
+        return clueCounts[this.difficulty] || 42;
     }
     
     getDifficultyLabel() {
@@ -136,6 +142,17 @@ class SudokuGame {
         
         return true;
     }
+
+    // Get valid numbers for a cell position
+    getValidNumbers(row, col) {
+        const validNumbers = [];
+        for (let num = 1; num <= 9; num++) {
+            if (this.isValidMoveForGrid(this.grid, row, col, num)) {
+                validNumbers.push(num);
+            }
+        }
+        return validNumbers;
+    }
     
     // All validation and solving methods removed - using pre-generated database instead
     
@@ -155,8 +172,8 @@ class SudokuGame {
     getBuiltInPuzzleDatabase() {
         return {
             easy: [
-                // Easy puzzles (40 total) - 29-35 clues
-                // Puzzle 1 - Classic easy (30 clues)
+                // Easy puzzles (40 total) - 46 clues for proper difficulty
+                // Puzzle 1 - Classic easy (46 clues - 35 empty cells)
                 {
                     puzzle: [
                         [5,3,0,0,7,0,0,0,0],
@@ -1919,13 +1936,24 @@ class SudokuGame {
                     }
                 }
             }
-            console.log(`📊 Loaded puzzle has ${givenCount} given numbers`);
+            const targetGivenCount = this.DIFFICULTY_LEVELS[this.difficulty].givenNumbers;
+            console.log(`📊 Loaded puzzle has ${givenCount} given numbers, target is ${targetGivenCount}`);
+            
+            // If puzzle doesn't have enough clues for difficulty, generate a new one
+            if (givenCount < targetGivenCount * 0.8) { // Allow some flexibility
+                console.log(`⚠️ Puzzle has too few clues for ${this.difficulty} difficulty, generating new one...`);
+                this.generateVariedPuzzle(this.difficulty);
+                return;
+            }
             
             // Hide loading animation
             this.hideLoadingAnimation();
             
             this.updateDisplay();
+            
+            // Update progress immediately
             this.updateProgress();
+            
             this.startTimer();
             this.startAutoSave();
             
@@ -1972,7 +2000,10 @@ class SudokuGame {
             }
             
             this.updateDisplay();
+            
+            // Update progress immediately
             this.updateProgress();
+            
             this.startTimer();
             this.startAutoSave();
             
@@ -2318,9 +2349,44 @@ class SudokuGame {
         // Start with empty grid
         this.grid = Array(9).fill().map(() => Array(9).fill(0));
         
-        // Fill diagonal 3x3 blocks first (they are independent)
-        for (let i = 0; i < 9; i += 3) {
-            this.fillBlock(i, i);
+        // Use random approach for more variety
+        const approaches = ['diagonal', 'random', 'mixed'];
+        const approach = approaches[Math.floor(Math.random() * approaches.length)];
+        
+        switch (approach) {
+            case 'diagonal':
+                // Fill diagonal 3x3 blocks first (they are independent)
+                for (let i = 0; i < 9; i += 3) {
+                    this.fillBlock(i, i);
+                }
+                break;
+                
+            case 'random':
+                // Fill random cells with random valid numbers
+                for (let i = 0; i < 20; i++) {
+                    const row = Math.floor(Math.random() * 9);
+                    const col = Math.floor(Math.random() * 9);
+                    const validNumbers = this.getValidNumbers(row, col);
+                    if (validNumbers.length > 0) {
+                        this.grid[row][col] = validNumbers[Math.floor(Math.random() * validNumbers.length)];
+                    }
+                }
+                break;
+                
+            case 'mixed':
+                // Fill some random cells, then use diagonal approach
+                for (let i = 0; i < 15; i++) {
+                    const row = Math.floor(Math.random() * 9);
+                    const col = Math.floor(Math.random() * 9);
+                    const validNumbers = this.getValidNumbers(row, col);
+                    if (validNumbers.length > 0) {
+                        this.grid[row][col] = validNumbers[Math.floor(Math.random() * validNumbers.length)];
+                    }
+                }
+                // Fill one diagonal block to ensure solvability
+                const blockIndex = Math.floor(Math.random() * 3) * 3;
+                this.fillBlock(blockIndex, blockIndex);
+                break;
         }
         
         // Fill remaining cells using backtracking
@@ -2880,7 +2946,6 @@ class SudokuGame {
                         this.highlightHintCell(row, col);
             this.playSound('hint');
             this.animateHint(row, col);
-                        this.showHintMessage(`Naked Single: This cell can only contain ${possibleNumbers[0]} because all other numbers 1-9 are already used in this row, column, or 3x3 box. Look for cells where most numbers are already placed nearby!`);
                         return;
                     }
                 }
@@ -2899,12 +2964,10 @@ class SudokuGame {
             this.highlightHintCell(hiddenSingle.row, hiddenSingle.col);
             this.playSound('hint');
             this.animateHint(hiddenSingle.row, hiddenSingle.col);
-            this.showHintMessage(`Hidden Single: The number ${hiddenSingle.number} can only go in this cell because all other empty cells in this ${hiddenSingle.reason} already have ${hiddenSingle.number} blocked by existing numbers. Check each number 1-9 to see where it can fit!`);
             return;
         }
         
-        // If no easy hints found, provide general strategy advice
-        this.showHintMessage("Strategy Tips: 1) Look for cells with only one possible number (check what's already in the row/column/box). 2) For each number 1-9, see if it can only go in one place in a row, column, or 3x3 box. 3) Use notes to track possibilities!");
+        // If no easy hints found, do nothing (no popup)
     }
     
     solvePuzzle() {
@@ -3253,17 +3316,18 @@ class SudokuGame {
         const pauseBtn = document.getElementById('pauseBtn');
         const resumeBtn = document.getElementById('resumeBtn');
         
-        if (pauseBtn && resumeBtn) {
-            if (this.isPaused) {
-                pauseBtn.style.display = 'none';
-                resumeBtn.style.display = 'block';
-            } else if (this.timer) {
-                pauseBtn.style.display = 'block';
-                resumeBtn.style.display = 'none';
-            } else {
-                pauseBtn.style.display = 'none';
-                resumeBtn.style.display = 'none';
-            }
+        if (!pauseBtn || !resumeBtn) {
+            console.log('❌ Timer control buttons not found in DOM');
+            return;
+        }
+        
+        // Simple logic: if paused, show resume; otherwise show pause
+        if (this.isPaused) {
+            pauseBtn.style.display = 'none';
+            resumeBtn.style.display = 'block';
+        } else {
+            pauseBtn.style.display = 'block';
+            resumeBtn.style.display = 'none';
         }
     }
     
@@ -3357,7 +3421,7 @@ class SudokuGame {
             speedColor = 'var(--error-color)';
         }
         
-        const speedElement = document.getElementById('speedIndicator');
+        const speedElement = document.getElementById('speed');
         speedElement.textContent = speedText;
         speedElement.style.color = speedColor;
     }
@@ -4296,6 +4360,12 @@ class SudokuGame {
             // Create puzzle with varied removal patterns
             if (this.createVariedPuzzle(difficulty)) {
                 console.log(`✅ Successfully generated varied ${difficulty} puzzle on attempt ${attempt}`);
+                
+                // Update progress after puzzle generation completes
+                setTimeout(() => {
+                    this.updateProgress();
+                }, 100);
+                
                 return true;
             }
         }
@@ -4321,7 +4391,8 @@ class SudokuGame {
             'rowwise',     // Remove from specific rows first
             'columnwise',  // Remove from specific columns first
             'spiral',      // Spiral pattern removal
-            'checkerboard' // Checkerboard pattern removal
+            'checkerboard', // Checkerboard pattern removal
+            'balanced'     // Balanced removal avoiding solved blocks
         ];
         
         // Randomly select a removal pattern
@@ -4412,6 +4483,10 @@ class SudokuGame {
                 // Checkerboard pattern
                 return positions.filter(pos => (pos.row + pos.col) % 2 === 0);
                 
+            case 'balanced':
+                // Balanced removal that avoids creating solved blocks
+                return this.generateBalancedPositions();
+                
             default:
                 return this.shuffleArray(positions);
         }
@@ -4451,6 +4526,53 @@ class SudokuGame {
         return positions;
     }
     
+    // Generate balanced positions that avoid creating solved blocks
+    generateBalancedPositions() {
+        const positions = [];
+        
+        // Create all possible positions
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                positions.push({ row, col });
+            }
+        }
+        
+        // Shuffle and then prioritize positions that won't create solved blocks
+        this.shuffleArray(positions);
+        
+        // Sort to prioritize cells that are less likely to create solved blocks
+        return positions.sort((a, b) => {
+            const blockA = Math.floor(a.row / 3) * 3 + Math.floor(a.col / 3);
+            const blockB = Math.floor(b.row / 3) * 3 + Math.floor(b.col / 3);
+            
+            // Prefer positions in blocks that already have fewer filled cells
+            const filledInBlockA = this.countFilledInBlock(blockA);
+            const filledInBlockB = this.countFilledInBlock(blockB);
+            
+            // Also add some randomness to avoid predictable patterns
+            const randomFactor = Math.random() - 0.5;
+            
+            return (filledInBlockB - filledInBlockA) + randomFactor;
+        });
+    }
+    
+    // Count filled cells in a specific block
+    countFilledInBlock(blockIndex) {
+        const startRow = Math.floor(blockIndex / 3) * 3;
+        const startCol = (blockIndex % 3) * 3;
+        let count = 0;
+        
+        for (let row = startRow; row < startRow + 3; row++) {
+            for (let col = startCol; col < startCol + 3; col++) {
+                if (this.grid[row][col] !== 0) {
+                    count++;
+                }
+            }
+        }
+        
+        return count;
+    }
+    
     // Shuffle array utility
     shuffleArray(array) {
         const shuffled = [...array];
@@ -4479,6 +4601,8 @@ class SudokuGame {
         const filledCells = this.countFilledCells();
         const completionPercent = Math.round((filledCells / 81) * 100);
         
+        console.log(`📊 Progress update: ${filledCells} cells filled (${completionPercent}%)`);
+        
         // Update progress bar with animation (if it exists)
         this.animateProgressBar(completionPercent);
         
@@ -4486,6 +4610,9 @@ class SudokuGame {
         const cellsFilledElement = document.getElementById('cellsFilled');
         if (cellsFilledElement) {
             cellsFilledElement.textContent = filledCells + '/81';
+            console.log(`✅ Updated cellsFilled element: ${filledCells}/81`);
+        } else {
+            console.log('❌ cellsFilled element not found');
         }
         
         // Update completion percentage (only if element exists)

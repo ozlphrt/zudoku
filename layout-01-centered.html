@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout 01 - Centered</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        :root {
+            --bg: #1a1a1a;
+            --text: #ffffff;
+            --border: #404040;
+            --border-thick: #808080;
+            --cell-bg: #2a2a2a;
+            --selected: #404040;
+            --hover: #353535;
+            --given: #333333;
+            --panel: #252525;
+        }
+        
+        [data-theme="light"] {
+            --bg: #ffffff;
+            --text: #1a1a1a;
+            --border: #d0d0d0;
+            --border-thick: #707070;
+            --cell-bg: #f8f8f8;
+            --selected: #e0e0e0;
+            --hover: #f0f0f0;
+            --given: #f5f5f5;
+            --panel: #fafafa;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 900px;
+            padding: 2rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            letter-spacing: 0.15em;
+            color: var(--text);
+        }
+        
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 0;
+            background: var(--border);
+            border: 2px solid var(--border-thick);
+            margin: 0 auto 2rem;
+            width: 540px;
+            height: 540px;
+        }
+        
+        .cell {
+            background: var(--cell-bg);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 400;
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.2s ease;
+        }
+        
+        .cell:hover { background: var(--hover); }
+        .cell.selected { background: var(--selected); }
+        .cell.given { 
+            background: var(--given); 
+            font-weight: 500;
+            color: var(--text);
+        }
+        
+        /* 3x3 block separators - thick lines */
+        .cell:nth-child(3n):not(:nth-child(9n)) { 
+            border-right: 3px solid var(--border-thick); 
+        }
+        .cell:nth-child(n+19):nth-child(-n+27) { 
+            border-bottom: 3px solid var(--border-thick); 
+        }
+        .cell:nth-child(n+46):nth-child(-n+54) { 
+            border-bottom: 3px solid var(--border-thick); 
+        }
+        
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.8rem;
+            margin: 2rem auto;
+            max-width: 450px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        
+        button {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.7rem 1.8rem;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            transition: all 0.2s ease;
+        }
+        
+        button:hover { 
+            background: var(--hover); 
+            border-color: var(--border-thick);
+        }
+        
+        .num-btn {
+            aspect-ratio: 1;
+            font-size: 1.4rem;
+            padding: 0.6rem;
+            font-weight: 500;
+        }
+        
+        .difficulty-btns {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .difficulty-btn.active { 
+            background: var(--selected); 
+            border-color: var(--border-thick);
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            padding: 0;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">◐</button>
+    
+    <div class="container">
+        <h1>SUDOKU</h1>
+        
+        <div class="stats-row">
+            <div>TIME: <span id="timer">00:00:00</span></div>
+            <div>MOVES: <span id="moveCount">0</span></div>
+            <div>ERRORS: <span id="errorCount">0</span></div>
+        </div>
+        
+        <div class="grid" id="sudokuGrid"></div>
+        
+        <div class="number-pad">
+            <button class="num-btn" onclick="selectNumber(1)">1</button>
+            <button class="num-btn" onclick="selectNumber(2)">2</button>
+            <button class="num-btn" onclick="selectNumber(3)">3</button>
+            <button class="num-btn" onclick="selectNumber(4)">4</button>
+            <button class="num-btn" onclick="selectNumber(5)">5</button>
+            <button class="num-btn" onclick="selectNumber(6)">6</button>
+            <button class="num-btn" onclick="selectNumber(7)">7</button>
+            <button class="num-btn" onclick="selectNumber(8)">8</button>
+            <button class="num-btn" onclick="selectNumber(9)">9</button>
+            <button class="num-btn" onclick="selectNumber(0)">⌫</button>
+        </div>
+        
+        <div class="difficulty-btns">
+            <button class="difficulty-btn active" onclick="setDifficulty('easy')">EASY</button>
+            <button class="difficulty-btn" onclick="setDifficulty('medium')">MEDIUM</button>
+            <button class="difficulty-btn" onclick="setDifficulty('hard')">HARD</button>
+        </div>
+        
+        <div class="controls">
+            <button onclick="undoMove()" id="undoBtn">UNDO</button>
+            <button onclick="redoMove()" id="redoBtn">REDO</button>
+            <button onclick="solveHint()">HINT</button>
+            <button onclick="solvePuzzle()">SOLVE</button>
+            <button onclick="toggleAudio()">AUDIO</button>
+        </div>
+    </div>
+    
+    <script src="puzzles-expanded.js?v=2"></script>
+    <script src="script.js?v=2"></script>
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const current = body.getAttribute('data-theme');
+            body.setAttribute('data-theme', current === 'light' ? '' : 'light');
+        }
+    </script>
+</body>
+</html>

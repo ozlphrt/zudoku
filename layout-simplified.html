@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Zudoku - Simplified</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=85">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700;800;900&family=Fredoka:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ========================================
+           RESET & BASE STYLES
+        ======================================== */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary);
+            height: 100vh;
+            width: 100vw;
+            color: var(--text-primary);
+            overflow: hidden;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* ========================================
+           CSS VARIABLES - THEMES
+        ======================================== */
+        
+        :root {
+            /* Dark Theme (Default) */
+            --bg-primary: rgb(10,10,10);
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #222222;
+            --bg-accent: rgba(34, 34, 34, 0.5);
+            --text-primary: #d1d9e0;
+            --text-secondary: rgba(209, 217, 224, 0.8);
+            --border-color: #333333;
+            --border-thick: #1a1a1a;
+            --accent-color: #666666;
+            --paint-target-color: rgba(74, 93, 74, 0.3);
+            --highlight-color: rgba(74, 93, 74, 0.2);
+            --cell-bg: #2a2a2a;
+            --cell-text: #888888;
+            --given-text: #bbbbbb;
+            --num-btn-text: #555555;
+            --error-color: #4a5d4a;
+            --success-color: #4a5d4a;
+            --hover-color: #2a2a2a;
+            --given-color: var(--cell-bg);
+        }
+
+        [data-theme="light"] {
+            /* Light Theme */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #f8f8f8;
+            --bg-accent: rgba(108, 117, 125, 0.1);
+            --text-primary: #2a2a2a;
+            --text-secondary: #4a4a4a;
+            --border-color: #333333;
+            --border-thick: #1a1a1a;
+            --accent-color: #666666;
+            --paint-target-color: rgba(74, 93, 74, 0.3);
+            --highlight-color: rgba(74, 93, 74, 0.2);
+            --cell-bg: #eeeeee;
+            --cell-text: #888888;
+            --given-text: #444444;
+            --num-btn-text: #555555;
+            --error-color: #4a5d4a;
+            --success-color: #4a5d4a;
+            --hover-color: #eeeeee;
+            --given-color: var(--cell-bg);
+        }
+
+        /* ========================================
+           LAYOUT CONTAINER
+        ======================================== */
+        
+        .container {
+            display: flex;
+            align-items: stretch;
+            height: 100vh;
+            width: 100vw;
+            padding: 5px;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        /* ========================================
+           LEFT PANEL - GAME STATS
+        ======================================== */
+        
+        .left-panel {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .stats-section {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .stats-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .stat-item, .progress-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* ========================================
+           TIMER CONTROLS
+        ======================================== */
+        
+        .timer-controls {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .timer-btn {
+            flex: 1;
+            padding: 6px 12px;
+            background: var(--bg-accent);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .timer-btn:hover {
+            background: var(--hover-color);
+        }
+
+        .reset-btn-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--bg-accent);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+        }
+
+        .reset-btn-icon:hover {
+            background: var(--hover-color);
+        }
+
+        /* ========================================
+           RIGHT PANEL - CONTROLS
+        ======================================== */
+        
+        .right-panel {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        /* ========================================
+           ACTION BUTTONS
+        ======================================== */
+        
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-primary);
+            opacity: 0.6;
+            font-family: monospace, 'Courier New', sans-serif;
+        }
+
+        .icon-btn:not(:disabled) {
+            opacity: 1;
+        }
+
+        .icon-btn:hover:not(:disabled) {
+            background: var(--hover-color);
+        }
+
+        .icon-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .icon-btn.undo-redo {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .icon-btn.undo-redo:disabled {
+            color: var(--text-secondary);
+            opacity: 0.4;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'Fredoka', 'Nunito', 'Quicksand', 'Verdana', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+        }
+
+        .action-btn:hover {
+            background: var(--hover-color);
+        }
+
+        /* ========================================
+           NUMBER PAD
+        ======================================== */
+        
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .num-btn {
+            aspect-ratio: 1;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--num-btn-text);
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'Fredoka', 'Nunito', 'Quicksand', 'Verdana', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .num-btn:hover {
+            background: var(--hover-color);
+            border-color: var(--accent-color);
+        }
+
+        .num-btn.selected {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        /* ========================================
+           DIFFICULTY BUTTONS
+        ======================================== */
+        
+        .difficulty-section {
+            margin-bottom: 12px;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .difficulty-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .difficulty-btn:hover {
+            background: var(--hover-color);
+            border-color: var(--accent-color);
+        }
+
+        .difficulty-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        /* ========================================
+           SUDOKU GRID
+        ======================================== */
+        
+        .sudoku-container {
+            flex: 1;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            gap: 1px;
+            background: transparent;
+            border: none;
+            border-radius: 16px;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .cell {
+            background: var(--cell-bg);
+            border: 1px solid var(--border-thick);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 56px;
+            font-weight: 700;
+            font-family: 'Fredoka', 'Nunito', 'Quicksand', 'Verdana', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: var(--cell-text);
+            position: relative;
+            min-height: 0;
+            min-width: 0;
+            box-shadow: none;
+        }
+
+        /* Thick borders for 3x3 block separations */
+        .cell:nth-child(3n) {
+            border-right: 5px solid var(--border-thick);
+        }
+
+        .cell:nth-child(n+19):nth-child(-n+27),
+        .cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 5px solid var(--border-thick);
+        }
+
+        /* Additional thick borders for complete 3x3 block separation */
+        .cell:nth-child(n+1):nth-child(-n+9):nth-child(3n) {
+            border-right: 5px solid var(--border-thick);
+        }
+        
+        .cell:nth-child(n+10):nth-child(-n+18):nth-child(3n) {
+            border-right: 5px solid var(--border-thick);
+        }
+        
+        .cell:nth-child(n+28):nth-child(-n+36):nth-child(3n) {
+            border-right: 5px solid var(--border-thick);
+        }
+        
+        .cell:nth-child(n+37):nth-child(-n+45):nth-child(3n) {
+            border-right: 5px solid var(--border-thick);
+        }
+        
+        .cell:nth-child(n+55):nth-child(-n+63):nth-child(3n) {
+            border-right: 5px solid var(--border-thick);
+        }
+        
+        .cell:nth-child(n+64):nth-child(-n+72):nth-child(3n) {
+            border-right: 5px solid var(--border-thick);
+        }
+        
+        .cell:nth-child(n+82):nth-child(-n+90):nth-child(3n) {
+            border-right: 5px solid var(--border-thick);
+        }
+
+        /* Horizontal separations for 3x3 blocks */
+        .cell:nth-child(n+1):nth-child(-n+9),
+        .cell:nth-child(n+10):nth-child(-n+18) {
+            border-bottom: 5px solid var(--border-thick);
+        }
+        
+        .cell:nth-child(n+28):nth-child(-n+36),
+        .cell:nth-child(n+37):nth-child(-n+45) {
+            border-bottom: 5px solid var(--border-thick);
+        }
+
+        .cell:hover {
+            background: var(--hover-color);
+        }
+
+        .cell.selected {
+            background: #4a5d4a;
+            border-color: #4a5d4a;
+        }
+
+        .cell.given {
+            background: var(--given-color);
+            font-weight: 600;
+            color: var(--given-text);
+        }
+
+        .cell.paint-target {
+            background: var(--paint-target-color);
+            border-color: var(--accent-color);
+            animation: paintTargetPulse 2s ease-in-out infinite;
+        }
+
+        .cell.highlighted {
+            background: #4a5d4a;
+            border-color: #4a5d4a;
+        }
+
+        .cell.same-number-highlight {
+            background: #4a5d4a;
+            border-color: #4a5d4a;
+        }
+
+        /* ========================================
+           NOTES SYSTEM
+        ======================================== */
+        
+        .cell.notes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            padding: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .cell.notes .note-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            font-family: 'Fredoka', 'Nunito', 'Quicksand', 'Verdana', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+        }
+
+        .cell.notes .note-number:empty {
+            display: none;
+        }
+
+        .note-number-highlight {
+            background: #8b4c4c !important;
+            opacity: 1 !important;
+            color: var(--text-primary) !important;
+            border: 2px solid #6b3a3a !important;
+            border-radius: 0 !important;
+            font-weight: 900 !important;
+        }
+
+        .note-number-error {
+            background: var(--error-color) !important;
+            opacity: 1 !important;
+            color: var(--text-primary) !important;
+            border: 2px solid var(--error-color) !important;
+            border-radius: 0 !important;
+            font-weight: 900 !important;
+            animation: noteNumberErrorPulse 0.6s ease-out;
+        }
+
+        /* ========================================
+           ANIMATIONS
+        ======================================== */
+        
+        @keyframes paintTargetPulse {
+            0%, 100% { 
+                opacity: 0.8;
+            }
+            50% { 
+                opacity: 1;
+            }
+        }
+
+        @keyframes noteNumberErrorPulse {
+            0%, 100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.7;
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes numberPlace {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-8px) rotate(-2deg); }
+            20%, 40%, 60%, 80% { transform: translateX(8px) rotate(2deg); }
+        }
+
+        @keyframes successRipple {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.5);
+            }
+        }
+
+        @keyframes completionCelebration {
+            0% {
+                background: var(--success-color);
+                transform: scale(1);
+            }
+            10% {
+                background: rgba(76, 175, 80, 0.9);
+                transform: scale(1.1) translateX(-2px);
+            }
+            20% {
+                background: var(--success-color);
+                transform: scale(1.15) translateX(2px);
+            }
+            30% {
+                background: rgba(76, 175, 80, 0.9);
+                transform: scale(1.1) translateX(-1px);
+            }
+            40% {
+                background: var(--success-color);
+                transform: scale(1.15) translateX(1px);
+            }
+            50% {
+                background: rgba(76, 175, 80, 0.9);
+                transform: scale(1.1) translateX(-1px);
+            }
+            60% {
+                background: var(--success-color);
+                transform: scale(1.15) translateX(1px);
+            }
+            70% {
+                background: rgba(76, 175, 80, 0.9);
+                transform: scale(1.1) translateX(0);
+            }
+            80% {
+                background: var(--success-color);
+                transform: scale(1.05) translateX(0);
+            }
+            100% {
+                background: var(--success-color);
+                transform: scale(1) translateX(0);
+            }
+        }
+
+        @keyframes hintGlow {
+            0%, 100% {
+                opacity: 0.9;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Animation classes */
+        .cell.number-place-animation {
+            animation: numberPlace 0.6s ease-out;
+        }
+
+        .cell.error-shake {
+            animation: errorShake 0.8s ease-out;
+        }
+
+        .cell.success-ripple {
+            position: relative;
+        }
+
+        .cell.success-ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            border-radius: 6px;
+            background: var(--success-color);
+            transform: translate(-50%, -50%);
+            animation: successRipple 0.6s ease-out;
+            pointer-events: none;
+        }
+
+        .cell.completion-celebration {
+            animation: completionCelebration 0.4s ease-in-out;
+        }
+
+        .cell.hint-glow {
+            animation: hintGlow 1s ease-in-out;
+        }
+
+        .cell.correct {
+            background: var(--success-color);
+            opacity: 0.3;
+            border-color: var(--success-color);
+        }
+
+        .cell.hint-highlight {
+            background: var(--success-color);
+            border-color: var(--success-color);
+            animation: hintGlow 2s ease-in-out;
+        }
+
+        .cell.completed-highlight {
+            background: var(--success-color);
+            border-color: var(--success-color);
+            animation: completionCelebration 1.5s ease-in-out;
+        }
+
+        /* ========================================
+           INSTRUCTIONS
+        ======================================== */
+        
+        .instructions {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: auto;
+        }
+
+        .instructions h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .instructions p {
+            font-size: 12px;
+            line-height: 1.4;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        /* ========================================
+           MOBILE SWIPE INTERFACE
+        ======================================== */
+        
+        @media (max-width: 768px) {
+            .container {
+                display: flex;
+                flex-direction: row;
+                width: 300vw;
+                transition: transform 0.3s ease;
+                overflow-x: hidden;
+            }
+            
+            .left-panel {
+                width: 100vw;
+                height: 100vh;
+                padding: 20px;
+                order: 1;
+                overflow-y: auto;
+            }
+            
+            .sudoku-container {
+                width: 100vw;
+                height: 100vh;
+                order: 2;
+                padding: 20px;
+            }
+            
+            .sudoku-grid {
+                width: min(90vw, 90vh);
+                height: min(90vw, 90vh);
+                max-width: 400px;
+                max-height: 400px;
+            }
+            
+            .right-panel {
+                width: 100vw;
+                height: 100vh;
+                padding: 20px;
+                order: 3;
+                overflow-y: auto;
+            }
+            
+            .cell {
+                font-size: 32px;
+            }
+            
+            .cell.notes {
+                font-size: 14px;
+            }
+            
+            .num-btn {
+                font-size: 24px;
+            }
+        }
+
+        /* Mobile page indicators */
+        .page-indicators {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+        }
+
+        .page-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: background 0.3s ease;
+        }
+
+        .page-indicator.active {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        @media (min-width: 769px) {
+            .page-indicators {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Left Panel: Game Stats -->
+        <div class="left-panel">
+            <div class="stats-section">
+                <h2 class="stats-title">Game Stats</h2>
+                <div class="stat-item">
+                    <span class="stat-label">Time:</span>
+                    <span class="stat-value" id="timer">00:00:00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Best Time:</span>
+                    <span class="stat-value" id="bestTime">---:---:---</span>
+                    <button class="reset-btn-icon" onclick="resetBestTime()" title="Reset Best Time">↻</button>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Speed:</span>
+                    <span class="stat-value" id="speed">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Moves:</span>
+                    <span class="stat-value" id="moveCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Errors:</span>
+                    <span class="stat-value" id="errorCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Hints Used:</span>
+                    <span class="stat-value" id="hintCount">0</span>
+                </div>
+                <div class="timer-controls">
+                    <button class="timer-btn" id="pauseBtn" onclick="pauseTimer()">Pause</button>
+                    <button class="timer-btn" id="resumeBtn" onclick="resumeTimer()" style="display: none;">Resume</button>
+                </div>
+            </div>
+            
+            <div class="stats-section">
+                <h2 class="stats-title">Progress</h2>
+                <div class="progress-item">
+                    <span class="stat-label">Cells Filled:</span>
+                    <span class="stat-value" id="cellsFilled">0/81</span>
+                </div>
+            </div>
+            
+            <div class="stats-section">
+                <h2 class="stats-title">Difficulty</h2>
+                <div class="difficulty-buttons">
+                    <button class="difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
+                    <button class="difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
+                    <button class="difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
+                </div>
+            </div>
+            
+            <div class="instructions">
+                <h3>How to Play</h3>
+                <p>1. Click or touch a number</p>
+                <p>2. Left-click or tap empty cell to place</p>
+                <p>3. Right-click, hold, or flick up for notes</p>
+                <p>4. Select numbers to highlight same notes</p>
+                <p>5. Use 'C' key to clean notes</p>
+                <p>6. Use 'A' key for auto-suggestions</p>
+            </div>
+        </div>
+        
+        <!-- Center: Sudoku Grid -->
+        <div class="sudoku-container">
+            <div class="sudoku-grid" id="sudokuGrid"></div>
+        </div>
+        
+        <!-- Right Panel: Controls -->
+        <div class="right-panel">
+            <div class="stats-section">
+                <h2 class="stats-title">Controls</h2>
+                <div class="controls-row">
+                    <div class="toggle-controls">
+                        <button class="icon-btn undo-redo" onclick="undoMove()" id="undoBtn" disabled title="Undo">↺</button>
+                        <button class="icon-btn undo-redo" onclick="redoMove()" id="redoBtn" disabled title="Redo">↻</button>
+                    </div>
+                    <div class="action-controls">
+                        <button class="action-btn" onclick="solveHint()" title="Get Hint">Hint</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-section">
+                <h2 class="stats-title">Numbers</h2>
+                <div class="number-pad">
+                    <button class="num-btn" onclick="selectNumber(1)">1</button>
+                    <button class="num-btn" onclick="selectNumber(2)">2</button>
+                    <button class="num-btn" onclick="selectNumber(3)">3</button>
+                    <button class="num-btn" onclick="selectNumber(4)">4</button>
+                    <button class="num-btn" onclick="selectNumber(5)">5</button>
+                    <button class="num-btn" onclick="selectNumber(6)">6</button>
+                    <button class="num-btn" onclick="selectNumber(7)">7</button>
+                    <button class="num-btn" onclick="selectNumber(8)">8</button>
+                    <button class="num-btn" onclick="selectNumber(9)">9</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile page indicators -->
+    <div class="page-indicators">
+        <div class="page-indicator"></div>
+        <div class="page-indicator active"></div>
+        <div class="page-indicator"></div>
+    </div>
+
+    <script src="puzzles-expanded.js?v=84"></script>
+    <script src="script.js?v=84"></script>
+    <script>
+        // Global variables for paint mode
+        let paintMode = false;
+        let isPainting = false;
+
+        // Mobile swipe functionality
+        let currentPage = 1; // 0: left panel, 1: board, 2: right panel
+        let startX = 0;
+        let startY = 0;
+        let container = null;
+
+        function disablePaintMode() {
+            paintMode = false;
+            document.body.style.cursor = 'default';
+            document.querySelectorAll('.num-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            selectedPadNumber = null;
+            if (window.game) {
+                window.game.isPaintMode = false;
+                window.game.paintNumber = null;
+                window.game.updateCursor();
+            }
+        }
+
+        // Global click handler to disable paint mode when clicking outside numpad
+        if (!window.clickListenerAdded) {
+            document.addEventListener('click', function(event) {
+                if (event.target.classList.contains('btn') || 
+                    event.target.classList.contains('num-btn') ||
+                    event.target.closest('.left-panel') ||
+                    event.target.closest('.right-panel')) {
+                    if (!event.target.classList.contains('num-btn')) {
+                        disablePaintMode();
+                    }
+                }
+            });
+            window.clickListenerAdded = true;
+        }
+
+        // Mobile swipe functions
+        function goToPage(page) {
+            if (window.innerWidth > 768) return; // Only on mobile
+            
+            currentPage = page;
+            container = container || document.querySelector('.container');
+            container.style.transform = `translateX(-${page * 100}vw)`;
+            updatePageIndicators();
+        }
+
+        function updatePageIndicators() {
+            const indicators = document.querySelectorAll('.page-indicator');
+            indicators.forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === currentPage);
+            });
+        }
+
+        function handleSwipeStart(e) {
+            if (window.innerWidth > 768) return; // Only on mobile
+            startX = e.touches ? e.touches[0].clientX : e.clientX;
+            startY = e.touches ? e.touches[0].clientY : e.clientY;
+        }
+
+        function handleSwipeMove(e) {
+            if (window.innerWidth > 768) return; // Only on mobile
+            e.preventDefault();
+        }
+
+        function handleSwipeEnd(e) {
+            if (window.innerWidth > 768) return; // Only on mobile
+            
+            const endX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+            const endY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+            const diffX = startX - endX;
+            const diffY = startY - endY;
+            
+            // Only handle horizontal swipes (ignore vertical scrolling)
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                if (diffX > 0 && currentPage < 2) {
+                    // Swipe left - go to next page
+                    goToPage(currentPage + 1);
+                } else if (diffX < 0 && currentPage > 0) {
+                    // Swipe right - go to previous page
+                    goToPage(currentPage - 1);
+                }
+            }
+        }
+
+        // Add mobile event listeners only once
+        if (!window.swipeListenersAdded) {
+            document.addEventListener('touchstart', handleSwipeStart, { passive: false });
+            document.addEventListener('touchmove', handleSwipeMove, { passive: false });
+            document.addEventListener('touchend', handleSwipeEnd, { passive: false });
+            document.addEventListener('mousedown', handleSwipeStart);
+            document.addEventListener('mouseup', handleSwipeEnd);
+            window.swipeListenersAdded = true;
+        }
+
+        // Prevent multiple initializations
+        let isInitialized = false;
+        let resizeHandler = null;
+        let loadHandler = null;
+
+        function initializeApp() {
+            if (isInitialized) return;
+            isInitialized = true;
+
+            console.log('🎮 Initializing Sudoku Game...');
+            window.game = new SudokuGame();
+            
+            // Initialize mobile interface
+            if (window.innerWidth <= 768) {
+                goToPage(1); // Start on board page
+            }
+        }
+
+        function handleResize() {
+            if (window.innerWidth > 768) {
+                // Desktop - reset container
+                container = container || document.querySelector('.container');
+                container.style.transform = '';
+                currentPage = 1;
+            } else {
+                // Mobile - ensure we're on the right page
+                goToPage(currentPage);
+            }
+        }
+
+        // Clean up existing listeners before adding new ones
+        function cleanupListeners() {
+            if (resizeHandler) {
+                window.removeEventListener('resize', resizeHandler);
+            }
+            if (loadHandler) {
+                window.removeEventListener('load', loadHandler);
+            }
+        }
+
+        // Add listeners only once
+        loadHandler = initializeApp;
+        resizeHandler = handleResize;
+        
+        window.addEventListener('load', loadHandler);
+        window.addEventListener('resize', resizeHandler);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            cleanupListeners();
+            // Clear game reference and stop timers to help garbage collection
+            if (window.game) {
+                if (window.game.autoSaveInterval) {
+                    clearInterval(window.game.autoSaveInterval);
+                }
+                if (window.game.timer) {
+                    clearInterval(window.game.timer);
+                }
+                window.game = null;
+            }
+        });
+
+        // Prevent multiple game instances - check global scope
+        if (typeof window.game !== 'undefined' && window.game !== null) {
+            console.log('🔄 Cleaning up existing game instance...');
+            if (window.game.autoSaveInterval) {
+                clearInterval(window.game.autoSaveInterval);
+            }
+            if (window.game.timer) {
+                clearInterval(window.game.timer);
+            }
+            window.game = null;
+        }
+    </script>
+</body>
+</html>
