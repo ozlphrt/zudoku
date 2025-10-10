@@ -1103,8 +1103,8 @@ class SudokuGame {
             // If we're in paint mode and this matches the paint number, re-highlight all instances
             if (this.isPaintMode && this.paintNumber === number) {
                 // Re-highlight all instances of this number (including the newly placed one)
-                this.highlightSameNumbers(number);
-                this.highlightSameNotes(number);
+                this.highlightAllInstances(number);
+                this.setNumberCursor(number);
                 // Keep paint mode active, don't clear selection
             } else {
                 // Clear selection after valid move (only if not in paint mode)
