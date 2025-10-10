@@ -783,9 +783,6 @@ class SudokuGame {
         this.clearHighlights();
         this.clearNoteHighlights();
         
-        const row = Math.floor(index / 9);
-        const col = index % 9;
-        
         // If it's a given cell, highlight all instances of that number and set paint mode
         if (this.givenCells[row][col]) {
             const number = this.grid[row][col];
