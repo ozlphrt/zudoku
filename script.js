@@ -98,6 +98,7 @@ class SudokuGame {
     async fetchExternalPuzzle(difficulty) {
         try {
             console.log(`🌐 Attempting to fetch ${difficulty} puzzle from external database...`);
+            const targetGivenNumbers = this.getTargetGivenNumbers();
             
             // Try Tdoku dataset first (most reliable)
             const tdokuUrl = `${this.externalDatabases.tdoku}${difficulty}_puzzles.txt`;
@@ -108,17 +109,27 @@ class SudokuGame {
                 const puzzles = text.trim().split('\n').filter(line => line.length === 81);
                 
                 if (puzzles.length > 0) {
-                    const randomPuzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
-                    const puzzle = this.parseTdokuPuzzle(randomPuzzle);
-                    
-                    if (puzzle && this.validatePuzzleFormat(puzzle)) {
-                        console.log(`✅ Loaded ${difficulty} puzzle from Tdoku database`);
-                        return puzzle;
+                    // Try up to 10 random puzzles to find one with correct given count
+                    for (let attempt = 0; attempt < Math.min(10, puzzles.length); attempt++) {
+                        const randomPuzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
+                        const puzzle = this.parseTdokuPuzzle(randomPuzzle);
+                        
+                        if (puzzle && this.validatePuzzleFormat(puzzle)) {
+                            const givenCount = puzzle.flat().filter(num => num !== 0).length;
+                            
+                            // Check if given count matches our target (allow ±2 tolerance)
+                            if (Math.abs(givenCount - targetGivenNumbers) <= 2) {
+                                console.log(`✅ Loaded ${difficulty} puzzle from Tdoku database: ${givenCount} given numbers (target: ${targetGivenNumbers})`);
+                                return puzzle;
+                            } else {
+                                console.log(`⚠️ External puzzle has ${givenCount} given numbers, need ${targetGivenNumbers}, trying another...`);
+                            }
+                        }
                     }
                 }
             }
             
-            console.log(`❌ Failed to load from external database, using generation`);
+            console.log(`❌ No suitable external puzzle found, using generation`);
             return null;
             
         } catch (error) {
@@ -1486,27 +1497,17 @@ class SudokuGame {
         this.showLoadingAnimation();
         
         // Small delay to show loading animation
-        setTimeout(async () => {
-            // Try external database first (most reliable)
-            console.log('🌐 Attempting to load from external database...');
-            const externalPuzzle = await this.fetchExternalPuzzle(this.difficulty);
+        setTimeout(() => {
+            // Skip external database for now - focus on reliable generation
+            console.log('🔍 Attempting to load from local database...');
+            const loadedFromDatabase = this.loadPuzzleFromDatabase(this.difficulty);
             
-            if (externalPuzzle) {
-                this.grid = externalPuzzle;
-                this.solution = null; // Will be generated if needed
-                console.log('✅ Loaded puzzle from external database');
+            if (!loadedFromDatabase) {
+                console.log(`Falling back to varied puzzle generation for ${this.difficulty} difficulty...`);
+                // Generate a varied puzzle using our enhanced system
+                this.generateReliablePuzzle();
             } else {
-                // Try to load from pre-validated database
-                console.log('🔍 Attempting to load from local database...');
-                const loadedFromDatabase = this.loadPuzzleFromDatabase(this.difficulty);
-                
-                if (!loadedFromDatabase) {
-                    console.log(`Falling back to varied puzzle generation for ${this.difficulty} difficulty...`);
-                    // Generate a varied puzzle using our enhanced system
-                    this.generateReliablePuzzle();
-                } else {
-                    console.log('✅ Loaded puzzle from local database');
-                }
+                console.log('✅ Loaded puzzle from local database');
             }
             
             // Debug: Check if grid has numbers
