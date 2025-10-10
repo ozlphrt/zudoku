@@ -4626,23 +4626,42 @@ function selectNumber(number) {
         btn.classList.remove('selected');
     });
     
-    if (number > 0) {
+    if (number > 0 && game) {
         const btn = document.querySelector(`.num-btn[data-number="${number}"]`);
         if (btn) {
             btn.classList.add('selected');
         }
-    }
-    
-    // If a cell is already selected, place the number immediately
-    if (game && game.selectedCell !== null) {
-        const row = Math.floor(game.selectedCell / 9);
-        const col = game.selectedCell % 9;
         
-        if (!game.givenCells[row][col]) {
-            if (number === 0) {
+        // Clear any existing selection and highlights
+        game.clearSelection();
+        game.clearHighlights();
+        game.clearNoteHighlights();
+        
+        // Highlight all instances of this number (like clicking a number on the board)
+        game.highlightSameNumbers(number);
+        game.highlightSameNotes(number);
+        
+        // Enable paint mode for this number
+        game.isPaintMode = true;
+        game.paintNumber = number;
+        game.updateCursor();
+        
+    } else if (number === 0 && game) {
+        // Handle delete/erase mode
+        game.clearSelection();
+        game.clearHighlights();
+        game.clearNoteHighlights();
+        game.isPaintMode = false;
+        game.paintNumber = null;
+        game.updateCursor();
+        
+        // If a cell is already selected, erase it
+        if (game.selectedCell !== null) {
+            const row = Math.floor(game.selectedCell / 9);
+            const col = game.selectedCell % 9;
+            
+            if (!game.givenCells[row][col]) {
                 game.setNumber(row, col, 0);
-            } else {
-                game.setNumber(row, col, number);
             }
         }
     }
