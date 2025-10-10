@@ -838,15 +838,10 @@ class SudokuGame {
         for (let i = 0; i < 81; i++) {
             const row = Math.floor(i / 9);
             const col = i % 9;
-            const cell = document.querySelector(`[data-index="${i}"]`);
             
             if (this.grid[row][col] === number) {
                 // Highlight cells that have this number
-                if (cell) {
-                    cell.classList.add('number-selected');
-                }
-            } else if (this.grid[row][col] === 0 && this.notes[row][col].has(number)) {
-                // Also highlight cells that have this number in their notes
+                const cell = document.querySelector(`[data-index="${i}"]`);
                 if (cell) {
                     cell.classList.add('number-selected');
                 }
