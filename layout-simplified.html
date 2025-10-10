@@ -406,6 +406,34 @@
             min-height: 0;
             min-width: 0;
             box-shadow: none;
+            transition: background-color 0.15s ease;
+        }
+
+        .cell:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .cell.selected {
+            background: rgba(74, 93, 74, 0.3);
+        }
+
+        .cell.highlighted {
+            background: rgba(74, 93, 74, 0.2);
+        }
+
+        .cell.same-number-highlight {
+            background: rgba(74, 93, 74, 0.2);
+        }
+
+        .cell.given {
+            background: var(--given-color);
+            font-weight: 600;
+            color: var(--given-text);
+        }
+
+        .cell.paint-target {
+            background: var(--paint-target-color);
+            border-color: var(--accent-color);
         }
 
         /* Thick borders for 3x3 block separations */
