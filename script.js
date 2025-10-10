@@ -30,14 +30,18 @@ class SudokuGame {
         this.soundsEnabled = this.loadSoundSettings();
         this.initAudio();
         
-        this.difficulties = {
-            easy: 30,      // Most given numbers = easiest
-            medium: 23,    // Moderate given numbers
-            hard: 17       // Fewest given numbers = hardest (minimum for unique solution)
+        // Clean difficulty system - 3 levels only
+        this.DIFFICULTY_LEVELS = {
+            easy: { givenNumbers: 30, label: 'Easy' },
+            medium: { givenNumbers: 23, label: 'Medium' },
+            hard: { givenNumbers: 17, label: 'Hard' }
         };
         
         // Pre-validated puzzle database
         this.puzzleDatabase = this.loadPuzzleDatabase();
+        
+        // Validate and set initial difficulty
+        this.difficulty = this.isValidDifficulty(this.difficulty) ? this.difficulty : 'easy';
         
         // Auto-save system
         this.autoSaveInterval = null;
@@ -64,6 +68,23 @@ class SudokuGame {
         this.addWheelListener();
         this.updateBestTimeDisplay();
         this.newGame();
+    }
+    
+    // Difficulty helper methods
+    isValidDifficulty(difficulty) {
+        return this.DIFFICULTY_LEVELS.hasOwnProperty(difficulty);
+    }
+    
+    getTargetGivenNumbers() {
+        if (!this.isValidDifficulty(this.difficulty)) {
+            console.warn(`Invalid difficulty: ${this.difficulty}, defaulting to easy`);
+            this.difficulty = 'easy';
+        }
+        return this.DIFFICULTY_LEVELS[this.difficulty].givenNumbers;
+    }
+    
+    getDifficultyLabel() {
+        return this.DIFFICULTY_LEVELS[this.difficulty]?.label || 'Easy';
     }
     
     createGrid() {
@@ -1174,7 +1195,7 @@ class SudokuGame {
     }
     
     removeNumbers() {
-        const targetCellsToRemove = 81 - this.difficulties[this.difficulty];
+        const targetCellsToRemove = 81 - this.getTargetGivenNumbers();
         let removedCount = 0;
         let attempts = 0;
         const maxAttempts = 500; // Increased from 1000
@@ -1479,7 +1500,7 @@ class SudokuGame {
     }
     
     removeNumbersForDifficulty() {
-        const targetGivenCount = this.difficulties[this.difficulty];
+        const targetGivenCount = this.getTargetGivenNumbers();
         let attempts = 0;
         const maxAttempts = 100;
         
@@ -1901,7 +1922,7 @@ class SudokuGame {
     }
 
     removeNumbersForDifficulty() {
-        const targetGivenCount = this.difficulties[this.difficulty];
+        const targetGivenCount = this.getTargetGivenNumbers();
         const targetRemovalCount = 81 - targetGivenCount;
         
         console.log(`Target: ${targetGivenCount} given numbers, removing ${targetRemovalCount} numbers`);
@@ -1994,7 +2015,7 @@ class SudokuGame {
         this.solution = this.grid.map(row => [...row]);
         
         // Simple removal strategy - remove numbers from random positions
-        const targetGivenCount = this.difficulties[this.difficulty];
+        const targetGivenCount = this.getTargetGivenNumbers();
         const targetRemovalCount = 81 - targetGivenCount;
         
         const positions = [];
@@ -2820,7 +2841,14 @@ class SudokuGame {
     }
     
     setDifficulty(difficulty) {
+        // Validate difficulty
+        if (!this.isValidDifficulty(difficulty)) {
+            console.error(`Invalid difficulty: ${difficulty}, defaulting to easy`);
+            difficulty = 'easy';
+        }
+        
         this.difficulty = difficulty;
+        console.log(`✅ Difficulty set to: ${this.getDifficultyLabel()} (${this.getTargetGivenNumbers()} given numbers)`);
         
         // Clear highlights and selection
         this.clearSelection();
@@ -2830,7 +2858,10 @@ class SudokuGame {
         document.querySelectorAll('.difficulty-btn').forEach(btn => {
             btn.classList.remove('active');
         });
-        document.querySelector(`[onclick="setDifficulty('${difficulty}')"]`).classList.add('active');
+        const targetBtn = document.querySelector(`[onclick="setDifficulty('${difficulty}')"]`);
+        if (targetBtn) {
+            targetBtn.classList.add('active');
+        }
         
         // Update best time display for new difficulty
         this.updateBestTimeDisplay();
@@ -2921,11 +2952,13 @@ class SudokuGame {
     
     loadBestTimes() {
         const saved = localStorage.getItem('sudoku-best-times');
-        return saved ? JSON.parse(saved) : {
-            easy: null,
-            medium: null,
-            advanced: null,
-            hard: null
+        const parsed = saved ? JSON.parse(saved) : {};
+        
+        // Clean up and only keep valid difficulties
+        return {
+            easy: parsed.easy || null,
+            medium: parsed.medium || null,
+            hard: parsed.hard || null
         };
     }
     
@@ -2981,7 +3014,6 @@ class SudokuGame {
         this.bestTimes = {
             easy: null,
             medium: null,
-            advanced: null,
             hard: null
         };
         this.saveBestTimes();
@@ -2993,7 +3025,6 @@ class SudokuGame {
         const speedThresholds = {
             easy: { fast: 300, slow: 900 },      // 5min fast, 15min slow
             medium: { fast: 600, slow: 1800 },   // 10min fast, 30min slow
-            advanced: { fast: 900, slow: 2700 }, // 15min fast, 45min slow
             hard: { fast: 1200, slow: 3600 }     // 20min fast, 60min slow
         };
         
@@ -3398,7 +3429,15 @@ class SudokuGame {
             // Restore game state
             this.grid = gameState.grid.map(row => [...row]);
             this.notes = gameState.notes.map(row => row.map(cell => new Set(cell)));
-            this.difficulty = gameState.difficulty;
+            
+            // Validate and set difficulty (convert old 'advanced' to 'hard')
+            let loadedDifficulty = gameState.difficulty;
+            if (loadedDifficulty === 'advanced') {
+                console.log('⚠️ Converting old "advanced" difficulty to "hard"');
+                loadedDifficulty = 'hard';
+            }
+            this.difficulty = this.isValidDifficulty(loadedDifficulty) ? loadedDifficulty : 'easy';
+            
             this.startTime = gameState.startTime;
             this.moveCount = gameState.moveCount;
             this.errorCount = gameState.errorCount;
@@ -3887,33 +3926,6 @@ class SudokuGame {
                     ]
                 }
             ],
-            advanced: [
-                // Advanced puzzle 1
-                {
-                    puzzle: [
-                        [0,0,0,0,0,0,0,0,0],
-                        [0,0,0,0,0,3,0,8,5],
-                        [0,0,1,0,2,0,0,0,0],
-                        [0,0,0,5,0,7,0,0,0],
-                        [0,0,4,0,0,0,1,0,0],
-                        [0,9,0,0,0,0,0,0,0],
-                        [5,0,0,0,0,0,0,7,3],
-                        [0,0,2,0,1,0,0,0,0],
-                        [0,0,0,0,4,0,0,0,9]
-                    ],
-                    solution: [
-                        [4,8,3,9,6,1,7,2,5],
-                        [7,2,9,4,6,3,1,8,5],
-                        [6,5,1,7,2,8,4,9,3],
-                        [2,1,8,5,9,7,3,6,4],
-                        [3,6,4,8,5,2,1,9,7],
-                        [9,7,5,1,3,4,8,6,2],
-                        [5,4,6,2,8,9,7,1,3],
-                        [8,3,2,6,1,5,9,4,7],
-                        [1,9,7,3,4,6,2,5,8]
-                    ]
-                }
-            ],
             hard: [
                 // Hard puzzles disabled - using generation system for consistent 17 given numbers
                 // {
@@ -4065,7 +4077,12 @@ class SudokuGame {
     
     // Create puzzle with varied removal patterns
     createVariedPuzzle(difficulty) {
-        const targetGivenCount = this.difficulties[difficulty];
+        // Ensure valid difficulty
+        if (!this.isValidDifficulty(difficulty)) {
+            console.warn(`Invalid difficulty: ${difficulty}, using current difficulty`);
+            difficulty = this.difficulty;
+        }
+        const targetGivenCount = this.DIFFICULTY_LEVELS[difficulty].givenNumbers;
         const targetRemovalCount = 81 - targetGivenCount;
         
         // Create varied removal patterns
@@ -4543,7 +4560,6 @@ function checkPuzzleDatabase() {
         console.log('📊 Puzzle Database Status:');
         console.log(`Easy: ${game.getPuzzleCount('easy')} puzzles`);
         console.log(`Medium: ${game.getPuzzleCount('medium')} puzzles`);
-        console.log(`Advanced: ${game.getPuzzleCount('advanced')} puzzles`);
         console.log(`Hard: ${game.getPuzzleCount('hard')} puzzles`);
     }
 }
