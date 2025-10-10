@@ -1301,7 +1301,14 @@
         function testEyedropper() {
             console.log('Test function called!');
             alert('Test function works!');
-            document.body.style.cursor = 'crosshair';
+            
+            // Create simple eyedropper cursor
+            const eyedropperSVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 4.63L19.37 3.29C19 2.9 18.35 2.9 17.96 3.29L9 12.25L11.75 15L20.71 6.04C21.1 5.65 21.1 5.02 20.71 4.63Z" fill="#000000"/><path d="M7 14C4.79 14 3 15.79 3 18C3 19.66 4.34 21 6 21C7.66 21 9 19.66 9 18C9 15.79 7.21 14 7 14Z" fill="#000000"/></svg>`;
+            const svgDataUrl = `data:image/svg+xml;base64,${btoa(eyedropperSVG)}`;
+            const eyedropperCursor = `url("${svgDataUrl}") 12 12, crosshair`;
+            
+            document.body.style.cursor = eyedropperCursor;
+            console.log('Cursor set to:', document.body.style.cursor);
         }
 
         // Make functions globally accessible for testing
@@ -1326,16 +1333,27 @@
             console.log('=== activateEyedropper called ===');
             isEyedropperActive = true;
             
-            // Test cursor change immediately
-            document.body.style.cursor = 'crosshair';
-            console.log('Cursor set to crosshair');
+            // Create eyedropper cursor SVG
+            const eyedropperSVG = `
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20.71 4.63L19.37 3.29C19 2.9 18.35 2.9 17.96 3.29L9 12.25L11.75 15L20.71 6.04C21.1 5.65 21.1 5.02 20.71 4.63Z" fill="#000000"/>
+                    <path d="M7 14C4.79 14 3 15.79 3 18C3 19.66 4.34 21 6 21C7.66 21 9 19.66 9 18C9 15.79 7.21 14 7 14Z" fill="#000000"/>
+                    <circle cx="6" cy="18" r="1" fill="#FFFFFF"/>
+                </svg>
+            `;
+            
+            // Convert SVG to data URL
+            const svgDataUrl = `data:image/svg+xml;base64,${btoa(eyedropperSVG)}`;
+            
+            // Apply eyedropper cursor
+            const eyedropperCursor = `url("${svgDataUrl}") 12 12, crosshair`;
             
             // Apply cursor to body and all elements with !important
-            document.body.style.setProperty('cursor', 'crosshair', 'important');
+            document.body.style.setProperty('cursor', eyedropperCursor, 'important');
             
             // Also apply to all elements to override any existing cursor styles
             document.querySelectorAll('*').forEach(el => {
-                el.style.setProperty('cursor', 'crosshair', 'important');
+                el.style.setProperty('cursor', eyedropperCursor, 'important');
             });
             
             // Create color info tooltip
@@ -1350,7 +1368,7 @@
             button.style.backgroundColor = 'var(--accent-color)';
             button.style.color = 'white';
             
-            console.log('Eyedropper activated, cursor set to crosshair');
+            console.log('Eyedropper activated with custom cursor');
             console.log('Current cursor:', document.body.style.cursor);
             
             // Add a visible indicator
