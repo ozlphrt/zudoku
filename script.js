@@ -5377,7 +5377,7 @@ document.addEventListener('keydown', (e) => {
 
 // Initialize game
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🎮 Initializing Sudoku Game...');
+    console.log('🎮 DOMContentLoaded - checking if game exists...');
     
     // Load saved theme first
     loadSavedTheme();
@@ -5390,8 +5390,8 @@ document.addEventListener('DOMContentLoaded', () => {
         audioToggle.classList.toggle('muted', !soundsEnabled);
     }
     
-    // Initialize game
-    game = new SudokuGame();
+    // Game is initialized in layout-simplified.html, just reference it
+    game = window.game;
     
     // Check for saved games and update UI
     setTimeout(() => {
