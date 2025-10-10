@@ -400,7 +400,6 @@
             font-weight: 700;
             font-family: 'Fredoka', 'Nunito', 'Quicksand', 'Verdana', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
             cursor: pointer;
-            transition: all 0.15s ease;
             color: var(--cell-text);
             position: relative;
             min-height: 0;
@@ -418,35 +417,10 @@
             border-bottom: 16px solid var(--border-thick);
         }
 
-        .cell:hover {
-            background: var(--hover-color);
-        }
-
-        .cell.selected {
-            background: #4a5d4a;
-            border-color: #4a5d4a;
-        }
-
         .cell.given {
             background: var(--given-color);
             font-weight: 600;
             color: var(--given-text);
-        }
-
-        .cell.paint-target {
-            background: var(--paint-target-color);
-            border-color: var(--accent-color);
-            animation: paintTargetPulse 2s ease-in-out infinite;
-        }
-
-        .cell.highlighted {
-            background: #4a5d4a;
-            border-color: #4a5d4a;
-        }
-
-        .cell.same-number-highlight {
-            background: #4a5d4a;
-            border-color: #4a5d4a;
         }
 
         /* ========================================
@@ -614,58 +588,8 @@
             }
         }
 
-        /* Animation classes */
-        .cell.number-place-animation {
-            animation: numberPlace 0.6s ease-out;
-        }
 
-        .cell.error-shake {
-            animation: errorShake 0.8s ease-out;
-        }
 
-        .cell.success-ripple {
-            position: relative;
-        }
-
-        .cell.success-ripple::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 100%;
-            height: 100%;
-            border-radius: 6px;
-            background: var(--success-color);
-            transform: translate(-50%, -50%);
-            animation: successRipple 0.6s ease-out;
-            pointer-events: none;
-        }
-
-        .cell.completion-celebration {
-            animation: completionCelebration 0.4s ease-in-out;
-        }
-
-        .cell.hint-glow {
-            animation: hintGlow 1s ease-in-out;
-        }
-
-        .cell.correct {
-            background: var(--success-color);
-            opacity: 0.3;
-            border-color: var(--success-color);
-        }
-
-        .cell.hint-highlight {
-            background: var(--success-color);
-            border-color: var(--success-color);
-            animation: hintGlow 2s ease-in-out;
-        }
-
-        .cell.completed-highlight {
-            background: var(--success-color);
-            border-color: var(--success-color);
-            animation: completionCelebration 1.5s ease-in-out;
-        }
 
         /* ========================================
            INSTRUCTIONS
