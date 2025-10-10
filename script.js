@@ -832,13 +832,21 @@ class SudokuGame {
     highlightAllInstances(number) {
         // Clear previous highlights
         this.clearHighlights();
+        this.clearNoteHighlights();
         
         // Highlight all cells with this number
         for (let i = 0; i < 81; i++) {
             const row = Math.floor(i / 9);
             const col = i % 9;
+            const cell = document.querySelector(`[data-index="${i}"]`);
+            
             if (this.grid[row][col] === number) {
-                const cell = document.querySelector(`[data-index="${i}"]`);
+                // Highlight cells that have this number
+                if (cell) {
+                    cell.classList.add('number-selected');
+                }
+            } else if (this.grid[row][col] === 0 && this.notes[row][col].has(number)) {
+                // Also highlight cells that have this number in their notes
                 if (cell) {
                     cell.classList.add('number-selected');
                 }
