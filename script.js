@@ -613,26 +613,26 @@ class SudokuGame {
                     return;
                 }
                 
-                // Check for flick gestures (quick swipe left/right)
+                // Check for flick gestures (quick swipe up/down)
                 if (touchDuration < 300 && e.changedTouches.length > 0) {
                     const touchEndX = e.changedTouches[0].clientX;
                     const touchEndY = e.changedTouches[0].clientY;
                     const deltaX = touchEndX - touchStartX;
                     const deltaY = touchEndY - touchStartY;
                     
-                    // Flick right: deltaX > 20 and |deltaY| < 60 (note mode)
-                    if (deltaX > 20 && Math.abs(deltaY) < 60) {
+                    // Flick up: deltaY < -20 and |deltaX| < 60 (note mode)
+                    if (deltaY < -20 && Math.abs(deltaX) < 60) {
                         e.preventDefault();
                         e.stopPropagation();
-                        this.handleFlickRight(i);
+                        this.handleFlickUp(i);
                         return;
                     }
                     
-                    // Flick left: deltaX < -20 and |deltaY| < 60 (undo)
-                    if (deltaX < -20 && Math.abs(deltaY) < 60) {
+                    // Flick down: deltaY > 20 and |deltaX| < 60 (undo)
+                    if (deltaY > 20 && Math.abs(deltaX) < 60) {
                         e.preventDefault();
                         e.stopPropagation();
-                        this.handleFlickLeft();
+                        this.handleFlickDown();
                         return;
                     }
                 }
@@ -941,8 +941,8 @@ class SudokuGame {
         }
     }
     
-    // Handle flick right gesture for note mode
-    handleFlickRight(index) {
+    // Handle flick up gesture for note mode
+    handleFlickUp(index) {
         if (this.isGameWon) return;
         
         const row = Math.floor(index / 9);
@@ -957,8 +957,8 @@ class SudokuGame {
         }
     }
     
-    // Handle flick left gesture for undo
-    handleFlickLeft() {
+    // Handle flick down gesture for undo
+    handleFlickDown() {
         if (this.isGameWon) return;
         
         // Perform undo action
