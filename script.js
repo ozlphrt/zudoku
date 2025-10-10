@@ -767,6 +767,17 @@ class SudokuGame {
     selectCell(index) {
         if (this.isGameWon) return;
         
+        const row = Math.floor(index / 9);
+        const col = index % 9;
+        const cellValue = this.grid[row][col];
+        
+        // If clicking on a cell with a number, highlight all instances of that number
+        if (cellValue !== 0) {
+            this.highlightAllInstances(cellValue);
+            this.setNumberCursor(cellValue);
+            return;
+        }
+        
         // Remove previous selection and highlights
         this.clearSelection();
         this.clearHighlights();
@@ -823,6 +834,47 @@ class SudokuGame {
         
     }
     
+    highlightAllInstances(number) {
+        // Clear previous highlights
+        this.clearHighlights();
+        
+        // Highlight all cells with this number
+        for (let i = 0; i < 81; i++) {
+            const row = Math.floor(i / 9);
+            const col = i % 9;
+            if (this.grid[row][col] === number) {
+                const cell = document.querySelector(`[data-index="${i}"]`);
+                if (cell) {
+                    cell.classList.add('number-selected');
+                }
+            }
+        }
+    }
+    
+    setNumberCursor(number) {
+        // Set cursor for all cells
+        const cells = document.querySelectorAll('.cell');
+        const cursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="rgba(0,255,0,0.8)" stroke="white" stroke-width="2"/><text x="16" y="20" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="white">${number}</text></svg>`;
+        
+        cells.forEach(cell => {
+            cell.style.cursor = `url('${cursorSvg}'), auto`;
+        });
+        
+        // Also set on document body
+        document.body.style.cursor = `url('${cursorSvg}'), auto`;
+    }
+    
+    clearNumberCursor() {
+        // Reset cursor for all cells
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            cell.style.cursor = '';
+        });
+        
+        // Reset body cursor
+        document.body.style.cursor = '';
+    }
+    
     clearSelection() {
         if (this.selectedCell !== null) {
             const cell = document.querySelector(`[data-index="${this.selectedCell}"]`);
@@ -839,8 +891,9 @@ class SudokuGame {
     clearHighlights() {
         const cells = document.querySelectorAll('.cell');
         cells.forEach(cell => {
-            cell.classList.remove('highlighted');
+            cell.classList.remove('highlighted', 'number-selected');
         });
+        this.clearNumberCursor();
     }
     
     updateCursor() {

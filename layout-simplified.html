@@ -425,6 +425,15 @@
             background: rgba(74, 93, 74, 0.2);
         }
 
+        .cell.number-selected {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: rgba(0, 255, 0, 0.6);
+        }
+
+        .cell.cursor-number {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="rgba(0,255,0,0.8)" stroke="white" stroke-width="2"/><text x="16" y="20" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="white">3</text></svg>'), auto;
+        }
+
         .cell.given {
             background: var(--given-color);
             font-weight: 600;
