@@ -715,14 +715,11 @@ class SudokuGame {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                // Clear previous highlights and highlight new number
+                // Clear previous highlights and highlight new number with green
                 this.clearHighlights();
                 this.clearNoteHighlights();
-                this.highlightSameNumbers(this.paintNumber);
-                this.highlightSameNotes(this.paintNumber);
-                
-                // Update the cursor with new number
-                this.updateCursor();
+                this.highlightAllInstances(this.paintNumber);
+                this.setNumberCursor(this.paintNumber);
             }
         }, { passive: false, capture: true });
         
@@ -752,13 +749,11 @@ class SudokuGame {
                     e.preventDefault();
                     e.stopPropagation();
                     
-                    // Clear previous highlights and highlight new number
+                    // Clear previous highlights and highlight new number with green
                     this.clearHighlights();
                     this.clearNoteHighlights();
-                    this.highlightSameNumbers(this.paintNumber);
-                    this.highlightSameNotes(this.paintNumber);
-                    
-                    this.updateCursor();
+                    this.highlightAllInstances(this.paintNumber);
+                    this.setNumberCursor(this.paintNumber);
                 }
             }, { passive: false });
         }
