@@ -418,46 +418,6 @@
             border-bottom: 5px solid var(--border-thick);
         }
 
-        /* Additional thick borders for complete 3x3 block separation */
-        .cell:nth-child(n+1):nth-child(-n+9):nth-child(3n) {
-            border-right: 5px solid var(--border-thick);
-        }
-        
-        .cell:nth-child(n+10):nth-child(-n+18):nth-child(3n) {
-            border-right: 5px solid var(--border-thick);
-        }
-        
-        .cell:nth-child(n+28):nth-child(-n+36):nth-child(3n) {
-            border-right: 5px solid var(--border-thick);
-        }
-        
-        .cell:nth-child(n+37):nth-child(-n+45):nth-child(3n) {
-            border-right: 5px solid var(--border-thick);
-        }
-        
-        .cell:nth-child(n+55):nth-child(-n+63):nth-child(3n) {
-            border-right: 5px solid var(--border-thick);
-        }
-        
-        .cell:nth-child(n+64):nth-child(-n+72):nth-child(3n) {
-            border-right: 5px solid var(--border-thick);
-        }
-        
-        .cell:nth-child(n+82):nth-child(-n+90):nth-child(3n) {
-            border-right: 5px solid var(--border-thick);
-        }
-
-        /* Horizontal separations for 3x3 blocks */
-        .cell:nth-child(n+1):nth-child(-n+9),
-        .cell:nth-child(n+10):nth-child(-n+18) {
-            border-bottom: 5px solid var(--border-thick);
-        }
-        
-        .cell:nth-child(n+28):nth-child(-n+36),
-        .cell:nth-child(n+37):nth-child(-n+45) {
-            border-bottom: 5px solid var(--border-thick);
-        }
-
         .cell:hover {
             background: var(--hover-color);
         }
@@ -559,6 +519,15 @@
                 opacity: 0.7;
                 transform: scale(1.1);
             }
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .loading-pulse {
+            animation: loadingPulse 1.5s ease-in-out infinite;
         }
 
         @keyframes numberPlace {
