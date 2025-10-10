@@ -773,11 +773,12 @@ class SudokuGame {
         
         // If clicking on a cell with a number, highlight all instances of that number
         if (cellValue !== 0) {
-            this.highlightAllInstances(cellValue);
-            this.setNumberCursor(cellValue);
+            this.highlightSameNumbers(cellValue);
+            this.highlightSameNotes(cellValue);
             // Enable paint mode so clicking on empty cells will place this number
             this.isPaintMode = true;
             this.paintNumber = cellValue;
+            this.updateCursor();
             return;
         }
         
@@ -834,47 +835,6 @@ class SudokuGame {
         
     }
     
-    highlightAllInstances(number) {
-        // Clear previous highlights
-        this.clearHighlights();
-        
-        // Highlight all cells with this number
-        for (let i = 0; i < 81; i++) {
-            const row = Math.floor(i / 9);
-            const col = i % 9;
-            if (this.grid[row][col] === number) {
-                const cell = document.querySelector(`[data-index="${i}"]`);
-                if (cell) {
-                    cell.classList.add('number-selected');
-                }
-            }
-        }
-    }
-    
-    setNumberCursor(number) {
-        // Set cursor for all cells - large size (64x64), subtle green outline (6px), large font (42px) with Fredoka font
-        const cells = document.querySelectorAll('.cell');
-        const cursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="rgba(0,150,0,0.6)" stroke="rgb(0,150,50)" stroke-width="6"/><text x="32" y="44" text-anchor="middle" font-family="Fredoka,Nunito,Quicksand,Verdana,Arial Rounded MT Bold,Helvetica Rounded,Arial,sans-serif" font-size="42" font-weight="700" fill="rgb(0,150,50)">${number}</text></svg>`;
-        
-        cells.forEach(cell => {
-            cell.style.cursor = `url('${cursorSvg}') 32 32, auto`;
-        });
-        
-        // Also set on document body
-        document.body.style.cursor = `url('${cursorSvg}') 32 32, auto`;
-    }
-    
-    clearNumberCursor() {
-        // Reset cursor for all cells
-        const cells = document.querySelectorAll('.cell');
-        cells.forEach(cell => {
-            cell.style.cursor = '';
-        });
-        
-        // Reset body cursor
-        document.body.style.cursor = '';
-    }
-    
     clearSelection() {
         if (this.selectedCell !== null) {
             const cell = document.querySelector(`[data-index="${this.selectedCell}"]`);
@@ -893,7 +853,6 @@ class SudokuGame {
         cells.forEach(cell => {
             cell.classList.remove('highlighted', 'number-selected');
         });
-        this.clearNumberCursor();
     }
     
     updateCursor() {
@@ -1103,8 +1062,8 @@ class SudokuGame {
             // If we're in paint mode and this matches the paint number, re-highlight all instances
             if (this.isPaintMode && this.paintNumber === number) {
                 // Re-highlight all instances of this number (including the newly placed one)
-                this.highlightAllInstances(number);
-                this.setNumberCursor(number);
+                this.highlightSameNumbers(number);
+                this.highlightSameNotes(number);
                 // Keep paint mode active, don't clear selection
             } else {
                 // Clear selection after valid move (only if not in paint mode)
@@ -4837,13 +4796,14 @@ function selectNumber(number) {
         game.clearHighlights();
         game.clearNoteHighlights();
         
-        // Highlight all instances of this number with green (like clicking a number on the board)
-        game.highlightAllInstances(number);
-        game.setNumberCursor(number);
+        // Highlight all instances of this number (like clicking a number on the board)
+        game.highlightSameNumbers(number);
+        game.highlightSameNotes(number);
         
         // Enable paint mode for this number
         game.isPaintMode = true;
         game.paintNumber = number;
+        game.updateCursor();
         
     } else if (number === 0 && game) {
         // Handle delete/erase mode
