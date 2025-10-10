@@ -112,6 +112,12 @@ class SudokuGame {
         
         // Step 1: Generate a complete valid grid
         const completeGrid = this.generateCompleteGrid();
+        console.log('Complete grid generated:', completeGrid);
+        
+        if (!completeGrid || !Array.isArray(completeGrid)) {
+            console.error('❌ Failed to generate complete grid');
+            return null;
+        }
         
         // Step 2: Remove cells based on difficulty
         const cellsToRemove = {
@@ -122,6 +128,13 @@ class SudokuGame {
         };
         
         const puzzle = this.removeNumbers(completeGrid, cellsToRemove[difficulty] || 35);
+        console.log('Puzzle after removal:', puzzle);
+        
+        if (!puzzle || !Array.isArray(puzzle)) {
+            console.error('❌ Failed to remove numbers from grid');
+            return null;
+        }
+        
         console.log(`✅ Generated ${difficulty} puzzle with ${81 - (cellsToRemove[difficulty] || 35)} clues`);
         
         return puzzle;
@@ -130,7 +143,13 @@ class SudokuGame {
     // Generate a complete valid Sudoku grid
     generateCompleteGrid() {
         const grid = Array(9).fill().map(() => Array(9).fill(0));
-        this.fillGrid(grid);
+        const success = this.fillGrid(grid);
+        
+        if (!success) {
+            console.error('❌ Failed to generate complete grid');
+            return null;
+        }
+        
         return grid;
     }
     
@@ -1668,6 +1687,10 @@ class SudokuGame {
             // Generate puzzle client-side
             const puzzle = this.generateValidPuzzle(this.difficulty);
             
+            if (!puzzle || !Array.isArray(puzzle)) {
+                throw new Error('Failed to generate valid puzzle');
+            }
+            
             // Load the puzzle into our grid
             this.grid = puzzle.map(row => [...row]);
             this.solution = null; // Will be generated if needed for hints
@@ -1705,8 +1728,52 @@ class SudokuGame {
             console.error('❌ Failed to generate puzzle:', error);
             this.hideLoadingAnimation();
             
-            // Show error message to user
-            alert('Failed to generate puzzle. Please try again.');
+            // Try fallback puzzle generation
+            console.log('🔄 Attempting fallback puzzle generation...');
+            this.generateFallbackPuzzle();
+        }
+    }
+    
+    // Fallback puzzle generation using a known valid puzzle
+    generateFallbackPuzzle() {
+        try {
+            // Use a known valid Sudoku puzzle as fallback
+            const fallbackPuzzle = [
+                [5,3,0,0,7,0,0,0,0],
+                [6,0,0,1,9,5,0,0,0],
+                [0,9,8,0,0,0,0,6,0],
+                [8,0,0,0,6,0,0,0,3],
+                [4,0,0,8,0,3,0,0,1],
+                [7,0,0,0,2,0,0,0,6],
+                [0,6,0,0,0,0,2,8,0],
+                [0,0,0,4,1,9,0,0,5],
+                [0,0,0,0,8,0,0,7,9]
+            ];
+            
+            console.log('✅ Using fallback puzzle');
+            
+            // Load the fallback puzzle
+            this.grid = fallbackPuzzle.map(row => [...row]);
+            this.solution = null;
+            
+            // Mark given cells
+            this.givenCells = Array(9).fill().map(() => Array(9).fill(false));
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (this.grid[row][col] !== 0) {
+                        this.givenCells[row][col] = true;
+                    }
+                }
+            }
+            
+            this.updateDisplay();
+            this.updateProgress();
+            this.startTimer();
+            this.startAutoSave();
+            
+        } catch (error) {
+            console.error('❌ Fallback puzzle generation also failed:', error);
+            alert('Failed to generate puzzle. Please refresh the page.');
         }
     }
 
