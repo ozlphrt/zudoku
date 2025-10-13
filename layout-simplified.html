@@ -916,6 +916,11 @@
                 min-width: 80px;
             }
             
+            /* Hide difficulty buttons at top for iPad, show at bottom */
+            .ipad-difficulty-top {
+                display: none;
+            }
+            
             .cell {
                 font-size: 1.8rem;
                 min-height: 45px;
@@ -935,21 +940,39 @@
             }
             
             .ipad-top-controls {
-                gap: 8px;
+                gap: 6px;
                 margin-bottom: 10px;
                 padding: 6px;
-                flex-wrap: nowrap;
+                flex-wrap: wrap;
+                justify-content: center;
             }
             
             .ipad-timer {
                 padding: 4px 8px;
-                font-size: 0.8rem;
+                font-size: 0.75rem;
+                flex-shrink: 0;
+                order: 1;
+            }
+            
+            .ipad-difficulty-top {
+                display: flex;
+                gap: 4px;
+                order: 2;
+            }
+            
+            .ipad-difficulty-top .difficulty-btn {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+                min-width: 50px;
                 flex-shrink: 0;
             }
             
             .ipad-numpad {
                 gap: 4px;
                 flex-wrap: nowrap;
+                order: 3;
+                width: 100%;
+                justify-content: center;
             }
             
             .ipad-numpad .num-btn {
@@ -961,22 +984,26 @@
                 flex-shrink: 0;
             }
             
+            /* Hide bottom difficulty buttons on iPhone, show at top instead */
+            .ipad-difficulty-bottom {
+                display: none !important;
+            }
+            
             .ipad-controls {
                 gap: 10px;
                 margin-top: 10px;
                 padding: 8px;
+                justify-content: center;
             }
             
-            .ipad-controls .difficulty-btn {
-                padding: 6px 10px;
-                font-size: 0.8rem;
-                min-width: 60px;
+            .ipad-controls-row {
+                justify-content: center;
             }
             
             .ipad-controls .action-btn {
-                padding: 6px 12px;
-                font-size: 0.8rem;
-                min-width: 70px;
+                padding: 8px 16px;
+                font-size: 0.9rem;
+                min-width: 80px;
             }
         }
 
@@ -1093,11 +1120,16 @@
         
         <!-- Center: Grids -->
         <div class="sudoku-container">
-            <!-- iPad Top Controls - Timer and Number Pad -->
+            <!-- iPad Top Controls - Timer, Difficulty, and Number Pad -->
             <div class="ipad-top-controls">
                 <div class="ipad-timer">
                     <span class="timer-label">Time:</span>
                     <span class="timer-value" id="timer-ipad">00:00:00</span>
+                </div>
+                <div class="ipad-difficulty-top">
+                    <button class="difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
+                    <button class="difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
+                    <button class="difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
                 </div>
                 <div class="ipad-numpad">
                     <button class="num-btn" onclick="selectNumber(1)">1</button>
@@ -1117,7 +1149,7 @@
             <!-- iPad Controls Under Board -->
             <div class="ipad-controls">
                 <div class="ipad-controls-row">
-                    <div class="difficulty-buttons">
+                    <div class="difficulty-buttons ipad-difficulty-bottom">
                         <button class="difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
                         <button class="difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
                         <button class="difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
@@ -1166,8 +1198,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=95"></script>
-    <script src="script.js?v=95"></script>
+    <script src="puzzles-expanded.js?v=96"></script>
+    <script src="script.js?v=96"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;
