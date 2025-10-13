@@ -810,16 +810,18 @@
                 width: 100%;
             }
             
-            /* iPad Top Controls - Timer and Number Pad */
+            /* iPad Top Controls - Timer and Number Pad in same row */
             .ipad-top-controls {
                 display: flex;
-                flex-direction: column;
-                gap: 10px;
+                flex-direction: row;
+                gap: 15px;
                 margin-bottom: 15px;
                 padding: 10px;
                 width: 100%;
                 max-width: 90vw;
                 align-items: center;
+                justify-content: center;
+                flex-wrap: wrap;
             }
             
             .ipad-timer {
@@ -830,6 +832,7 @@
                 background: var(--bg-secondary);
                 border-radius: 8px;
                 border: 1px solid var(--border-color);
+                flex-shrink: 0;
             }
             
             .timer-label {
@@ -853,9 +856,9 @@
             }
             
             .ipad-numpad .num-btn {
-                width: 45px;
-                height: 45px;
-                font-size: 1.2rem;
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
                 padding: 0;
                 margin: 0;
                 flex-shrink: 0;
@@ -1145,7 +1148,7 @@
 
         // Mobile swipe functions
         function goToPage(page) {
-            if (window.innerWidth > 768) return; // Only on mobile
+            if (window.innerWidth > 768 || (window.innerWidth >= 481 && window.innerWidth <= 768)) return; // Only on mobile, not iPad
             
             currentPage = page;
             container = container || document.querySelector('.container');
@@ -1161,18 +1164,18 @@
         }
 
         function handleSwipeStart(e) {
-            if (window.innerWidth > 768) return; // Only on mobile
+            if (window.innerWidth > 768 || (window.innerWidth >= 481 && window.innerWidth <= 768)) return; // Only on mobile, not iPad
             startX = e.touches ? e.touches[0].clientX : e.clientX;
             startY = e.touches ? e.touches[0].clientY : e.clientY;
         }
 
         function handleSwipeMove(e) {
-            if (window.innerWidth > 768) return; // Only on mobile
+            if (window.innerWidth > 768 || (window.innerWidth >= 481 && window.innerWidth <= 768)) return; // Only on mobile, not iPad
             e.preventDefault();
         }
 
         function handleSwipeEnd(e) {
-            if (window.innerWidth > 768) return; // Only on mobile
+            if (window.innerWidth > 768 || (window.innerWidth >= 481 && window.innerWidth <= 768)) return; // Only on mobile, not iPad
             
             const endX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
             const endY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
