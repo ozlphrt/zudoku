@@ -763,9 +763,165 @@
         }
         
         /* ========================================
+           IPAD CONTROLS - Hidden by default
+        ======================================== */
+        
+        .ipad-controls {
+            display: none;
+        }
+        
+        /* Show iPad controls only on iPad devices */
+        @media (max-width: 768px) and (min-width: 481px) {
+            .ipad-controls {
+                display: flex;
+            }
+        }
+
+        /* ========================================
            TABLET/IPAD OVERRIDE (768px - 1024px)
         ======================================== */
         
+        @media (max-width: 768px) and (min-width: 481px) {
+            /* iPad Layout - Move controls under board */
+            .container {
+                flex-direction: column;
+                height: 100vh;
+                overflow: hidden;
+            }
+            
+            .left-panel {
+                order: 3;
+                max-height: 80px;
+                flex-direction: row;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 4px;
+            }
+            
+            /* Hide timer and difficulty sections in left panel on iPad */
+            .left-panel .stats-section:first-child,
+            .left-panel .stats-section:nth-child(2) {
+                display: none;
+            }
+            
+            .sudoku-container {
+                order: 1;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 10px;
+            }
+            
+            .right-panel {
+                order: 2;
+                max-height: 80px;
+                flex-direction: row;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 4px;
+            }
+            
+            /* Hide hint button in right panel on iPad */
+            .right-panel .action-controls {
+                display: none;
+            }
+            
+            .sudoku-grid {
+                max-width: min(90vw, calc(100vh - 280px));
+                max-height: min(90vw, calc(100vh - 280px));
+                gap: 3px;
+                flex-shrink: 0;
+            }
+            
+            /* iPad Controls Under Board */
+            .ipad-controls {
+                flex-direction: row;
+                gap: 20px;
+                margin-top: 15px;
+                padding: 10px;
+                background: var(--bg-secondary);
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+                border: 2px solid var(--border-color);
+                align-items: center;
+                justify-content: center;
+                flex-wrap: wrap;
+                width: 100%;
+                max-width: 90vw;
+            }
+            
+            .ipad-timer-section {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+                min-width: 120px;
+            }
+            
+            .ipad-difficulty-section {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+                min-width: 200px;
+            }
+            
+            .ipad-hint-section {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                min-width: 100px;
+            }
+            
+            .ipad-controls .stats-title {
+                font-size: 1.0rem;
+                margin-bottom: 4px;
+                text-align: center;
+            }
+            
+            .ipad-controls .stat-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 4px 8px;
+                background: var(--bg-tertiary);
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+                min-width: 100px;
+            }
+            
+            .ipad-controls .difficulty-buttons {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .ipad-controls .difficulty-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+                min-width: 60px;
+            }
+            
+            .ipad-controls .action-btn,
+            .ipad-controls .timer-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .ipad-controls .timer-controls {
+                display: flex;
+                gap: 4px;
+            }
+            
+            .cell {
+                font-size: 1.6rem;
+                min-height: 40px;
+            }
+        }
+
         @media (min-width: 768px) and (max-width: 1024px) {
             .sudoku-grid {
                 max-width: 700px !important;
@@ -880,6 +1036,33 @@
         <!-- Center: Grids -->
         <div class="sudoku-container">
             <div class="sudoku-grid" id="sudokuGrid"></div>
+            
+            <!-- iPad Controls Under Board -->
+            <div class="ipad-controls">
+                <div class="ipad-timer-section">
+                    <div class="stat-item">
+                        <span class="stat-label">Time:</span>
+                        <span class="stat-value" id="timer-ipad">00:00:00</span>
+                    </div>
+                    <div class="timer-controls">
+                        <button class="timer-btn" id="pauseBtn-ipad" onclick="pauseTimer()">Pause</button>
+                        <button class="timer-btn" id="resumeBtn-ipad" onclick="resumeTimer()" style="display: none;">Resume</button>
+                    </div>
+                </div>
+                
+                <div class="ipad-difficulty-section">
+                    <h3 class="stats-title">Difficulty</h3>
+                    <div class="difficulty-buttons">
+                        <button class="difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
+                        <button class="difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
+                        <button class="difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
+                    </div>
+                </div>
+                
+                <div class="ipad-hint-section">
+                    <button class="action-btn" onclick="solveHint()" title="Get Hint">Hint</button>
+                </div>
+            </div>
         </div>
         
         <!-- Right Panel: Controls -->

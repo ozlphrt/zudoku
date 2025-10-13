@@ -3379,8 +3379,14 @@ class SudokuGame {
     updateTimer() {
         const elapsed = this.getElapsedTime();
         const timerElement = document.getElementById('timer');
+        const timerIpadElement = document.getElementById('timer-ipad');
+        const timeString = this.formatTime(elapsed);
+        
         if (timerElement) {
-            timerElement.textContent = this.formatTime(elapsed);
+            timerElement.textContent = timeString;
+        }
+        if (timerIpadElement) {
+            timerIpadElement.textContent = timeString;
         }
         this.updateSpeedIndicator(elapsed);
     }
@@ -3401,19 +3407,29 @@ class SudokuGame {
     updateTimerControls() {
         const pauseBtn = document.getElementById('pauseBtn');
         const resumeBtn = document.getElementById('resumeBtn');
+        const pauseBtnIpad = document.getElementById('pauseBtn-ipad');
+        const resumeBtnIpad = document.getElementById('resumeBtn-ipad');
         
-        if (!pauseBtn || !resumeBtn) {
-            console.log('❌ Timer control buttons not found in DOM');
-            return;
+        // Update main timer controls
+        if (pauseBtn && resumeBtn) {
+            if (this.isPaused) {
+                pauseBtn.style.display = 'none';
+                resumeBtn.style.display = 'block';
+            } else {
+                pauseBtn.style.display = 'block';
+                resumeBtn.style.display = 'none';
+            }
         }
         
-        // Simple logic: if paused, show resume; otherwise show pause
-        if (this.isPaused) {
-            pauseBtn.style.display = 'none';
-            resumeBtn.style.display = 'block';
-        } else {
-            pauseBtn.style.display = 'block';
-            resumeBtn.style.display = 'none';
+        // Update iPad timer controls
+        if (pauseBtnIpad && resumeBtnIpad) {
+            if (this.isPaused) {
+                pauseBtnIpad.style.display = 'none';
+                resumeBtnIpad.style.display = 'block';
+            } else {
+                pauseBtnIpad.style.display = 'block';
+                resumeBtnIpad.style.display = 'none';
+            }
         }
     }
     
