@@ -766,13 +766,15 @@
            IPAD CONTROLS - Hidden by default
         ======================================== */
         
-        .ipad-controls {
+        .ipad-controls,
+        .ipad-top-controls {
             display: none;
         }
         
         /* Show iPad controls only on iPad devices */
         @media (max-width: 768px) and (min-width: 481px) {
-            .ipad-controls {
+            .ipad-controls,
+            .ipad-top-controls {
                 display: flex;
             }
         }
@@ -804,13 +806,64 @@
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                padding: 20px;
+                padding: 10px;
                 width: 100%;
             }
             
+            /* iPad Top Controls - Timer and Number Pad */
+            .ipad-top-controls {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 15px;
+                padding: 10px;
+                width: 100%;
+                max-width: 90vw;
+                align-items: center;
+            }
+            
+            .ipad-timer {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 12px;
+                background: var(--bg-secondary);
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+            }
+            
+            .timer-label {
+                font-size: 0.9rem;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+            
+            .timer-value {
+                font-size: 1.0rem;
+                color: var(--text-primary);
+                font-weight: 700;
+                font-family: monospace;
+            }
+            
+            .ipad-numpad {
+                display: flex;
+                gap: 6px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .ipad-numpad .num-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 1.2rem;
+                padding: 0;
+                margin: 0;
+                flex-shrink: 0;
+            }
+            
             .sudoku-grid {
-                max-width: min(90vw, calc(100vh - 120px));
-                max-height: min(90vw, calc(100vh - 120px));
+                max-width: min(85vw, calc(100vh - 200px));
+                max-height: min(85vw, calc(100vh - 200px));
                 gap: 3px;
                 flex-shrink: 0;
             }
@@ -975,6 +1028,25 @@
         
         <!-- Center: Grids -->
         <div class="sudoku-container">
+            <!-- iPad Top Controls - Timer and Number Pad -->
+            <div class="ipad-top-controls">
+                <div class="ipad-timer">
+                    <span class="timer-label">Time:</span>
+                    <span class="timer-value" id="timer-ipad">00:00:00</span>
+                </div>
+                <div class="ipad-numpad">
+                    <button class="num-btn" onclick="selectNumber(1)">1</button>
+                    <button class="num-btn" onclick="selectNumber(2)">2</button>
+                    <button class="num-btn" onclick="selectNumber(3)">3</button>
+                    <button class="num-btn" onclick="selectNumber(4)">4</button>
+                    <button class="num-btn" onclick="selectNumber(5)">5</button>
+                    <button class="num-btn" onclick="selectNumber(6)">6</button>
+                    <button class="num-btn" onclick="selectNumber(7)">7</button>
+                    <button class="num-btn" onclick="selectNumber(8)">8</button>
+                    <button class="num-btn" onclick="selectNumber(9)">9</button>
+                </div>
+            </div>
+            
             <div class="sudoku-grid" id="sudokuGrid"></div>
             
             <!-- iPad Controls Under Board -->
