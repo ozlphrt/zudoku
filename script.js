@@ -3027,11 +3027,15 @@ class SudokuGame {
                         this.notes[row][col].clear(); // Clear any existing notes
                         this.hintCount++;
                         this.updateHintCount();
+                        
+                        // Remove invalid notes from entire grid after hint reveal
+                        this.removeInvalidNotes();
+                        
                         this.updateDisplay();
-            this.updateProgress();
+                        this.updateProgress();
                         this.highlightHintCell(row, col);
-            this.playSound('hint');
-            this.animateHint(row, col);
+                        this.playSound('hint');
+                        this.animateHint(row, col);
                         return;
                     }
                 }
@@ -3045,6 +3049,10 @@ class SudokuGame {
             this.notes[hiddenSingle.row][hiddenSingle.col].clear(); // Clear any existing notes
             this.hintCount++;
             this.updateHintCount();
+            
+            // Remove invalid notes from entire grid after hint reveal
+            this.removeInvalidNotes();
+            
             this.updateDisplay();
             this.updateProgress();
             this.highlightHintCell(hiddenSingle.row, hiddenSingle.col);
@@ -3074,6 +3082,14 @@ class SudokuGame {
         if (this.solveSudokuForGrid(workingGrid)) {
             // If successful, copy the solution back
             this.grid = workingGrid;
+            
+            // Clear all notes since puzzle is fully solved
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    this.notes[row][col].clear();
+                }
+            }
+            
             this.updateDisplay();
             
             // Check if this matches our stored solution
