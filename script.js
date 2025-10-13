@@ -40,6 +40,18 @@ class SudokuGame {
         
         // Puzzle database - initialize immediately
         this.puzzleDatabase = this.getBuiltInPuzzleDatabase();
+        
+        // Merge with expanded puzzle database if available
+        if (typeof expandedPuzzleDatabase !== 'undefined') {
+            console.log('🔄 Merging expanded puzzle database...');
+            for (const difficulty of ['easy', 'medium', 'hard']) {
+                if (expandedPuzzleDatabase[difficulty]) {
+                    this.puzzleDatabase[difficulty] = this.puzzleDatabase[difficulty].concat(expandedPuzzleDatabase[difficulty]);
+                    console.log(`📚 Added ${expandedPuzzleDatabase[difficulty].length} ${difficulty} puzzles from expanded database`);
+                }
+            }
+        }
+        
         const totalPuzzles = Object.values(this.puzzleDatabase).reduce((sum, arr) => sum + arr.length, 0);
         console.log(`✅ Puzzle database loaded: ${totalPuzzles} total puzzles -`, 
             Object.keys(this.puzzleDatabase).map(d => `${d}: ${this.puzzleDatabase[d].length}`).join(', '));
