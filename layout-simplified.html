@@ -780,8 +780,8 @@
             display: none;
         }
         
-        /* Show iPad controls only on iPad devices */
-        @media (max-width: 768px) and (min-width: 481px) {
+        /* Show iPad controls on iPad and iPhone devices */
+        @media (max-width: 768px) {
             .ipad-controls,
             .ipad-top-controls {
                 display: flex;
@@ -789,10 +789,10 @@
         }
 
         /* ========================================
-           TABLET/IPAD OVERRIDE (768px - 1024px)
+           MOBILE/IPAD/IPHONE OVERRIDE (max-width: 768px)
         ======================================== */
         
-        @media (max-width: 768px) and (min-width: 481px) {
+        @media (max-width: 768px) {
             /* iPad Layout - Single panel with just sudoku board */
             .container {
                 display: flex;
@@ -921,9 +921,52 @@
                 min-height: 45px;
             }
             
-            /* Hide page indicators on iPad */
+            /* Hide page indicators on mobile/iPad/iPhone */
             .page-indicators {
                 display: none !important;
+            }
+        }
+
+        /* iPhone specific adjustments (max-width: 480px) */
+        @media (max-width: 480px) {
+            .cell {
+                font-size: 1.6rem;
+                min-height: 40px;
+            }
+            
+            .ipad-top-controls {
+                gap: 10px;
+                margin-bottom: 10px;
+                padding: 8px;
+            }
+            
+            .ipad-timer {
+                padding: 6px 10px;
+                font-size: 0.9rem;
+            }
+            
+            .ipad-numpad .num-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+            
+            .ipad-controls {
+                gap: 10px;
+                margin-top: 10px;
+                padding: 8px;
+            }
+            
+            .ipad-controls .difficulty-btn {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+                min-width: 60px;
+            }
+            
+            .ipad-controls .action-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+                min-width: 70px;
             }
         }
 
@@ -1113,8 +1156,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=92"></script>
-    <script src="script.js?v=92"></script>
+    <script src="puzzles-expanded.js?v=93"></script>
+    <script src="script.js?v=93"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;
@@ -1157,7 +1200,7 @@
 
         // Mobile swipe functions
         function goToPage(page) {
-            if (window.innerWidth > 768 || (window.innerWidth >= 481 && window.innerWidth <= 768)) return; // Only on mobile, not iPad
+            if (window.innerWidth <= 768) return; // Disable page switching on mobile, iPad, and iPhone
             
             currentPage = page;
             container = container || document.querySelector('.container');
@@ -1173,18 +1216,18 @@
         }
 
         function handleSwipeStart(e) {
-            if (window.innerWidth > 768 || (window.innerWidth >= 481 && window.innerWidth <= 768)) return; // Only on mobile, not iPad
+            if (window.innerWidth <= 768) return; // Disable swipe on mobile, iPad, and iPhone
             startX = e.touches ? e.touches[0].clientX : e.clientX;
             startY = e.touches ? e.touches[0].clientY : e.clientY;
         }
 
         function handleSwipeMove(e) {
-            if (window.innerWidth > 768 || (window.innerWidth >= 481 && window.innerWidth <= 768)) return; // Only on mobile, not iPad
+            if (window.innerWidth <= 768) return; // Disable swipe on mobile, iPad, and iPhone
             e.preventDefault();
         }
 
         function handleSwipeEnd(e) {
-            if (window.innerWidth > 768 || (window.innerWidth >= 481 && window.innerWidth <= 768)) return; // Only on mobile, not iPad
+            if (window.innerWidth <= 768) return; // Disable swipe on mobile, iPad, and iPhone
             
             const endX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
             const endY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
