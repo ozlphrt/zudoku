@@ -34,8 +34,8 @@ class SudokuGame {
         // Adjusted to match available puzzle database
         this.DIFFICULTY_LEVELS = {
             easy: { label: 'Easy', givenNumbers: 30 },      // 30 clues (27-33 range)
-            medium: { label: 'Medium', givenNumbers: 22 },  // 22 clues (19-25 range)
-            hard: { label: 'Hard', givenNumbers: 17 }       // 17 clues (14-20 range)
+            medium: { label: 'Medium', givenNumbers: 24 },  // 24 clues (21-27 range)
+            hard: { label: 'Hard', givenNumbers: 25 }       // 25 clues (22-28 range)
         };
         
         // Puzzle database - initialize immediately
