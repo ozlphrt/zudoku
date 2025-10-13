@@ -782,7 +782,7 @@
         ======================================== */
         
         @media (max-width: 768px) and (min-width: 481px) {
-            /* iPad Layout - Single page with controls under board */
+            /* iPad Layout - Single panel with just sudoku board */
             .container {
                 display: flex;
                 flex-direction: column;
@@ -809,78 +809,46 @@
             }
             
             .sudoku-grid {
-                max-width: min(85vw, calc(100vh - 200px));
-                max-height: min(85vw, calc(100vh - 200px));
+                max-width: min(90vw, calc(100vh - 120px));
+                max-height: min(90vw, calc(100vh - 120px));
                 gap: 3px;
                 flex-shrink: 0;
             }
             
-            /* iPad Controls Under Board */
+            /* iPad Controls Under Board - Single row */
             .ipad-controls {
                 display: flex;
-                flex-direction: column;
-                gap: 15px;
-                margin-top: 20px;
-                padding: 15px;
-                background: var(--bg-secondary);
-                border-radius: 15px;
-                backdrop-filter: blur(10px);
-                border: 2px solid var(--border-color);
-                align-items: center;
                 justify-content: center;
+                align-items: center;
+                margin-top: 15px;
+                padding: 10px;
                 width: 100%;
                 max-width: 90vw;
             }
             
-            .ipad-difficulty-section {
+            .ipad-controls-row {
                 display: flex;
+                gap: 15px;
                 align-items: center;
                 justify-content: center;
-                width: 100%;
+                flex-wrap: wrap;
             }
             
             .ipad-controls .difficulty-buttons {
                 display: flex;
-                gap: 8px;
-                justify-content: center;
-                width: 100%;
+                gap: 6px;
             }
             
             .ipad-controls .difficulty-btn {
-                padding: 8px 16px;
+                padding: 8px 12px;
                 font-size: 0.9rem;
-                flex: 1;
-                max-width: 100px;
-            }
-            
-            .ipad-hint-section {
-                display: flex;
-                justify-content: center;
-                width: 100%;
+                min-width: 70px;
             }
             
             .ipad-controls .action-btn {
-                padding: 10px 20px;
-                font-size: 1.0rem;
-                min-width: 120px;
-            }
-            
-            /* Number pad in one row */
-            .ipad-number-pad {
-                display: flex;
-                gap: 8px;
-                justify-content: center;
-                width: 100%;
-                flex-wrap: wrap;
-            }
-            
-            .ipad-number-pad .num-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 1.4rem;
-                padding: 0;
-                margin: 0;
-                flex-shrink: 0;
+                padding: 8px 16px;
+                font-size: 0.9rem;
+                min-width: 80px;
             }
             
             .cell {
@@ -1011,28 +979,13 @@
             
             <!-- iPad Controls Under Board -->
             <div class="ipad-controls">
-                <div class="ipad-difficulty-section">
+                <div class="ipad-controls-row">
                     <div class="difficulty-buttons">
                         <button class="difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
                         <button class="difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
                         <button class="difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
                     </div>
-                </div>
-                
-                <div class="ipad-hint-section">
                     <button class="action-btn" onclick="solveHint()" title="Get Hint">Hint</button>
-                </div>
-                
-                <div class="ipad-number-pad">
-                    <button class="num-btn" onclick="selectNumber(1)">1</button>
-                    <button class="num-btn" onclick="selectNumber(2)">2</button>
-                    <button class="num-btn" onclick="selectNumber(3)">3</button>
-                    <button class="num-btn" onclick="selectNumber(4)">4</button>
-                    <button class="num-btn" onclick="selectNumber(5)">5</button>
-                    <button class="num-btn" onclick="selectNumber(6)">6</button>
-                    <button class="num-btn" onclick="selectNumber(7)">7</button>
-                    <button class="num-btn" onclick="selectNumber(8)">8</button>
-                    <button class="num-btn" onclick="selectNumber(9)">9</button>
                 </div>
             </div>
         </div>
