@@ -2,7 +2,7 @@
 // Generated on 2025-10-13T18:14:32.357Z
 // All puzzles verified to have unique solutions
 
-const validatedPuzzleDatabase = {
+const expandedPuzzleDatabase = {
     "easy": [
         {
             "puzzle": [
