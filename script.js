@@ -1427,14 +1427,24 @@ class SudokuGame {
             const col = i % 9;
             const cell = document.querySelector(`[data-index="${i}"]`);
             
-            cell.classList.remove('given', 'notes');
+            cell.classList.remove('given', 'notes', 'number-complete');
             
             if (this.givenCells[row][col]) {
                 cell.classList.add('given');
                 cell.textContent = this.grid[row][col] || '';
+                
+                // Check if this number is complete (all 9 instances placed)
+                if (this.grid[row][col] !== 0 && this.isNumberComplete(this.grid[row][col])) {
+                    cell.classList.add('number-complete');
+                }
             } else if (this.grid[row][col] !== 0) {
                 // If cell has a number, show the number (not notes)
                 cell.textContent = this.grid[row][col];
+                
+                // Check if this number is complete (all 9 instances placed)
+                if (this.isNumberComplete(this.grid[row][col])) {
+                    cell.classList.add('number-complete');
+                }
             } else if (this.notes[row][col].size > 0) {
                 // Only show notes if cell is empty
                 cell.classList.add('notes');

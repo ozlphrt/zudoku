@@ -496,6 +496,15 @@
             color: var(--given-text);
         }
 
+        .cell.number-complete {
+            opacity: 0.6;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .cell.given.number-complete {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
         .cell.paint-target {
             background: var(--paint-target-color);
             border-color: var(--accent-color);
@@ -1104,8 +1113,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=90"></script>
-    <script src="script.js?v=90"></script>
+    <script src="puzzles-expanded.js?v=91"></script>
+    <script src="script.js?v=91"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;
