@@ -916,8 +916,9 @@
                 min-width: 80px;
             }
             
-            /* Hide difficulty buttons at top for iPad, show at bottom */
-            .ipad-difficulty-top {
+            /* Hide difficulty buttons and hint at top for iPad, show at bottom */
+            .ipad-difficulty-top,
+            .ipad-hint-top {
                 display: none;
             }
             
@@ -967,6 +968,16 @@
                 flex-shrink: 0;
             }
             
+            /* Show hint button at top for iPhone */
+            .ipad-hint-top {
+                display: block !important;
+                padding: 4px 12px;
+                font-size: 0.75rem;
+                min-width: 60px;
+                flex-shrink: 0;
+                order: 2.5;
+            }
+            
             .ipad-numpad {
                 gap: 4px;
                 flex-wrap: nowrap;
@@ -984,26 +995,10 @@
                 flex-shrink: 0;
             }
             
-            /* Hide bottom difficulty buttons on iPhone, show at top instead */
-            .ipad-difficulty-bottom {
-                display: none !important;
-            }
-            
+            /* Hide bottom controls completely on iPhone (difficulty and hint moved to top) */
+            .ipad-difficulty-bottom,
             .ipad-controls {
-                gap: 10px;
-                margin-top: 10px;
-                padding: 8px;
-                justify-content: center;
-            }
-            
-            .ipad-controls-row {
-                justify-content: center;
-            }
-            
-            .ipad-controls .action-btn {
-                padding: 8px 16px;
-                font-size: 0.9rem;
-                min-width: 80px;
+                display: none !important;
             }
         }
 
@@ -1120,7 +1115,7 @@
         
         <!-- Center: Grids -->
         <div class="sudoku-container">
-            <!-- iPad Top Controls - Timer, Difficulty, and Number Pad -->
+            <!-- iPad Top Controls - Timer, Difficulty, Hint, and Number Pad -->
             <div class="ipad-top-controls">
                 <div class="ipad-timer">
                     <span class="timer-label">Time:</span>
@@ -1131,6 +1126,7 @@
                     <button class="difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
                     <button class="difficulty-btn" onclick="setDifficulty('hard')">Hard</button>
                 </div>
+                <button class="action-btn ipad-hint-top" onclick="solveHint()" title="Get Hint">Hint</button>
                 <div class="ipad-numpad">
                     <button class="num-btn" onclick="selectNumber(1)">1</button>
                     <button class="num-btn" onclick="selectNumber(2)">2</button>
@@ -1198,8 +1194,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=98"></script>
-    <script src="script.js?v=98"></script>
+    <script src="puzzles-expanded.js?v=99"></script>
+    <script src="script.js?v=99"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;
