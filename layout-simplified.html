@@ -1007,24 +1007,31 @@
             }
         }
 
-        /* Samsung A26 specific fixes - screen height around 844px */
-        @media (max-width: 480px) and (max-height: 900px) and (min-height: 800px) {
+        /* Samsung A26 specific fixes - 1080x1920 resolution, CSS pixels ~360x640 */
+        @media (max-width: 480px) and (max-height: 700px),
+               (device-width: 360px) and (device-height: 640px),
+               (device-width: 375px) and (device-height: 667px) {
             .sudoku-grid {
-                max-width: calc(100vh - 160px) !important;
-                max-height: calc(100vh - 160px) !important;
+                max-width: calc(100vh - 180px) !important;
+                max-height: calc(100vh - 180px) !important;
             }
             
             .ipad-top-controls {
-                margin-bottom: 5px !important;
-                padding: 2px !important;
+                margin-bottom: 3px !important;
+                padding: 1px !important;
             }
             
             .container {
-                padding-top: 5px !important;
+                padding-top: 2px !important;
             }
             
             .sudoku-container {
                 padding-top: 0 !important;
+                padding-bottom: 0 !important;
+            }
+            
+            .ipad-numpad {
+                margin-bottom: 5px !important;
             }
         }
 
@@ -1220,8 +1227,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=101"></script>
-    <script src="script.js?v=101"></script>
+    <script src="puzzles-expanded.js?v=102"></script>
+    <script src="script.js?v=102"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;

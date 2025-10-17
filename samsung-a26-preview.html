@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samsung A26 Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Samsung A26 Device Frame */
+        .device-frame {
+            width: 375px;
+            height: 844px;
+            background: #1a1a1a;
+            border-radius: 25px;
+            padding: 8px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        /* Screen */
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            height: 24px;
+            background: #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Browser Address Bar */
+        .address-bar {
+            height: 48px;
+            background: #2a2a2a;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            color: #ccc;
+            font-size: 14px;
+            border-bottom: 1px solid #333;
+        }
+
+        .address-bar .home-icon {
+            width: 20px;
+            height: 20px;
+            background: #666;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+
+        .address-bar .url {
+            flex: 1;
+            margin: 0 8px;
+        }
+
+        .address-bar .refresh-icon {
+            width: 16px;
+            height: 16px;
+            background: #666;
+            border-radius: 2px;
+            margin-right: 8px;
+        }
+
+        .address-bar .tabs-icon {
+            width: 16px;
+            height: 16px;
+            background: #666;
+            border-radius: 2px;
+            margin-right: 8px;
+            position: relative;
+        }
+
+        .address-bar .tabs-icon::after {
+            content: "4";
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #007acc;
+            color: white;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            font-size: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .address-bar .menu-icon {
+            width: 16px;
+            height: 16px;
+            background: #666;
+            border-radius: 2px;
+        }
+
+        /* Game Interface */
+        .game-container {
+            background: #000;
+            height: calc(100% - 72px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px;
+        }
+
+        /* Top Controls */
+        .top-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 5px;
+            padding: 2px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hint-btn {
+            background: rgba(74, 93, 74, 0.8);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            min-width: 50px;
+            height: fit-content;
+            cursor: pointer;
+        }
+
+        .timer {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 3px 6px;
+            font-size: 0.7rem;
+            height: fit-content;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+
+        .difficulty-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 3px 6px;
+            font-size: 0.65rem;
+            min-width: 45px;
+            height: fit-content;
+            cursor: pointer;
+        }
+
+        .difficulty-btn.active {
+            background: rgba(74, 93, 74, 0.8);
+        }
+
+        /* Number Pad */
+        .numpad {
+            display: flex;
+            gap: 4px;
+            width: 100%;
+            justify-content: center;
+            margin-bottom: 10px;
+            flex-wrap: nowrap;
+        }
+
+        .num-btn {
+            width: 28px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* Sudoku Grid */
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            gap: 1px;
+            background: transparent;
+            border: none;
+            border-radius: 16px;
+            padding: 0;
+            width: calc(100vh - 160px);
+            height: calc(100vh - 160px);
+            max-width: 100%;
+            max-height: calc(100% - 120px);
+        }
+
+        .cell {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: white;
+            position: relative;
+            min-height: 40px;
+        }
+
+        .cell:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .cell.selected {
+            background: rgba(74, 93, 74, 0.3);
+        }
+
+        /* Sample filled cells */
+        .cell.filled-1 { color: #fff; }
+        .cell.filled-2 { color: #fff; }
+        .cell.filled-3 { color: #fff; }
+        .cell.filled-4 { color: #fff; }
+        .cell.filled-5 { color: #fff; }
+        .cell.filled-6 { color: #fff; }
+        .cell.filled-7 { color: #fff; }
+        .cell.filled-8 { color: #fff; }
+        .cell.filled-9 { color: #fff; }
+
+        /* Android Navigation Bar */
+        .nav-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #000;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border-radius: 2px;
+        }
+
+        /* Device Label */
+        .device-label {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #666;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .device-label .model {
+            font-weight: bold;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="device-frame">
+        <div class="screen">
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <span>12:01</span>
+                <span>📱 📨 📁</span>
+                <span>🔒 📶 📶 🔋 85%</span>
+            </div>
+
+            <!-- Browser Address Bar -->
+            <div class="address-bar">
+                <div class="home-icon"></div>
+                <div class="url">ozlphrt.github.io/zudo</div>
+                <div class="refresh-icon"></div>
+                <div class="tabs-icon"></div>
+                <div class="menu-icon"></div>
+            </div>
+
+            <!-- Game Container -->
+            <div class="game-container">
+                <!-- Top Controls -->
+                <div class="top-controls">
+                    <button class="hint-btn">Hint</button>
+                    <div class="timer">Time: 00:00:04</div>
+                    <div class="difficulty-buttons">
+                        <button class="difficulty-btn active">Easy</button>
+                        <button class="difficulty-btn">Medium</button>
+                        <button class="difficulty-btn">Hard</button>
+                    </div>
+                </div>
+
+                <!-- Number Pad -->
+                <div class="numpad">
+                    <button class="num-btn">1</button>
+                    <button class="num-btn">2</button>
+                    <button class="num-btn">3</button>
+                    <button class="num-btn">4</button>
+                    <button class="num-btn">5</button>
+                    <button class="num-btn">6</button>
+                    <button class="num-btn">7</button>
+                    <button class="num-btn">8</button>
+                    <button class="num-btn">9</button>
+                </div>
+
+                <!-- Sudoku Grid -->
+                <div class="sudoku-grid">
+                    <!-- Row 1 -->
+                    <div class="cell filled-1">1</div>
+                    <div class="cell filled-2">2</div>
+                    <div class="cell filled-6">6</div>
+                    <div class="cell filled-4">4</div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell filled-5">5</div>
+                    <div class="cell"></div>
+
+                    <!-- Row 2 -->
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell filled-4">4</div>
+                    <div class="cell"></div>
+                    <div class="cell filled-5">5</div>
+                    <div class="cell filled-8">8</div>
+                    <div class="cell filled-7">7</div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+
+                    <!-- Row 3 -->
+                    <div class="cell"></div>
+                    <div class="cell filled-5">5</div>
+                    <div class="cell"></div>
+                    <div class="cell filled-1">1</div>
+                    <div class="cell filled-9">9</div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell filled-6">6</div>
+                    <div class="cell"></div>
+
+                    <!-- Row 4 -->
+                    <div class="cell filled-4">4</div>
+                    <div class="cell"></div>
+                    <div class="cell filled-5">5</div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell filled-2">2</div>
+                    <div class="cell"></div>
+                    <div class="cell filled-3">3</div>
+
+                    <!-- Row 5 -->
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell filled-9">9</div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+
+                    <!-- Row 6 -->
+                    <div class="cell filled-2">2</div>
+                    <div class="cell filled-7">7</div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell filled-8">8</div>
+                    <div class="cell filled-5">5</div>
+                    <div class="cell"></div>
+                    <div class="cell filled-4">4</div>
+                    <div class="cell filled-6">6</div>
+
+                    <!-- Row 7 -->
+                    <div class="cell"></div>
+                    <div class="cell filled-9">9</div>
+                    <div class="cell"></div>
+                    <div class="cell filled-8">8</div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell filled-7">7</div>
+                    <div class="cell filled-4">4</div>
+                    <div class="cell"></div>
+
+                    <!-- Row 8 -->
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell filled-8">8</div>
+                    <div class="cell"></div>
+                    <div class="cell filled-6">6</div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+
+                    <!-- Row 9 - FULLY VISIBLE NOW -->
+                    <div class="cell filled-5">5</div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell filled-7">7</div>
+                </div>
+
+                <!-- Android Navigation Bar -->
+                <div class="nav-bar">
+                    <div class="nav-icon"></div>
+                    <div class="nav-icon"></div>
+                    <div class="nav-icon"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Device Label -->
+        <div class="device-label">
+            <div class="model">Samsung Galaxy A26</div>
+            <div>375 × 844px • Bottom row fully visible</div>
+        </div>
+    </div>
+</body>
+</html>
