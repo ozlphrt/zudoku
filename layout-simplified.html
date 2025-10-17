@@ -1012,17 +1012,18 @@
                (device-width: 360px) and (device-height: 640px),
                (device-width: 375px) and (device-height: 667px) {
             .sudoku-grid {
-                max-width: calc(100vh - 180px) !important;
-                max-height: calc(100vh - 180px) !important;
+                max-width: calc(100vh - 200px) !important;
+                max-height: calc(100vh - 200px) !important;
             }
             
             .ipad-top-controls {
-                margin-bottom: 3px !important;
-                padding: 1px !important;
+                margin-bottom: 1px !important;
+                padding: 0px !important;
             }
             
             .container {
-                padding-top: 2px !important;
+                padding-top: 0px !important;
+                padding-bottom: 0px !important;
             }
             
             .sudoku-container {
@@ -1031,7 +1032,32 @@
             }
             
             .ipad-numpad {
-                margin-bottom: 5px !important;
+                margin-bottom: 2px !important;
+            }
+        }
+        
+        /* Even more aggressive Samsung A26 fix */
+        @media screen and (max-width: 400px) and (max-height: 800px) {
+            .sudoku-grid {
+                max-width: calc(100vh - 220px) !important;
+                max-height: calc(100vh - 220px) !important;
+            }
+            
+            .ipad-top-controls {
+                margin-bottom: 0px !important;
+                padding: 0px !important;
+            }
+            
+            .container {
+                padding: 0px !important;
+            }
+            
+            .sudoku-container {
+                padding: 0px !important;
+            }
+            
+            .ipad-numpad {
+                margin-bottom: 0px !important;
             }
         }
 
@@ -1227,8 +1253,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=102"></script>
-    <script src="script.js?v=102"></script>
+    <script src="puzzles-expanded.js?v=103"></script>
+    <script src="script.js?v=103"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;
