@@ -304,6 +304,8 @@
             transition: transform 0.3s ease;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             left: 2px;
+            top: 50%;
+            transform: translateY(-50%);
             z-index: 2;
         }
 
@@ -327,7 +329,7 @@
         }
 
         [data-theme="light"] .theme-toggle-switch::before {
-            transform: translateX(48px);
+            transform: translateX(48px) translateY(-50%);
             background: #1a1a1a;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
@@ -1038,6 +1040,8 @@
                 width: 22px;
                 height: 22px;
                 left: 2px;
+                top: 50%;
+                transform: translateY(-50%);
                 z-index: 2;
             }
             
@@ -1048,7 +1052,7 @@
             }
             
             [data-theme="light"] .ipad-theme-toggle::before {
-                transform: translateX(38px);
+                transform: translateX(38px) translateY(-50%);
             }
             
             [data-theme="light"] .ipad-theme-toggle::after {
@@ -1367,8 +1371,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=112"></script>
-    <script src="script.js?v=112"></script>
+    <script src="puzzles-expanded.js?v=113"></script>
+    <script src="script.js?v=113"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;
