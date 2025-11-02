@@ -280,6 +280,43 @@
             transform: scale(1.05);
         }
 
+        /* Switch-style toggle */
+        .theme-toggle-switch {
+            width: 50px;
+            height: 26px;
+            background: rgba(128, 128, 128, 0.3);
+            border-radius: 13px;
+            padding: 2px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            position: relative;
+            border: none;
+        }
+
+        .theme-toggle-switch::before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: white;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="light"] .theme-toggle-switch {
+            background: rgba(128, 128, 128, 0.5);
+        }
+
+        [data-theme="light"] .theme-toggle-switch::before {
+            transform: translateX(24px);
+            background: #f0f0f0;
+        }
+
+        .theme-toggle-switch:hover {
+            background: rgba(128, 128, 128, 0.5);
+        }
+
         .action-btn {
             padding: 6px 12px;
             border-radius: 8px;
@@ -964,15 +1001,19 @@
             
             .ipad-theme-toggle {
                 display: block !important;
-                width: 28px;
-                height: 28px;
-                padding: 0;
+                width: 40px;
+                height: 22px;
                 flex-shrink: 0;
                 order: 1;
-                font-size: 18px;
-                border-radius: 6px;
-                background: transparent !important;
-                border: 1px solid rgba(128, 128, 128, 0.3) !important;
+            }
+            
+            .ipad-theme-toggle::before {
+                width: 18px;
+                height: 18px;
+            }
+            
+            [data-theme="light"] .ipad-theme-toggle::before {
+                transform: translateX(18px);
             }
             
             .ipad-timer {
@@ -1210,7 +1251,7 @@
                     <span class="timer-label">Time:</span>
                     <span class="timer-value" id="timer-ipad">00:00:00</span>
                 </div>
-                <button class="icon-btn theme-toggle ipad-theme-toggle" onclick="toggleTheme()" id="themeToggle-ipad" title="Toggle Light/Dark Theme">🌙</button>
+                <button class="theme-toggle-switch ipad-theme-toggle" onclick="toggleTheme()" id="themeToggle-ipad" title="Toggle Light/Dark Theme"></button>
                 <div class="ipad-difficulty-top">
                     <button class="difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
                     <button class="difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
@@ -1250,7 +1291,7 @@
             <div class="stats-section">
                 <h2 class="stats-title">Controls</h2>
                 <div class="toggle-controls">
-                    <button class="icon-btn theme-toggle" onclick="toggleTheme()" id="themeToggle" title="Toggle Light/Dark Theme">🌙</button>
+                    <button class="theme-toggle-switch" onclick="toggleTheme()" id="themeToggle" title="Toggle Light/Dark Theme"></button>
                 </div>
                 <div class="controls-row">
                     <div class="toggle-controls">
@@ -1287,8 +1328,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=107"></script>
-    <script src="script.js?v=107"></script>
+    <script src="puzzles-expanded.js?v=108"></script>
+    <script src="script.js?v=108"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;

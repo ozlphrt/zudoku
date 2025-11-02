@@ -5118,31 +5118,8 @@ function loadSavedTheme() {
     const savedTheme = localStorage.getItem('preferredTheme') || 'dark';
     console.log(`🎨 Loading saved theme: ${savedTheme}`);
     
-    // Apply theme to document
+    // Apply theme to document (switch style is handled by CSS)
     document.documentElement.setAttribute('data-theme', savedTheme);
-    
-    // Update theme toggle icons (both desktop and mobile versions)
-    const themeToggle = document.getElementById('themeToggle');
-    if (themeToggle) {
-        themeToggle.textContent = savedTheme === 'light' ? '💡' : '🌙';
-    }
-    
-    const themeToggleIpad = document.getElementById('themeToggle-ipad');
-    if (themeToggleIpad) {
-        themeToggleIpad.textContent = savedTheme === 'light' ? '💡' : '🌙';
-    }
-    
-    // Also update after DOM is loaded in case button loads later
-    setTimeout(() => {
-        const themeToggleDelayed = document.getElementById('themeToggle');
-        if (themeToggleDelayed) {
-            themeToggleDelayed.textContent = savedTheme === 'light' ? '💡' : '🌙';
-        }
-        const themeToggleIpadDelayed = document.getElementById('themeToggle-ipad');
-        if (themeToggleIpadDelayed) {
-            themeToggleIpadDelayed.textContent = savedTheme === 'light' ? '💡' : '🌙';
-        }
-    }, 100);
 }
 
 function undoMove() {
@@ -5184,19 +5161,8 @@ function toggleTheme() {
     // Toggle between light and dark
     const newTheme = currentTheme === 'light' ? 'dark' : 'light';
     
-    // Apply new theme
+    // Apply new theme (switch style is handled by CSS)
     document.documentElement.setAttribute('data-theme', newTheme);
-    
-    // Update theme toggle icons (both desktop and mobile versions)
-    const themeToggle = document.getElementById('themeToggle');
-    if (themeToggle) {
-        themeToggle.textContent = newTheme === 'light' ? '💡' : '🌙';
-    }
-    
-    const themeToggleIpad = document.getElementById('themeToggle-ipad');
-    if (themeToggleIpad) {
-        themeToggleIpad.textContent = newTheme === 'light' ? '💡' : '🌙';
-    }
     
     // Save theme preference
     localStorage.setItem('preferredTheme', newTheme);
