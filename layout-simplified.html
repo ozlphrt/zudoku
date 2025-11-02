@@ -345,6 +345,18 @@
             opacity: 0.9;
         }
 
+        /* Override for desktop when both classes are present - ensure ipad version takes precedence on mobile */
+        @media (max-width: 480px) {
+            .theme-toggle-switch::before {
+                width: 22px;
+                height: 22px;
+            }
+            
+            [data-theme="light"] .theme-toggle-switch::before {
+                transform: translateX(38px) translateY(-50%);
+            }
+        }
+
         .action-btn {
             padding: 6px 12px;
             border-radius: 8px;
@@ -1371,8 +1383,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=113"></script>
-    <script src="script.js?v=113"></script>
+    <script src="puzzles-expanded.js?v=114"></script>
+    <script src="script.js?v=114"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;
