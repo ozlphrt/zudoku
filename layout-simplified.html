@@ -1155,6 +1155,11 @@
             .sudoku-grid {
                 margin-top: 12px;
             }
+            
+            /* Ensure highlighted notes are white in light theme on mobile */
+            [data-theme="light"] .note-number-highlight {
+                color: white !important;
+            }
         }
 
         /* Samsung A26 specific fixes - 1080x1920 resolution, CSS pixels ~360x640 */
@@ -1407,8 +1412,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=122"></script>
-    <script src="script.js?v=122"></script>
+    <script src="puzzles-expanded.js?v=123"></script>
+    <script src="script.js?v=123"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;
