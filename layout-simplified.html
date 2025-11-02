@@ -608,6 +608,16 @@
             border-bottom: 3px solid rgba(255, 255, 255, 0.2);
         }
 
+        /* Light theme: thicker, darker borders for 3x3 block separations */
+        [data-theme="light"] .cell:nth-child(3n):not(:nth-child(9n)) {
+            border-right: 3px solid rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="light"] .cell:nth-child(n+19):nth-child(-n+27),
+        [data-theme="light"] .cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 3px solid rgba(0, 0, 0, 0.15);
+        }
+
 
 
         /* ========================================
@@ -1383,8 +1393,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=114"></script>
-    <script src="script.js?v=114"></script>
+    <script src="puzzles-expanded.js?v=115"></script>
+    <script src="script.js?v=115"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;
