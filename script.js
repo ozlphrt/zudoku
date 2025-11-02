@@ -928,7 +928,13 @@ class SudokuGame {
         if (this.isPaintMode && this.paintNumber) {
             document.body.classList.add('paint-mode');
             // Update the cursor to show the paint number
-            const cursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="%23ffc107" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16" text-anchor="middle" font-family="Arial" font-size="12" font-weight="300" fill="%23ffc107">${this.paintNumber}</text></svg>`;
+            // Check current theme to adjust cursor color
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            const isLightTheme = currentTheme === 'light';
+            
+            // Use darker colors for light theme, brighter for dark theme
+            const cursorColor = isLightTheme ? '%23333' : '%23ffc107';
+            const cursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="${cursorColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16" text-anchor="middle" font-family="Arial" font-size="12" font-weight="300" fill="${cursorColor}">${this.paintNumber}</text></svg>`;
             document.documentElement.style.setProperty('--paint-cursor', `url('${cursorSvg}') 24 24, pointer`);
             
             // Paint mode is active
