@@ -953,12 +953,13 @@
             }
             
             .ipad-top-controls {
-                gap: 4px;
+                gap: 6px;
                 margin-bottom: 8px;
                 padding: 4px;
                 flex-wrap: wrap;
                 justify-content: center;
                 align-items: center;
+                flex-direction: row;
             }
             
             .ipad-timer {
@@ -975,7 +976,7 @@
                 height: 28px;
                 padding: 0;
                 flex-shrink: 0;
-                order: 1.5;
+                order: 2;
                 font-size: 16px;
                 border-radius: 6px;
             }
@@ -983,8 +984,11 @@
             .ipad-difficulty-top {
                 display: flex;
                 gap: 3px;
-                order: 2;
+                order: 3;
                 align-items: center;
+                width: 100%;
+                justify-content: center;
+                margin-top: 0;
             }
             
             .ipad-difficulty-top .difficulty-btn {
@@ -1002,16 +1006,17 @@
                 font-size: 0.7rem;
                 min-width: 50px;
                 flex-shrink: 0;
-                order: 2.5;
+                order: 4;
                 height: fit-content;
             }
             
             .ipad-numpad {
                 gap: 4px;
                 flex-wrap: nowrap;
-                order: 3;
+                order: 5;
                 width: 100%;
                 justify-content: center;
+                margin-top: 0;
             }
             
             .ipad-numpad .num-btn {
@@ -1280,8 +1285,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=105"></script>
-    <script src="script.js?v=105"></script>
+    <script src="puzzles-expanded.js?v=106"></script>
+    <script src="script.js?v=106"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;
