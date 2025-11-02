@@ -269,6 +269,17 @@
             opacity: 0.4;
         }
 
+        .icon-btn.theme-toggle {
+            font-size: 20px;
+            background: var(--bg-accent);
+            border: 1px solid var(--border-color);
+        }
+
+        .icon-btn.theme-toggle:hover {
+            background: var(--hover-color);
+            transform: scale(1.05);
+        }
+
         .action-btn {
             padding: 6px 12px;
             border-radius: 8px;
@@ -1218,6 +1229,9 @@
         <div class="right-panel">
             <div class="stats-section">
                 <h2 class="stats-title">Controls</h2>
+                <div class="toggle-controls">
+                    <button class="icon-btn theme-toggle" onclick="toggleTheme()" id="themeToggle" title="Toggle Light/Dark Theme">🌙</button>
+                </div>
                 <div class="controls-row">
                     <div class="toggle-controls">
                         <button class="icon-btn undo-redo" onclick="undoMove()" id="undoBtn" disabled title="Undo">↺</button>
@@ -1253,8 +1267,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=103"></script>
-    <script src="script.js?v=103"></script>
+    <script src="puzzles-expanded.js?v=104"></script>
+    <script src="script.js?v=104"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;

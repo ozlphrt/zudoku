@@ -644,7 +644,7 @@ class SudokuGame {
                 longPressTimer = setTimeout(() => {
                     this.handleLongPress(i);
                     longPressTriggered = true;
-                }, 800);
+                }, 500);
             }, { passive: true });
             
             cell.addEventListener('touchend', (e) => {
@@ -5126,6 +5126,14 @@ function loadSavedTheme() {
     if (themeToggle) {
         themeToggle.textContent = savedTheme === 'light' ? '💡' : '🌙';
     }
+    
+    // Also update after DOM is loaded in case button loads later
+    setTimeout(() => {
+        const themeToggleDelayed = document.getElementById('themeToggle');
+        if (themeToggleDelayed) {
+            themeToggleDelayed.textContent = savedTheme === 'light' ? '💡' : '🌙';
+        }
+    }, 100);
 }
 
 function undoMove() {
