@@ -929,7 +929,8 @@
             
             /* Hide difficulty buttons and hint at top for iPad, show at bottom */
             .ipad-difficulty-top,
-            .ipad-hint-top {
+            .ipad-hint-top,
+            .ipad-theme-toggle {
                 display: none;
             }
             
@@ -966,6 +967,17 @@
                 flex-shrink: 0;
                 order: 1;
                 height: fit-content;
+            }
+            
+            .ipad-theme-toggle {
+                display: block !important;
+                width: 28px;
+                height: 28px;
+                padding: 0;
+                flex-shrink: 0;
+                order: 1.5;
+                font-size: 16px;
+                border-radius: 6px;
             }
             
             .ipad-difficulty-top {
@@ -1185,12 +1197,13 @@
         
         <!-- Center: Grids -->
         <div class="sudoku-container">
-            <!-- iPad Top Controls - Timer, Difficulty, Hint, and Number Pad -->
+            <!-- iPad Top Controls - Timer, Theme Toggle, Difficulty, Hint, and Number Pad -->
             <div class="ipad-top-controls">
                 <div class="ipad-timer">
                     <span class="timer-label">Time:</span>
                     <span class="timer-value" id="timer-ipad">00:00:00</span>
                 </div>
+                <button class="icon-btn theme-toggle ipad-theme-toggle" onclick="toggleTheme()" id="themeToggle-ipad" title="Toggle Light/Dark Theme">🌙</button>
                 <div class="ipad-difficulty-top">
                     <button class="difficulty-btn active" onclick="setDifficulty('easy')">Easy</button>
                     <button class="difficulty-btn" onclick="setDifficulty('medium')">Medium</button>
@@ -1267,8 +1280,8 @@
         <div class="page-indicator"></div>
     </div>
 
-    <script src="puzzles-expanded.js?v=104"></script>
-    <script src="script.js?v=104"></script>
+    <script src="puzzles-expanded.js?v=105"></script>
+    <script src="script.js?v=105"></script>
     <script>
         // Global variables for paint mode
         let paintMode = false;
