@@ -76,11 +76,9 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 8px 24px 0 24px;
-            height: 56px;
-            flex-shrink: 0;
+            padding: 8px 8px 0 8px;
             width: 100%;
-            max-width: min(calc(100vw - 48px), calc(100vh - 240px));
+            max-width: 600px; /* Better default for desktop, expands on mobile */
             margin: 0 auto;
         }
 
@@ -128,8 +126,8 @@
             grid-template-rows: repeat(9, minmax(0, 1fr));
             background: var(--grid-line);
             gap: 1.5px;
-            width: min(calc(100vw - 48px), calc(100vh - 240px));
-            height: min(calc(100vw - 48px), calc(100vh - 240px));
+            width: min(calc(100vw - 16px), calc(100vh - 240px));
+            height: min(calc(100vw - 16px), calc(100vh - 240px));
             border: 2px solid var(--grid-line);
             box-shadow: 0 12px 30px rgba(0,0,0,0.5);
         }
@@ -427,30 +425,42 @@
             position: relative;
         }
         .header-bar {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            display: flex;
             align-items: center;
-            padding: 12px 20px;
-            background: rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+            justify-content: space-between;
+            padding: 12px 16px;
+            min-height: 64px;
+            background: rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
             z-index: 100;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .header-left {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: flex-start;
-            gap: 10px;
+            gap: 12px;
         }
 
         .header-center {
+            flex: 0 1 auto;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 0 10px;
+            z-index: 10;
+        }
+
+        .header-center > * {
+            pointer-events: auto;
         }
 
         .header-right {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: flex-end;
@@ -487,12 +497,16 @@
 
         #timer_display {
             font-family: 'JetBrains Mono', 'Courier New', monospace;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 700;
             color: var(--highlight);
             letter-spacing: 1px;
             min-width: 90px;
             text-align: center;
+            line-height:  1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.3s ease;
         }
 
@@ -500,6 +514,18 @@
             color: #ff9500; /* Vibrant amber/orange highlight when paused */
             text-shadow: 0 0 20px rgba(255, 149, 0, 0.5);
             opacity: 0.9;
+        }
+
+        .oscillating {
+            animation: oscillate 1.4s ease-in-out infinite;
+            background: rgba(255, 255, 255, 0.25) !important;
+            border-color: var(--highlight) !important;
+            box-shadow: 0 0 15px var(--glow);
+        }
+
+        @keyframes oscillate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         .version-tag {
@@ -585,30 +611,26 @@
     <header class="header-bar">
         <div class="header-left">
             <button id="pause_toggle" onclick="togglePause()" title="Pause Game">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>
                 </svg>
             </button>
-            <button id="restart_button" onclick="clearBoard()" title="Restart Puzzle">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                </svg>
-            </button>
-        </div>
-
-        <div class="header-center">
-            <div id="timer_display">00:00</div>
-        </div>
-
-        <div class="header-right">
-            <button id="theme_toggle" onclick="toggleTheme()" title="Switch Theme">
-                <svg viewBox="0 0 24 24" fill="currentColor" id="theme_icon">
-                    <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1-8.313-12.454z"/>
+            <button id="theme_toggle" onclick="toggleTheme()" title="Toggle Theme">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
             </button>
             <button id="difficulty_cycle" onclick="cycleDifficulty()" title="Change Difficulty">
                 <span id="difficulty_toggle_label">EASY</span>
             </button>
+        </div>
+
+        <div class="header-center">
+        </div>
+
+        <div class="header-right">
+            <div id="timer_display">00:00</div>
         </div>
     </header>
 
@@ -629,7 +651,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.2</div>
+    <div class="version-tag">V1.1.3</div>
  </div>
 
 </div>
@@ -662,8 +684,8 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="puzzles-expanded.js?v=127"></script>
-    <script src="script.js?v=127"></script>
+    <script src="puzzles-expanded.js?v=128"></script>
+    <script src="script.js?v=128"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame

@@ -44,9 +44,9 @@ class SudokuGame {
         // Client-side generation difficulty system
         // Adjusted to match available puzzle database
         this.DIFFICULTY_LEVELS = {
-            easy: { label: 'Easy', givenNumbers: 32 },      // 32 clues (validated)
-            medium: { label: 'Medium', givenNumbers: 26 },  // 26 clues (validated)
-            hard: { label: 'Hard', givenNumbers: 24 }       // 24 clues (validated)
+            easy: { label: 'Easy', givenNumbers: 38 },      // 38 clues (standard Easy)
+            medium: { label: 'Medium', givenNumbers: 30 },  // 30 clues (standard Medium)
+            hard: { label: 'Hard', givenNumbers: 24 }       // 24 clues (standard Hard)
         };
         
         // Puzzle database - initialize immediately
@@ -1183,6 +1183,7 @@ class SudokuGame {
     }
     
     setNumber(row, col, number) {
+        if (this.isPaused) this.resumeTimer();
         const oldValue = this.grid[row][col];
         this.grid[row][col] = number;
         
@@ -1261,6 +1262,7 @@ class SudokuGame {
     }
     
     toggleNote(row, col, number) {
+        if (this.isPaused) this.resumeTimer();
         const wasRemoving = this.notes[row][col].has(number);
         
         if (wasRemoving) {
@@ -3129,6 +3131,7 @@ class SudokuGame {
     }
     
     solveHint() {
+        if (this.isPaused) this.resumeTimer();
         if (this.isGameWon) return;
         
         // Try to find a cell with only one possible number (naked single)
@@ -3562,10 +3565,15 @@ class SudokuGame {
                 resumeBtnIpad.style.display = 'none';
             }
         }
-        // Sync high-fidelity timer display highlight
+        // Sync high-fidelity timer display and pause button oscillation
         const timerDisplay = document.getElementById('timer_display');
+        const pauseToggle = document.getElementById('pause_toggle');
+        
         if (timerDisplay) {
             timerDisplay.classList.toggle('paused', this.isPaused);
+        }
+        if (pauseToggle) {
+            pauseToggle.classList.toggle('oscillating', this.isPaused);
         }
     }
     
@@ -4889,6 +4897,7 @@ class SudokuGame {
     }
     
     undoMove() {
+        if (this.isPaused) this.resumeTimer();
         if (this.historyIndex >= 0 && this.moveHistory.length > 0) {
             const move = this.moveHistory[this.historyIndex];
             this.executeMove(move, true); // true = undo
@@ -4901,6 +4910,7 @@ class SudokuGame {
     }
     
     redoMove() {
+        if (this.isPaused) this.resumeTimer();
         if (this.historyIndex < this.moveHistory.length - 1) {
             this.historyIndex++;
             const move = this.moveHistory[this.historyIndex];
