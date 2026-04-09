@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Zudoku</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Zudoku — Glassmorphism</title>
+    
+    <!-- PWA Integration -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="public/192.png">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="icon" type="image/svg+xml" href="favicon.svg?v=86">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
@@ -651,7 +659,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.3</div>
+    <div class="version-tag">V1.1.4</div>
  </div>
 
 </div>
@@ -684,8 +692,8 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="puzzles-expanded.js?v=128"></script>
-    <script src="script.js?v=128"></script>
+    <script src="puzzles-expanded.js?v=129"></script>
+    <script src="script.js?v=129"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
