@@ -187,29 +187,12 @@ class SudokuGame {
             throw new Error(`No puzzles found for difficulty: ${difficulty}`);
         }
         
-        // Filter puzzles that meet the difficulty requirements
-        const targetClues = this.DIFFICULTY_LEVELS[difficulty.toLowerCase()].givenNumbers;
-        const validPuzzles = puzzles.filter(puzzle => {
-            const clueCount = puzzle.puzzle.flat().filter(num => num !== 0).length;
-            // Allow ±3 tolerance for clue count
-            const isValid = Math.abs(clueCount - targetClues) <= 3;
-            if (!isValid) {
-                console.log(`❌ Rejecting puzzle with ${clueCount} clues (target: ${targetClues}±3)`);
-            }
-            return isValid;
-        });
+        // Simply return a random puzzle from the database for this difficulty
+        // We will balance the clue count dynamically in loadPuzzleFromDatabase
+        const randomIndex = Math.floor(Math.random() * puzzles.length);
+        const selectedPuzzle = puzzles[randomIndex];
         
-        if (validPuzzles.length === 0) {
-            console.error(`⚠️ NO valid puzzles found for ${difficulty} difficulty (target: ${targetClues}±3 clues)`);
-            console.error(`Available puzzles have these clue counts:`, 
-                puzzles.map(p => p.puzzle.flat().filter(c => c !== 0).length));
-            throw new Error(`No valid puzzles available for ${difficulty} difficulty`);
-        }
-        
-        const randomIndex = Math.floor(Math.random() * validPuzzles.length);
-        const selectedPuzzle = validPuzzles[randomIndex];
-        const clueCount = selectedPuzzle.puzzle.flat().filter(num => num !== 0).length;
-        console.log(`✅ Selected puzzle with ${clueCount} clues (${randomIndex + 1}/${validPuzzles.length} valid puzzles for ${difficulty})`);
+        console.log(`✅ Selected base puzzle ${randomIndex + 1}/${puzzles.length} for ${difficulty}`);
         return selectedPuzzle;
     }
     
@@ -2122,31 +2105,52 @@ class SudokuGame {
             this.grid = puzzleData.puzzle.map(row => [...row]);
             this.solution = puzzleData.solution.map(row => [...row]);
             
+            // --- DYNAMIC CLUE BALANCING ---
+            const currentClues = [];
+            const emptyCells = [];
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (this.grid[r][c] !== 0) currentClues.push({r, c});
+                    else emptyCells.push({r, c});
+                }
+            }
+
+            const targetClues = this.DIFFICULTY_LEVELS[this.difficulty.toLowerCase()].givenNumbers;
+            let diff = targetClues - currentClues.length;
+            
+            if (diff > 0) {
+                // We need MORE clues. Randomly reveal some from the solution.
+                console.log(`⚖️ Balancing: Adding ${diff} clues to meet target of ${targetClues}...`);
+                for (let i = 0; i < diff && emptyCells.length > 0; i++) {
+                    const idx = Math.floor(Math.random() * emptyCells.length);
+                    const {r, c} = emptyCells.splice(idx, 1)[0];
+                    this.grid[r][c] = this.solution[r][c];
+                }
+            } else if (diff < 0) {
+                // We need FEWER clues. Randomly hide some.
+                diff = Math.abs(diff);
+                console.log(`⚖️ Balancing: Removing ${diff} clues to meet target of ${targetClues}...`);
+                for (let i = 0; i < diff && currentClues.length > 0; i++) {
+                    const idx = Math.floor(Math.random() * currentClues.length);
+                    const {r, c} = currentClues.splice(idx, 1)[0];
+                    this.grid[r][c] = 0;
+                }
+            }
+            
             // Mark given cells
             this.givenCells = Array(9).fill().map(() => Array(9).fill(false));
+            let finalCount = 0;
             for (let row = 0; row < 9; row++) {
                 for (let col = 0; col < 9; col++) {
                     if (this.grid[row][col] !== 0) {
                         this.givenCells[row][col] = true;
+                        finalCount++;
                     }
                 }
             }
             
-            // Debug: Check if grid has numbers
-            let givenCount = 0;
-            for (let row = 0; row < 9; row++) {
-                for (let col = 0; col < 9; col++) {
-                    if (this.grid[row][col] !== 0) {
-                        givenCount++;
-                    }
-                }
-            }
-            const targetGivenCount = this.DIFFICULTY_LEVELS[this.difficulty].givenNumbers;
-            console.log(`📊 Loaded puzzle has ${givenCount} given numbers, target is ${targetGivenCount}`);
-            
-            // Use the puzzle as-is from the validated database
-            // All built-in puzzles are pre-validated and properly constructed
-            console.log(`✅ Using validated puzzle from database`);
+            console.log(`📊 Final puzzle has ${finalCount} given numbers (Target: ${targetClues})`);
+            console.log(`✅ Dynamically balanced from database`);
             
             // Hide loading animation
             this.hideLoadingAnimation();
