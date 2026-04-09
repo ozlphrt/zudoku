@@ -428,7 +428,7 @@
         }
         .header-bar {
             display: grid;
-            grid-template-columns: 1fr auto 1fr;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
             align-items: center;
             padding: 12px 20px;
             background: rgba(255, 255, 255, 0.03);
@@ -500,6 +500,19 @@
             color: #ff9500; /* Vibrant amber/orange highlight when paused */
             text-shadow: 0 0 20px rgba(255, 149, 0, 0.5);
             opacity: 0.9;
+        }
+
+        .version-tag {
+            position: fixed;
+            bottom: 12px;
+            right: 16px;
+            font-size: 10px;
+            color: var(--inactive);
+            opacity: 0.4;
+            font-family: var(--font);
+            pointer-events: none;
+            z-index: 1000;
+            letter-spacing: 0.1em;
         }
         .keypad-btn.active {
             background: var(--highlight);
@@ -616,6 +629,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
+    <div class="version-tag">V1.1.2</div>
  </div>
 
 </div>
@@ -648,8 +662,8 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="puzzles-expanded.js?v=126"></script>
-    <script src="script.js?v=126"></script>
+    <script src="puzzles-expanded.js?v=127"></script>
+    <script src="script.js?v=127"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
@@ -822,5 +836,29 @@
         <div class="keypad-btn" data-value="9">9</div>
         <div class="keypad-btn backspace" data-value="delete">DELETE</div>
     </div>
+
+    <script>
+        // Register Service Worker for offline support and updates
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => {
+                        console.log('✅ Service Worker registered');
+                        
+                        // Check for updates
+                        reg.addEventListener('updatefound', () => {
+                            const newWorker = reg.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('🔄 New version available! Please refresh.');
+                                    // Optional: Show a "New version available" toast
+                                }
+                            });
+                        });
+                    })
+                    .catch(err => console.error('❌ Service Worker registration failed:', err));
+            });
+        }
+    </script>
 </body>
 </html>
