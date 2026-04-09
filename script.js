@@ -20,6 +20,17 @@ class SudokuGame {
         this.isGameWon = false;
         this.wasAutoSolved = false;
         
+        // Touch Keypad state
+        this.touchKeypadActive = false;
+        this.activeTouchCellIndex = null;
+        this.selectedKeypadValue = null;
+        this.touchKeypadTimer = null;
+        
+        this.touchKeypadActive = false;
+        this.activeTouchCellIndex = null;
+        this.selectedKeypadValue = null;
+        this.touchKeypadTimer = null;
+        
         // Move history for undo/redo
         this.moveHistory = [];
         this.historyIndex = -1;
@@ -206,55 +217,54 @@ class SudokuGame {
     getBuiltInPuzzleDatabase() {
         return {
             easy: [
-                // Easy puzzles (40 total) - 46 clues for proper difficulty
-                // Puzzle 1 - Classic easy (46 clues - 35 empty cells)
+                // THE USER'S INITIAL PUZZLE (Priority 1)
                 {
                     puzzle: [
-                        [5,3,0,0,7,0,0,0,0],
-                        [6,0,0,1,9,5,0,0,0],
-                        [0,9,8,0,0,0,0,6,0],
-                        [8,0,0,0,6,0,0,0,3],
-                        [4,0,0,8,0,3,0,0,1],
-                        [7,0,0,0,2,0,0,0,6],
-                        [0,6,0,0,0,0,2,8,0],
-                        [0,0,0,4,1,9,0,0,5],
-                        [0,0,0,0,8,0,0,7,9]
+                        [0, 0, 4, 0, 0, 8, 0, 1, 0],
+                        [0, 0, 0, 0, 3, 0, 0, 7, 9],
+                        [0, 0, 0, 0, 0, 0, 0, 2, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 3, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 5, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 1, 0, 0],
+                        [0, 4, 6, 0, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0]
                     ],
                     solution: [
-                        [5,3,4,6,7,8,9,1,2],
-                        [6,7,2,1,9,5,3,4,8],
-                        [1,9,8,3,4,2,5,6,7],
-                        [8,5,9,7,6,1,4,2,3],
-                        [4,2,6,8,5,3,7,9,1],
-                        [7,1,3,9,2,4,8,5,6],
-                        [9,6,1,5,3,7,2,8,4],
-                        [2,8,7,4,1,9,6,3,5],
-                        [3,4,5,2,8,6,1,7,9]
+                        [3, 7, 4, 9, 2, 8, 5, 1, 6],
+                        [2, 5, 8, 1, 3, 6, 4, 7, 9],
+                        [6, 9, 1, 5, 4, 7, 3, 2, 8],
+                        [9, 1, 5, 7, 6, 4, 8, 3, 2],
+                        [8, 2, 7, 3, 9, 1, 6, 5, 4],
+                        [4, 6, 3, 8, 5, 2, 9, 7, 1],
+                        [7, 8, 2, 4, 9, 3, 1, 6, 5],
+                        [5, 4, 6, 2, 1, 9, 7, 8, 3],
+                        [1, 3, 9, 6, 8, 5, 2, 4, 7]
                     ]
                 },
-                // Puzzle 2 - Easy variant (31 clues)
+                // Puzzle 2 - User's other variant (31 clues)
                 {
                     puzzle: [
-                        [0,2,0,0,0,0,0,0,9],
-                        [0,0,0,4,0,0,0,5,0],
-                        [7,0,4,0,9,0,0,0,3],
-                        [0,0,5,0,0,9,0,0,0],
-                        [0,0,0,0,8,0,0,0,0],
-                        [0,0,0,3,0,0,9,0,0],
-                        [3,0,0,0,5,0,7,0,8],
-                        [0,6,0,0,0,7,0,0,0],
-                        [9,0,0,0,0,0,0,3,0]
+                        [0, 2, 0, 0, 0, 0, 0, 0, 9],
+                        [0, 0, 0, 4, 0, 0, 7, 5, 0],
+                        [7, 0, 4, 0, 9, 0, 0, 0, 3],
+                        [0, 0, 5, 0, 0, 9, 0, 0, 0],
+                        [0, 0, 0, 0, 8, 0, 0, 0, 0],
+                        [0, 0, 0, 3, 0, 0, 9, 0, 0],
+                        [3, 0, 0, 0, 5, 0, 7, 0, 8],
+                        [0, 6, 0, 0, 0, 7, 0, 0, 0],
+                        [9, 0, 0, 0, 0, 0, 0, 3, 0]
                     ],
                     solution: [
-                        [5,2,3,7,6,8,4,1,9],
-                        [6,9,8,4,3,1,2,5,7],
-                        [7,1,4,5,9,2,8,6,3],
-                        [4,3,5,6,7,9,1,8,2],
-                        [2,7,9,1,8,5,3,4,6],
-                        [8,5,6,3,2,4,9,7,1],
-                        [3,4,2,9,5,6,7,1,8],
-                        [1,6,5,8,4,7,2,9,4],
-                        [9,8,7,2,1,4,6,3,5]
+                        [5, 2, 3, 7, 6, 8, 4, 1, 9],
+                        [6, 9, 8, 4, 3, 1, 2, 5, 7],
+                        [7, 1, 4, 5, 9, 2, 8, 6, 3],
+                        [4, 3, 5, 6, 7, 9, 1, 8, 2],
+                        [2, 7, 9, 1, 8, 5, 3, 4, 6],
+                        [8, 5, 6, 3, 2, 4, 9, 7, 1],
+                        [3, 4, 2, 9, 5, 6, 7, 1, 8],
+                        [1, 6, 5, 8, 4, 7, 2, 9, 4],
+                        [9, 8, 7, 2, 1, 4, 6, 3, 5]
                     ]
                 },
                 // Puzzle 3 - Easy (29 clues)
@@ -628,34 +638,51 @@ class SudokuGame {
             });
             
             // Touch support - let browser handle pointer events naturally
-            let longPressTimer = null;
-            let longPressTriggered = false;
+            // Touch support
             let touchStartX = 0;
             let touchStartY = 0;
             let touchStartTime = 0;
+            let longPressTriggered = false;
             
             cell.addEventListener('touchstart', (e) => {
+                if (this.isGameWon) return;
+                
                 touchStartX = e.touches[0].clientX;
                 touchStartY = e.touches[0].clientY;
                 touchStartTime = Date.now();
                 longPressTriggered = false;
                 
-                // Start long press timer
-                longPressTimer = setTimeout(() => {
-                    this.handleLongPress(i);
+                // Clear any existing timer
+                if (this.touchKeypadTimer) {
+                    clearTimeout(this.touchKeypadTimer);
+                }
+                
+                // Start long press timer for the keypad
+                this.touchKeypadTimer = setTimeout(() => {
+                    this.showTouchKeypad(touchStartX, touchStartY, i);
                     longPressTriggered = true;
-                }, 500);
+                    this.vibrate(15);
+                }, 350);
             }, { passive: true });
             
             cell.addEventListener('touchend', (e) => {
                 const touchEndTime = Date.now();
                 const touchDuration = touchEndTime - touchStartTime;
                 
-                // Clear long press timer
-                if (longPressTimer) {
-                    clearTimeout(longPressTimer);
-                    longPressTimer = null;
+                // Clear timer
+                if (this.touchKeypadTimer) {
+                    clearTimeout(this.touchKeypadTimer);
+                    this.touchKeypadTimer = null;
                 }
+                
+                // If keypad is active, confirm the selection
+                if (this.touchKeypadActive) {
+                    this.confirmTouchKeypad();
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Existing flick logic below...
                 
                 // If long press was triggered, don't process other touch events
                 if (longPressTriggered) {
@@ -691,13 +718,24 @@ class SudokuGame {
             }, { passive: false });
             
             cell.addEventListener('touchmove', (e) => {
-                // Cancel long press on move
-                if (longPressTimer) {
-                    clearTimeout(longPressTimer);
-                    longPressTimer = null;
+                const x = e.touches[0].clientX;
+                const y = e.touches[0].clientY;
+                
+                // If they move significantly before long-press, cancel it
+                if (!this.touchKeypadActive && this.touchKeypadTimer) {
+                    const dist = Math.sqrt(Math.pow(x - touchStartX, 2) + Math.pow(y - touchStartY, 2));
+                    if (dist > 15) {
+                        clearTimeout(this.touchKeypadTimer);
+                        this.touchKeypadTimer = null;
+                    }
                 }
-                longPressTriggered = false;
-            }, { passive: true });
+                
+                // If keypad is active, update selection
+                if (this.touchKeypadActive) {
+                    this.updateTouchKeypad(x, y);
+                    e.preventDefault();
+                }
+            }, { passive: false });
             
             
             gridElement.appendChild(cell);
@@ -786,8 +824,32 @@ class SudokuGame {
         const col = index % 9;
         const cellValue = this.grid[row][col];
         
+        // Toggle selection off if clicking the same cell again
+        if (this.selectedCell === index) {
+            this.clearSelection();
+            this.clearHighlights();
+            this.clearNoteHighlights();
+            return;
+        }
+
+        // Toggle number highlight off if clicking a cell with the already active paint number
+        if (cellValue !== 0 && this.isPaintMode && this.paintNumber === cellValue) {
+            // Also erase the number if it's not a given cell
+            if (!this.givenCells[row][col]) {
+                this.setNumber(row, col, 0);
+            }
+            
+            this.clearSelection();
+            this.clearHighlights();
+            this.clearNoteHighlights();
+            this.isPaintMode = false;
+            this.paintNumber = null;
+            return;
+        }
+        
         // If clicking on a cell with a number, highlight all instances of that number
         if (cellValue !== 0) {
+            this.clearHighlights();
             this.highlightAllInstances(cellValue);
             this.setNumberCursor(cellValue);
             // Enable paint mode so clicking on empty cells will place this number
@@ -825,34 +887,39 @@ class SudokuGame {
         
         // If it's an empty cell and we're in paint mode, place the number immediately
         if (this.isPaintMode && this.paintNumber) {
-            this.setNumber(row, col, this.paintNumber);
-            return;
-        }
-        
-        // If it's an empty cell and we're in note mode, add the highlighted number as a note
-        if (this.isNoteMode && this.grid[row][col] === 0) {
-            if (this.isPaintMode && this.paintNumber) {
-                this.toggleNote(row, col, this.paintNumber);
-                // updateDisplay and highlighting are already handled in toggleNote
+            // Click to erase: if current value matches paintNumber, clear it
+            if (this.grid[row][col] === this.paintNumber) {
+                this.setNumber(row, col, 0);
             } else {
-                this.selectedCell = index;
-                const cell = document.querySelector(`[data-index="${index}"]`);
-                cell.classList.add('selected');
+                this.setNumber(row, col, this.paintNumber);
             }
             return;
         }
         
         this.selectedCell = index;
-        // Don't reset note mode on left click - keep it sticky
         const cell = document.querySelector(`[data-index="${index}"]`);
-        cell.classList.add('selected');
-        
+        if (cell) cell.classList.add('selected');
+
+        // Apply crosshair (row/column) highlighting
+        for (let i = 0; i < 9; i++) {
+            // Row highlight
+            const rCell = document.querySelector(`[data-index="${row * 9 + i}"]`);
+            if (rCell && i !== col) rCell.classList.add('row-highlight');
+            // Col highlight
+            const cCell = document.querySelector(`[data-index="${i * 9 + col}"]`);
+            if (cCell && i !== row) cCell.classList.add('col-highlight');
+        }
     }
     
     highlightAllInstances(number) {
         // Clear previous highlights
         this.clearHighlights();
         this.clearNoteHighlights();
+        
+        // Notify UI that a number is being highlighted
+        if (typeof this.onHighlightChange === 'function') {
+            this.onHighlightChange(number);
+        }
         
         // Highlight all cells with this number
         for (let i = 0; i < 81; i++) {
@@ -861,9 +928,9 @@ class SudokuGame {
             const cell = document.querySelector(`[data-index="${i}"]`);
             
             if (this.grid[row][col] === number) {
-                // Green highlight for cells that have this number
+                // Neon glow for same-number highlight
                 if (cell) {
-                    cell.classList.add('number-selected');
+                    cell.classList.add('same-number-highlight');
                 }
             } else if (this.grid[row][col] === 0 && this.notes[row][col].has(number)) {
                 // Highlight the specific note number (not the whole cell)
@@ -878,18 +945,55 @@ class SudokuGame {
             }
         }
     }
+
+    clearHighlights() {
+        // Notify UI that highlights are being cleared
+        if (typeof this.onHighlightChange === 'function') {
+            this.onHighlightChange(null);
+        }
+        
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            cell.classList.remove(
+                'selected', 
+                'highlighted', 
+                'number-selected', 
+                'row-highlight', 
+                'col-highlight', 
+                'same-number-highlight',
+                'paint-target'
+            );
+            
+            // Clear note-number-highlight inside the cell
+            const noteNumbers = cell.querySelectorAll('.note-number-highlight');
+            noteNumbers.forEach(n => n.classList.remove('note-number-highlight'));
+        });
+        this.clearNumberCursor();
+    }
     
     setNumberCursor(number) {
-        // Set cursor for all cells - large size (64x64), green outline (6px), large font (42px) with Fredoka font, no background
-        const cells = document.querySelectorAll('.cell');
-        const cursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="none" stroke="rgb(0,150,50)" stroke-width="6"/><text x="32" y="44" text-anchor="middle" font-family="Fredoka,Nunito,Quicksand,Verdana,Arial Rounded MT Bold,Helvetica Rounded,Arial,sans-serif" font-size="42" font-weight="700" fill="rgb(0,150,50)">${number}</text></svg>`;
+        // Redesigned cursor: Slightly smaller Rounded Cyan Square (48x48) with high-intensity neon glow
+        const cyan = "#57C7FF";
+        const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+            <defs>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="1.5" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+            </defs>
+            <rect x="4" y="4" width="40" height="40" rx="8" fill="rgba(20,20,20,0.6)" stroke="${cyan}" stroke-width="3" filter="url(#glow)"/>
+            <text x="24" y="34" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="28" font-weight="800" fill="${cyan}" filter="url(#glow)">${number}</text>
+        </svg>`;
         
+        // Encode to base64 for better browser compatibility
+        const cursorSvg = `data:image/svg+xml;base64,${btoa(svgContent)}`;
+        
+        const cells = document.querySelectorAll('.cell');
         cells.forEach(cell => {
-            cell.style.cursor = `url('${cursorSvg}') 32 32, auto`;
+            cell.style.cursor = `url('${cursorSvg}') 24 24, auto`;
         });
         
-        // Also set on document body
-        document.body.style.cursor = `url('${cursorSvg}') 32 32, auto`;
+        document.body.style.cursor = `url('${cursorSvg}') 24 24, auto`;
     }
     
     clearNumberCursor() {
@@ -909,19 +1013,13 @@ class SudokuGame {
             cell.classList.remove('selected', 'paint-target');
             this.selectedCell = null;
             
-            // Update erase button state
-            this.updateEraseButton();
+            // Update erase button state (if it exists)
+            if (typeof this.updateEraseButton === 'function') {
+                this.updateEraseButton();
+            }
         }
         // Don't reset note mode - keep it sticky
         // Don't reset paint mode - keep it sticky
-    }
-    
-    clearHighlights() {
-        const cells = document.querySelectorAll('.cell');
-        cells.forEach(cell => {
-            cell.classList.remove('highlighted', 'number-selected');
-        });
-        this.clearNumberCursor();
     }
     
     updateCursor() {
@@ -945,19 +1043,21 @@ class SudokuGame {
     
     
     highlightSameNumbers(number) {
+        this.clearHighlights();
         for (let i = 0; i < 81; i++) {
             const row = Math.floor(i / 9);
             const col = i % 9;
             const cell = document.querySelector(`[data-index="${i}"]`);
             
-            // Highlight all cells containing this number (both given and user-solved)
+            // Neon glow for same-number highlight
             if (this.grid[row][col] === number) {
-                cell.classList.add('highlighted');
+                if (cell) cell.classList.add('same-number-highlight');
             }
         }
     }
     
     inputNumber(number) {
+        if (this.isPaused) this.resumeTimer();
         if (this.selectedCell === null || this.isGameWon) return;
         
         const row = Math.floor(this.selectedCell / 9);
@@ -967,7 +1067,12 @@ class SudokuGame {
         
         // If we're in paint mode and the paint number matches the input number, place it
         if (this.isPaintMode && this.paintNumber && this.paintNumber === number) {
-            this.setNumber(row, col, number);
+            // Click to erase toggle
+            if (this.grid[row][col] === number) {
+                this.setNumber(row, col, 0);
+            } else {
+                this.setNumber(row, col, number);
+            }
             this.updateDisplay();
             return;
         }
@@ -975,7 +1080,12 @@ class SudokuGame {
         if (this.isNoteMode) {
             this.toggleNote(row, col, number);
         } else {
-            this.setNumber(row, col, number);
+            // Click to erase toggle
+            if (this.grid[row][col] === number) {
+                this.setNumber(row, col, 0);
+            } else {
+                this.setNumber(row, col, number);
+            }
         }
         
         this.updateDisplay();
@@ -989,58 +1099,35 @@ class SudokuGame {
         
         if (this.givenCells[row][col]) return;
         
-        // If we're in paint mode and clicking an empty cell, add the paint number as a note
-        if (this.isPaintMode && this.paintNumber && this.grid[row][col] === 0) {
-            this.toggleNote(row, col, this.paintNumber);
-            // updateDisplay and highlighting are already handled in toggleNote
+        // Use the currently selected number from the pad for the note
+        const noteValue = this.paintNumber || null;
+        console.log(`🖱️ Right-click detected on cell ${index}, paintNumber: ${noteValue}`);
+        
+        // If we have a number selected and the cell is empty, toggle it as a note
+        if (noteValue && this.grid[row][col] === 0) {
+            console.log(`📝 Toggling note ${noteValue} at (${row}, ${col})`);
+            this.toggleNote(row, col, noteValue);
             return;
         }
         
-        // If cell has a filled number, erase it
+        // If cell has a filled number, simply select it (no erase on right-click)
         if (this.grid[row][col] !== 0) {
-            this.setNumber(row, col, 0);
-            this.updateDisplay();
-            return;
-        }
-        
-        // If we're already in note mode and clicking an empty cell, just select it
-        if (this.isNoteMode && this.grid[row][col] === 0) {
             this.clearSelection();
             this.clearHighlights();
             this.selectedCell = index;
-            const cell = document.querySelector(`[data-index="${index}"]`);
-            cell.classList.add('selected');
+            this.highlightAllInstances(this.grid[row][col]);
             return;
         }
         
-        // Toggle note mode
-        this.isNoteMode = !this.isNoteMode;
-        
-        // Clear paint mode when toggling note mode
-        this.isPaintMode = false;
-        this.paintNumber = null;
-        document.body.classList.remove('paint-mode');
-        
-        // Update cursor style
-        if (this.isNoteMode) {
-            document.body.classList.add('note-mode');
-        } else {
-            document.body.classList.remove('note-mode');
+        // If cell is empty and no specific note number is selected, just select it
+        if (this.grid[row][col] === 0) {
+            this.clearSelection();
+            this.clearHighlights();
+            this.clearNoteHighlights();
+            this.selectedCell = index;
+            const cell = document.querySelector(`[data-index="${index}"]`);
+            if (cell) cell.classList.add('selected');
         }
-        
-        // Update mobile toggle
-        const toggle = document.getElementById('noteModeToggle');
-        if (toggle) {
-            toggle.checked = this.isNoteMode;
-        }
-        
-        // Remove previous selection and highlights
-        this.clearSelection();
-        this.clearHighlights();
-        
-        this.selectedCell = index;
-        const cell = document.querySelector(`[data-index="${index}"]`);
-        cell.classList.add('selected');
     }
     
     // New function to handle long press on empty cell
@@ -1177,10 +1264,7 @@ class SudokuGame {
         const wasRemoving = this.notes[row][col].has(number);
         
         if (wasRemoving) {
-            // Always allow removing notes
             this.notes[row][col].delete(number);
-            
-            // Add to move history
             this.addToHistory({
                 type: 'note',
                 row: row,
@@ -1188,22 +1272,22 @@ class SudokuGame {
                 noteNumber: number,
                 action: 'remove'
             });
+            console.log(`🗑️ Note ${number} removed from (${row}, ${col})`);
         } else {
-            // Validate before adding notes
+            // Check if this note is impossible (number already exists in row, col, or block)
             if (!this.isValidMove(row, col, number)) {
-                // Show red pulse animation on the number and don't add the note
-                this.showNoteError(row, col, number);
-                this.playSound('noteError');
+                this.playSound('error');
+                this.animateError(row, col);
+                
+                // Haptic feedback for mobile devices
+                this.vibrate(50);
+                
+                console.log(`❌ Rejected impossible note ${number} at (${row}, ${col})`);
                 return;
             }
             
-            // Add the note if it's valid
             this.notes[row][col].add(number);
-            
-            // Play note sound
             this.playSound('note');
-            
-            // Add to move history
             this.addToHistory({
                 type: 'note',
                 row: row,
@@ -1211,21 +1295,23 @@ class SudokuGame {
                 noteNumber: number,
                 action: 'add'
             });
+            console.log(`✍️ Note ${number} added to (${row}, ${col})`);
         }
         
-        // Update display to show the note change
         this.updateDisplay();
         
         // If we're in paint mode and this matches the paint number, highlight the note
         if (this.isPaintMode && this.paintNumber === number && !wasRemoving) {
             const index = row * 9 + col;
             const cell = document.querySelector(`[data-index="${index}"]`);
-            const noteNumbers = cell.querySelectorAll('.note-number');
-            noteNumbers.forEach(noteSpan => {
-                if (noteSpan.textContent === number.toString()) {
-                    noteSpan.classList.add('note-number-highlight');
-                }
-            });
+            if (cell) {
+                const noteNumbers = cell.querySelectorAll('.note-number');
+                noteNumbers.forEach(noteSpan => {
+                    if (noteSpan.textContent === number.toString()) {
+                        noteSpan.classList.add('note-number-highlight');
+                    }
+                });
+            }
         }
     }
     
@@ -3333,6 +3419,7 @@ class SudokuGame {
     }
     
     eraseNumber() {
+        if (this.isPaused) this.resumeTimer();
         if (this.selectedCell === null || this.isGameWon) return;
         
         const row = Math.floor(this.selectedCell / 9);
@@ -3474,6 +3561,11 @@ class SudokuGame {
                 pauseBtnIpad.style.display = 'block';
                 resumeBtnIpad.style.display = 'none';
             }
+        }
+        // Sync high-fidelity timer display highlight
+        const timerDisplay = document.getElementById('timer_display');
+        if (timerDisplay) {
+            timerDisplay.classList.toggle('paused', this.isPaused);
         }
     }
     
@@ -5064,8 +5156,46 @@ function clearBoard() {
     game.clearBoard();
 }
 
+function togglePause() {
+    if (!game) return;
+    
+    const grid = document.getElementById('sudokuGrid');
+    if (game.isPaused) {
+        game.resumeTimer();
+        if (grid) {
+            grid.style.filter = 'none';
+            grid.style.opacity = '1';
+        }
+    } else {
+        game.pauseTimer();
+        // Ensure board remains visible when paused
+        if (grid) {
+            grid.style.filter = 'none';
+            grid.style.opacity = '1';
+        }
+    }
+}
+
+function cycleDifficulty() {
+    const levels = ['easy', 'medium', 'hard'];
+    let currentIndex = levels.indexOf(game.difficulty.toLowerCase());
+    if (currentIndex === -1) currentIndex = 0;
+    const nextIndex = (currentIndex + 1) % levels.length;
+    const nextDifficulty = levels[nextIndex];
+    
+    // Set and start new game
+    setDifficulty(nextDifficulty);
+    
+    // Update the button text immediately
+    const btn = document.getElementById('difficulty_toggle_label');
+    if (btn) btn.textContent = nextDifficulty.toUpperCase();
+}
+
 function setDifficulty(difficulty) {
-    game.setDifficulty(difficulty);
+    if (game) {
+        game.difficulty = difficulty;
+        game.newGame();
+    }
 }
 
 function cleanupNotes() {
@@ -5081,6 +5211,137 @@ function autoSuggestNotes() {
         game.autoSuggestNotes(row, col);
     }
 }
+
+// --- Touch Keypad Implementation Methods ---
+
+SudokuGame.prototype.showTouchKeypad = function(clientX, clientY, cellIndex) {
+    if (this.isPaused || this.isGameWon) return;
+    
+    const keypad = document.getElementById('touchKeypad');
+    if (!keypad) return;
+    
+    this.touchKeypadActive = true;
+    this.activeTouchCellIndex = cellIndex;
+    this.selectedKeypadValue = null;
+    
+    // Preferred positioning: Top-right of touch
+    const offset = 20;
+    const margin = 10;
+    const keypadWidth = 230;
+    const keypadHeight = 310; // Accurate height with Delete button
+    
+    let left = clientX + offset;
+    let top = clientY - 150; // Higher offset to clear human thumbs
+    
+    // Boundary enforcement: Right side
+    if (left + keypadWidth > window.innerWidth - margin) {
+        left = clientX - keypadWidth - offset;
+    }
+    
+    // Final Clamp: Force within viewport bounds in all directions
+    if (left < margin) left = margin;
+    if (left + keypadWidth > window.innerWidth - margin) {
+        left = window.innerWidth - keypadWidth - margin;
+    }
+    
+    if (top < margin) top = margin;
+    if (top + keypadHeight > window.innerHeight - margin) {
+        top = window.innerHeight - keypadHeight - margin;
+    }
+    
+    keypad.style.left = `${left}px`;
+    keypad.style.top = `${top}px`;
+    
+    // Clear previous selection
+    keypad.querySelectorAll('.keypad-btn').forEach(btn => btn.classList.remove('active', 'tick'));
+    
+    // Smart Pre-selection: If a number is currently highlighted in the bottom bar,
+    // pre-select it in the keypad so the user can just release to record it.
+    if (this.isPaintMode && this.paintNumber) {
+        const val = this.paintNumber.toString();
+        const preselectBtn = keypad.querySelector(`.keypad-btn[data-value="${val}"]`);
+        if (preselectBtn) {
+            preselectBtn.classList.add('active');
+            this.selectedKeypadValue = val;
+            // Apply the visual 'tick' animation to show it's selected
+            preselectBtn.classList.add('tick');
+        }
+    }
+    
+    keypad.classList.add('visible');
+};
+
+SudokuGame.prototype.updateTouchKeypad = function(x, y) {
+    if (!this.touchKeypadActive) return;
+    
+    const element = document.elementFromPoint(x, y);
+    const keypadBtn = element ? element.closest('.keypad-btn') : null;
+    
+    const keypad = document.getElementById('touchKeypad');
+    keypad.querySelectorAll('.keypad-btn').forEach(btn => btn.classList.remove('active'));
+    
+    if (keypadBtn) {
+        keypadBtn.classList.add('active');
+        const newValue = keypadBtn.getAttribute('data-value');
+        if (this.selectedKeypadValue !== newValue) {
+            this.selectedKeypadValue = newValue;
+            if (navigator.vibrate) try { navigator.vibrate(5); } catch(e) {}
+        }
+    } else {
+        this.selectedKeypadValue = null;
+    }
+};
+
+SudokuGame.prototype.confirmTouchKeypad = function() {
+    if (!this.touchKeypadActive) return;
+    
+    // Auto-resume timer if taking a note/placing number while paused
+    if (this.isPaused && this.selectedKeypadValue !== null) {
+        this.resumeTimer();
+    }
+    
+    const index = this.activeTouchCellIndex;
+    const value = this.selectedKeypadValue;
+    
+    if (index !== null && value !== null) {
+        const row = Math.floor(index / 9);
+        const col = index % 9;
+        
+        if (value === 'delete') {
+            this.setNumber(row, col, 0);
+        } else {
+            const num = parseInt(value);
+            this.toggleNote(row, col, num);
+        }
+    }
+    
+    this.hideTouchKeypad();
+};
+
+SudokuGame.prototype.hideTouchKeypad = function() {
+    this.touchKeypadActive = false;
+    this.activeTouchCellIndex = null;
+    this.selectedKeypadValue = null;
+    
+    const keypad = document.getElementById('touchKeypad');
+    if (keypad) {
+        keypad.classList.remove('visible');
+    }
+};
+
+SudokuGame.prototype.vibrate = function(duration) {
+    // We no longer physically vibrate the device per user preference.
+    // Instead, we provide a visual 'tick' response on the active UI element.
+    const keypad = document.getElementById('touchKeypad');
+    if (keypad && this.touchKeypadActive) {
+        const activeBtn = keypad.querySelector('.keypad-btn.active');
+        if (activeBtn) {
+            activeBtn.classList.remove('tick');
+            void activeBtn.offsetWidth; // Trigger reflow
+            activeBtn.classList.add('tick');
+        }
+    }
+};
 
 function validateCurrentPuzzle() {
     console.log('🔍 Validating current puzzle...');
