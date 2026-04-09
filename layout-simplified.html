@@ -64,101 +64,8 @@
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-        }
-
-        /* ========================================
-           HEADER BAR
-        ======================================== */
-        .header-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 24px 0 24px;
-            height: 80px;
-            flex-shrink: 0;
-        }
-
-        #night_mode_toggle {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--inactive);
-            font-family: var(--font);
-            font-size: 10px;
-            font-weight: 400;
-            letter-spacing: 0.1em;
-            transition: color 0.2s;
-        }
-        #night_mode_toggle:hover { color: var(--text); }
-        #night_mode_toggle svg { width: 22px; height: 22px; }
-
-        #timer_display {
-            font-size: 14px;
-            font-weight: 400;
-            color: var(--text);
-            letter-spacing: 0.05em;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        #hint_button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-family: var(--font);
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text);
-            letter-spacing: 0.12em;
-            transition: color 0.15s;
-        }
-        #hint_button:hover { color: var(--highlight); }
-
-        /* ========================================
-           DIFFICULTY SELECTOR
-        ======================================== */
-        .difficulty-nav {
-            display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 32px;
-            height: 48px;
-            padding: 0 40px 24px 40px;
-            flex-shrink: 0;
-        }
-
-        .diff-btn {
-            background: none;
-            border: none;
-            font-family: var(--font);
-            font-size: 14px;
-            font-weight: 400;
-            color: var(--inactive);
-            cursor: pointer;
-            letter-spacing: 0.05em;
-            transition: color 0.2s;
-            position: relative;
-            padding-bottom: 4px;
-        }
-        .diff-btn:hover { color: var(--text); }
-        .diff-btn.active {
-            color: var(--text);
-            font-weight: 600;
-        }
-        .diff-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: var(--text);
-            border-radius: 2px;
+            align-items: center;
         }
 
         /* ========================================
@@ -169,11 +76,11 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 0 24px 16px 24px;
-            height: 64px;
+            padding: 8px 24px 0 24px;
+            height: 56px;
             flex-shrink: 0;
             width: 100%;
-            max-width: 500px;
+            max-width: min(calc(100vw - 48px), calc(100vh - 240px));
             margin: 0 auto;
         }
 
@@ -194,6 +101,7 @@
             justify-content: center;
             border-radius: 8px;
             transition: color 0.15s, background 0.15s;
+            touch-action: manipulation;
         }
         .num-btn:hover { color: var(--highlight); background: rgba(87,199,255,0.06); }
         .num-btn.selected {
@@ -207,11 +115,10 @@
            SUDOKU GRID AREA
         ======================================== */
         .grid-area {
-            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 10px 24px 30px 24px;
+            padding: 10px 0;
             min-height: 0;
         }
 
@@ -699,15 +606,15 @@
 
     <!-- NUMBER INPUT BAR (Relocated below Board) -->
     <div class="input-number-bar">
-        <button class="num-btn" onclick="selectNumber(1)">1</button>
-        <button class="num-btn" onclick="selectNumber(2)">2</button>
-        <button class="num-btn" onclick="selectNumber(3)">3</button>
-        <button class="num-btn" onclick="selectNumber(4)">4</button>
-        <button class="num-btn" onclick="selectNumber(5)">5</button>
-        <button class="num-btn" onclick="selectNumber(6)">6</button>
-        <button class="num-btn" onclick="selectNumber(7)">7</button>
-        <button class="num-btn" onclick="selectNumber(8)">8</button>
-        <button class="num-btn" onclick="selectNumber(9)">9</button>
+        <button class="num-btn" onclick="selectNumber(1, event)">1</button>
+        <button class="num-btn" onclick="selectNumber(2, event)">2</button>
+        <button class="num-btn" onclick="selectNumber(3, event)">3</button>
+        <button class="num-btn" onclick="selectNumber(4, event)">4</button>
+        <button class="num-btn" onclick="selectNumber(5, event)">5</button>
+        <button class="num-btn" onclick="selectNumber(6, event)">6</button>
+        <button class="num-btn" onclick="selectNumber(7, event)">7</button>
+        <button class="num-btn" onclick="selectNumber(8, event)">8</button>
+        <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
  </div>
 
@@ -741,8 +648,8 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="puzzles-expanded.js?v=125"></script>
-    <script src="script.js?v=125"></script>
+    <script src="puzzles-expanded.js?v=126"></script>
+    <script src="script.js?v=126"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
@@ -775,7 +682,8 @@
     // Handled by global cycleDifficulty() in script.js
 
     /* ---- Number selection (Horizontal Pad) ---- */
-    function selectNumber(n) {
+    function selectNumber(n, event) {
+        if (event) event.stopPropagation();
         if (!window.game) return;
 
         document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));

@@ -1,0 +1,101 @@
+{
+  "theme": {
+    "dark": {
+      "bg": "#0a0a0a",
+      "text": "#A4A4A4",
+      "inactive": "#4D4D4D",
+      "grid_line": "#333333",
+      "highlight": "#57C7FF",
+      "glow": "rgba(87, 199, 255, 0.6)",
+      "crosshair": "#1a1a1a",
+      "font": "'Outfit', sans-serif"
+    },
+    "light": {
+      "bg": "#f0f2f5",
+      "text": "#2c3e50",
+      "inactive": "#bdc3c7",
+      "grid_line": "#dcdde1",
+      "highlight": "#007AFF",
+      "glow": "rgba(0, 122, 255, 0.4)",
+      "crosshair": "#e1e4e8",
+      "font": "'Outfit', sans-serif"
+    }
+  },
+  "background": {
+    "type": "technical_grid",
+    "grid_size": "10px",
+    "line_opacity": {
+      "dark": 0.08,
+      "light": 0.12
+    }
+  },
+  "typography": {
+    "main": "'Outfit', sans-serif",
+    "monospace": "'JetBrains Mono', monospace",
+    "branding_title": {
+      "size": "18px",
+      "weight": "700",
+      "letter_spacing": "0.4em",
+      "transform": "uppercase"
+    }
+  },
+  "layout_hierarchy": {
+    "shell": {
+      "display": "flex-column",
+      "safe_area": "top & bottom"
+    },
+    "header": "branding-header (centered title)",
+    "main": {
+      "container": "board-container (flex-center)",
+      "controls": "controls-row (grid 1fr-auto-1fr)",
+      "grid": "grid-area (9x9 squares)",
+      "numpad": "numpad-bar (horizontal row)"
+    }
+  },
+  "grid_specification": {
+    "container": {
+      "max_width": "500px",
+      "aspect_ratio": "1:1",
+      "padding": "1.5px",
+      "gap": "1.5px",
+      "shadow": "0 20px 60px rgba(0,0,0,0.6)"
+    },
+    "cell": {
+      "font_size": "clamp(20px, 6vw, 32px)",
+      "weights": {
+        "regular": "300",
+        "given": "700"
+      },
+      "selection_highlight": {
+        "background": "rgba(87, 199, 255, 0.2)",
+        "border": "inset 2px #57C7FF",
+        "glow": "0 0 15px rgba(87, 199, 255, 0.6)"
+      }
+    },
+    "subgrids": {
+      "thicker_borders": "3n columns and specific rows (19-27, 46-54)",
+      "border_opacity": {
+        "dark": 0.25,
+        "light": 0.15
+      }
+    }
+  },
+  "components": {
+    "num_btn": {
+      "aspect_ratio": "1:1",
+      "border_radius": "10px",
+      "font_size": "24px"
+    },
+    "notes": {
+      "display": "3x3 grid inside cell",
+      "color": "var(--highlight)",
+      "font_size": "11px",
+      "weight": "800"
+    },
+    "modals": {
+      "overlay": "backdrop-filter: blur(10px)",
+      "border_radius": "24px",
+      "primary_btn": "var(--highlight) background"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "Zudoku",
+  "short_name": "Zudoku",
+  "description": "A high-fidelity minimalist Sudoku game with a technical blueprint aesthetic.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "public/192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "public/512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["games", "utilities"],
+  "shortcuts": [
+    {
+      "name": "New Game",
+      "url": "index.html?action=new",
+      "description": "Start a new Sudoku puzzle"
+    }
+  ]
+}
