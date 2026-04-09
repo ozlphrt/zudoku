@@ -2121,10 +2121,18 @@ class SudokuGame {
             if (diff > 0) {
                 // We need MORE clues. Randomly reveal some from the solution.
                 console.log(`⚖️ Balancing: Adding ${diff} clues to meet target of ${targetClues}...`);
-                for (let i = 0; i < diff && emptyCells.length > 0; i++) {
+                let added = 0;
+                while (added < diff && emptyCells.length > 0) {
                     const idx = Math.floor(Math.random() * emptyCells.length);
                     const {r, c} = emptyCells.splice(idx, 1)[0];
-                    this.grid[r][c] = this.solution[r][c];
+                    const val = this.solution[r][c];
+                    
+                    // Critical: Even though solution should be valid, 
+                    // we verify no collision exists in the board before placing
+                    if (this.isValidMove(r, c, val)) {
+                        this.grid[r][c] = val;
+                        added++;
+                    }
                 }
             } else if (diff < 0) {
                 // We need FEWER clues. Randomly hide some.

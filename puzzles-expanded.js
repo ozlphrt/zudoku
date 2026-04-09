@@ -30613,5 +30613,5 @@ const expandedPuzzleDatabase = {
 
 // Export for use in browser
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = validatedPuzzleDatabase;
+    module.exports = expandedPuzzleDatabase;
 }
