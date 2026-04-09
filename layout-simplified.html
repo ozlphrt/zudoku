@@ -609,6 +609,65 @@
             background: rgba(0, 0, 0, 0.12);
             color: #000;
         }
+        /* ========================================
+           UPDATE NOTIFICATION TOAST
+        ======================================== */
+        .update-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(87, 199, 255, 0.1);
+            transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            min-width: 280px;
+            pointer-events: all;
+        }
+
+        .update-toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .update-toast-text {
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .update-refresh-btn {
+            background: var(--highlight);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 0 10px var(--highlight);
+        }
+
+        .update-refresh-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Adjustments for safe area */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .update-toast {
+                bottom: calc(30px + env(safe-area-inset-bottom));
+            }
+        }
     </style>
 </head>
 
@@ -659,7 +718,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.6</div>
+    <div class="version-tag">V1.1.7</div>
  </div>
 
 </div>
@@ -692,8 +751,8 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="puzzles-expanded.js?v=131"></script>
-    <script src="script.js?v=131"></script>
+    <script src="puzzles-expanded.js?v=132"></script>
+    <script src="script.js?v=132"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
@@ -867,7 +926,34 @@
         <div class="keypad-btn backspace" data-value="delete">DELETE</div>
     </div>
 
+    <!-- Update Notification Toast Container -->
+    <div id="update-toast-container"></div>
+
     <script>
+        // --- Premium PWA Update Notification System ---
+        function showUpdateToast(reg) {
+            const container = document.getElementById('update-toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'update-toast';
+            toast.innerHTML = `
+                <div class="update-toast-text">New version available!</div>
+                <button class="update-refresh-btn" id="refresh-pwa-btn">REFRESH</button>
+            `;
+
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            document.getElementById('refresh-pwa-btn').addEventListener('click', () => {
+                // If there's a waiting worker, skipWaiting was already called in sw.js
+                // but we reload to get the new assets and updated UI version tags
+                window.location.reload();
+            });
+        }
+
         // Register Service Worker for offline support and updates
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -875,13 +961,24 @@
                     .then(reg => {
                         console.log('✅ Service Worker registered');
                         
-                        // Check for updates
+                        // 1. Check for updates IMMEDIATELY on launch
+                        reg.update();
+
+                        // 2. Periodic periodic check every 1 hour (3600000ms)
+                        setInterval(() => {
+                            console.log('🔍 Checking for PWA updates...');
+                            reg.update();
+                        }, 3600000);
+
+                        // 3. Listen for the actual update being found and installed
                         reg.addEventListener('updatefound', () => {
                             const newWorker = reg.installing;
                             newWorker.addEventListener('statechange', () => {
+                                // Once the new worker is installed, it becomes the 'waiting' worker
+                                // In our sw.js, we call skipWaiting() so it activates quickly
                                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log('🔄 New version available! Please refresh.');
-                                    // Optional: Show a "New version available" toast
+                                    console.log('🚀 New version detected and ready.');
+                                    showUpdateToast(reg);
                                 }
                             });
                         });
