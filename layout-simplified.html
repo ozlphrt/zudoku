@@ -389,48 +389,53 @@
             padding: 0;
             border: none;
             text-align: center;
-            width: auto;
-            max-width: 90%;
+            width: 100%;
+            max-width: 95vw;
             box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .victory-icon {
-            font-size: 120px;
-            margin-bottom: 32px;
+            font-size: clamp(80px, 25vw, 140px);
+            margin-bottom: 2vh;
             display: block;
             line-height: 1;
         }
 
         .victory-content h1 {
-            font-size: 80px;
+            font-size: clamp(42px, 16vw, 90px);
             font-weight: 800;
-            margin-bottom: 12px;
+            margin-bottom: 1vh;
             color: var(--highlight);
-            letter-spacing: -2px;
+            letter-spacing: -0.02em;
             line-height: 1;
             text-shadow: 0 0 30px var(--glow);
+            width: 100%;
+            white-space: nowrap;
         }
 
         .victory-content p {
-            font-size: 32px;
+            font-size: clamp(18px, 6vw, 32px);
             opacity: 0.8;
-            margin-bottom: 48px;
-            letter-spacing: 1px;
+            margin-bottom: 4vh;
+            letter-spacing: 0.05em;
         }
 
         .primary-btn {
             background: var(--highlight);
             color: #000;
             border: none;
-            padding: 20px 64px;
+            padding: 18px 56px;
             border-radius: 12px;
             font-family: var(--font);
-            font-size: 24px;
+            font-size: clamp(16px, 5vw, 24px);
             font-weight: 700;
             letter-spacing: 0.05em;
             cursor: pointer;
             transition: transform 0.2s, background 0.2s;
-            max-width: 100%;
+            max-width: 80vw;
         }
         .primary-btn:active { transform: scale(0.96); }
         .timer-display {
@@ -821,7 +826,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.28</div>
+    <div class="version-tag">V1.1.30</div>
  </div>
 
 </div>
@@ -854,7 +859,7 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=148"></script>
+    <script src="script.js?v=149"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
