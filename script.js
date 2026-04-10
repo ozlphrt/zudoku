@@ -3642,6 +3642,8 @@ class SudokuGame {
             this.saveBestTimes();
             this.updateBestTimeDisplay();
         }
+    }
+
     updateBestTimeDisplay() {
         const bestTime = this.bestTimes[this.difficulty.toLowerCase()];
         const bestTimeElement = document.getElementById('bestTime');
