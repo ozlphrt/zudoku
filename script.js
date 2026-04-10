@@ -3891,117 +3891,169 @@ class SudokuGame {
             
             switch (soundType) {
                 case 'place':
-                    // Ultra-sharp mechanical snap
-                    const osc1 = this.audioContext.createOscillator();
-                    const gain1 = this.audioContext.createGain();
-                    osc1.connect(gain1);
-                    gain1.connect(filter);
+                    // Metallic FM Click (Carrier + Modulator)
+                    const carrier = this.audioContext.createOscillator();
+                    const modulator = this.audioContext.createOscillator();
+                    const modGain = this.audioContext.createGain();
+                    const gain = this.audioContext.createGain();
                     
-                    osc1.type = 'triangle';
-                    osc1.frequency.setValueAtTime(3000, this.audioContext.currentTime);
-                    osc1.frequency.exponentialRampToValueAtTime(1500, this.audioContext.currentTime + 0.015);
+                    modulator.connect(modGain);
+                    modGain.connect(carrier.frequency);
+                    carrier.connect(gain);
+                    gain.connect(filter);
                     
-                    gain1.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain1.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.001);
-                    gain1.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.015);
+                    carrier.type = 'sine';
+                    carrier.frequency.setValueAtTime(2800, this.audioContext.currentTime);
                     
-                    osc1.start();
-                    osc1.stop(this.audioContext.currentTime + 0.015);
+                    modulator.type = 'sine';
+                    modulator.frequency.setValueAtTime(140, this.audioContext.currentTime);
+                    
+                    modGain.gain.setValueAtTime(1500, this.audioContext.currentTime);
+                    modGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.02);
+                    
+                    gain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.001);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.02);
+                    
+                    carrier.start();
+                    modulator.start();
+                    carrier.stop(this.audioContext.currentTime + 0.02);
+                    modulator.stop(this.audioContext.currentTime + 0.02);
+                    
+                    // Add a tiny noise burst for the mechanical "bite"
+                    this.playNoiseBurst(5000, 0.005, 0.05);
                     break;
                     
                 case 'error':
-                    // Sharp surgical error tone
-                    const osc2 = this.audioContext.createOscillator();
-                    const gain2 = this.audioContext.createGain();
-                    osc2.connect(gain2);
-                    gain2.connect(filter);
-                    
-                    osc2.type = 'triangle';
-                    osc2.frequency.setValueAtTime(440, this.audioContext.currentTime);
-                    osc2.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + 0.1);
-                    
-                    gain2.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain2.gain.linearRampToValueAtTime(0.15, this.audioContext.currentTime + 0.005);
-                    gain2.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
-                    
-                    osc2.start();
-                    osc2.stop(this.audioContext.currentTime + 0.1);
+                    const eOsc = this.audioContext.createOscillator();
+                    const eGain = this.audioContext.createGain();
+                    eOsc.connect(eGain);
+                    eGain.connect(filter);
+                    eOsc.type = 'triangle';
+                    eOsc.frequency.setValueAtTime(880, this.audioContext.currentTime);
+                    eOsc.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + 0.12);
+                    eGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    eGain.gain.linearRampToValueAtTime(0.15, this.audioContext.currentTime + 0.005);
+                    eGain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.12);
+                    eOsc.start();
+                    eOsc.stop(this.audioContext.currentTime + 0.12);
                     break;
                     
                 case 'note':
-                    // Higher, drier surgical click
-                    const osc3 = this.audioContext.createOscillator();
-                    const gain3 = this.audioContext.createGain();
-                    osc3.connect(gain3);
-                    gain3.connect(filter);
+                    // Higher, sharper metallic click for notes
+                    const nCarrier = this.audioContext.createOscillator();
+                    const nModulator = this.audioContext.createOscillator();
+                    const nModGain = this.audioContext.createGain();
+                    const nGain = this.audioContext.createGain();
                     
-                    osc3.type = 'triangle';
-                    osc3.frequency.setValueAtTime(4000, this.audioContext.currentTime);
-                    osc3.frequency.exponentialRampToValueAtTime(2500, this.audioContext.currentTime + 0.01);
+                    nModulator.connect(nModGain);
+                    nModGain.connect(nCarrier.frequency);
+                    nCarrier.connect(nGain);
+                    nGain.connect(filter);
                     
-                    gain3.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain3.gain.linearRampToValueAtTime(0.12, this.audioContext.currentTime + 0.001);
-                    gain3.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.01);
+                    nCarrier.type = 'sine';
+                    nCarrier.frequency.setValueAtTime(3800, this.audioContext.currentTime);
+                    nModulator.frequency.setValueAtTime(220, this.audioContext.currentTime);
+                    nModGain.gain.setValueAtTime(1000, this.audioContext.currentTime);
                     
-                    osc3.start();
-                    osc3.stop(this.audioContext.currentTime + 0.01);
+                    nGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    nGain.gain.linearRampToValueAtTime(0.12, this.audioContext.currentTime + 0.001);
+                    nGain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.015);
+                    
+                    nCarrier.start();
+                    nModulator.start();
+                    nCarrier.stop(this.audioContext.currentTime + 0.015);
+                    nModulator.stop(this.audioContext.currentTime + 0.015);
+                    
+                    this.playNoiseBurst(7000, 0.003, 0.03);
                     break;
                     
                 case 'noteError':
-                    const osc4 = this.audioContext.createOscillator();
-                    const gain4 = this.audioContext.createGain();
-                    osc4.connect(gain4);
-                    gain4.connect(filter);
-                    
-                    osc4.type = 'sine';
-                    osc4.frequency.setValueAtTime(300, this.audioContext.currentTime);
-                    osc4.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.08);
-                    
-                    gain4.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain4.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.005);
-                    gain4.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.08);
-                    
-                    osc4.start();
-                    osc4.stop(this.audioContext.currentTime + 0.08);
+                    const neOsc = this.audioContext.createOscillator();
+                    const neGain = this.audioContext.createGain();
+                    neOsc.connect(neGain);
+                    neGain.connect(filter);
+                    neOsc.type = 'sine';
+                    neOsc.frequency.setValueAtTime(400, this.audioContext.currentTime);
+                    neOsc.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.1);
+                    neGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    neGain.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.005);
+                    neGain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
+                    neOsc.start();
+                    neOsc.stop(this.audioContext.currentTime + 0.1);
                     break;
                     
                 case 'win':
-                    const chordNotes = [523.25, 659.25, 783.99, 1046.50]; 
-                    chordNotes.forEach((freq, index) => {
+                    const chord = [659.25, 830.61, 987.77, 1318.51]; 
+                    chord.forEach((freq, i) => {
                         const osc = this.audioContext.createOscillator();
-                        const gain = this.audioContext.createGain();
-                        osc.connect(gain);
-                        gain.connect(filter);
+                        const g = this.audioContext.createGain();
+                        osc.connect(g);
+                        g.connect(masterGain);
                         osc.type = 'triangle';
-                        osc.frequency.setValueAtTime(freq * 1.5, this.audioContext.currentTime + index * 0.06);
-                        gain.gain.setValueAtTime(0, this.audioContext.currentTime + index * 0.06);
-                        gain.gain.linearRampToValueAtTime(0.12, this.audioContext.currentTime + index * 0.06 + 0.005);
-                        gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + index * 0.06 + 0.08);
-                        osc.start(this.audioContext.currentTime + index * 0.06);
-                        osc.stop(this.audioContext.currentTime + index * 0.06 + 0.08);
+                        osc.frequency.setValueAtTime(freq, this.audioContext.currentTime + i * 0.05);
+                        g.gain.setValueAtTime(0, this.audioContext.currentTime + i * 0.05);
+                        g.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + i * 0.05 + 0.005);
+                        g.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + i * 0.05 + 0.1);
+                        osc.start(this.audioContext.currentTime + i * 0.05);
+                        osc.stop(this.audioContext.currentTime + i * 0.05 + 0.1);
                     });
                     break;
                     
                 case 'hint':
                 case 'undo':
                 case 'redo':
-                    // Minimalist utility click
-                    const osc5 = this.audioContext.createOscillator();
-                    const gain5 = this.audioContext.createGain();
-                    osc5.connect(gain5);
-                    gain5.connect(filter);
-                    osc5.type = 'triangle';
-                    osc5.frequency.setValueAtTime(2500, this.audioContext.currentTime);
-                    osc5.frequency.exponentialRampToValueAtTime(3000, this.audioContext.currentTime + 0.02);
-                    gain5.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain5.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.002);
-                    gain5.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.02);
-                    osc5.start();
-                    osc5.stop(this.audioContext.currentTime + 0.02);
+                    const uOsc = this.audioContext.createOscillator();
+                    const uGain = this.audioContext.createGain();
+                    uOsc.connect(uGain);
+                    uGain.connect(filter);
+                    uOsc.type = 'sine';
+                    uOsc.frequency.setValueAtTime(3200, this.audioContext.currentTime);
+                    uOsc.frequency.exponentialRampToValueAtTime(2000, this.audioContext.currentTime + 0.02);
+                    uGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    uGain.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.002);
+                    uGain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.02);
+                    uOsc.start();
+                    uOsc.stop(this.audioContext.currentTime + 0.02);
+                    this.playNoiseBurst(6000, 0.002, 0.03);
                     break;
             }
         } catch (e) {
             console.log('Sound playback error:', e);
+        }
+    }
+
+    playNoiseBurst(frequency, volume, duration) {
+        if (!this.soundsEnabled || !this.audioContext) return;
+        
+        try {
+            const bufferSize = this.audioContext.sampleRate * duration;
+            const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            
+            const noise = this.audioContext.createBufferSource();
+            noise.buffer = buffer;
+            
+            const filter = this.audioContext.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+            
+            const gain = this.audioContext.createGain();
+            gain.gain.setValueAtTime(volume, this.audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+            
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.audioContext.destination);
+            
+            noise.start();
+            noise.stop(this.audioContext.currentTime + duration);
+        } catch (e) {
+            console.warn('Noise burst error:', e);
         }
     }
     
