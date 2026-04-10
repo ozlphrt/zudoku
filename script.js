@@ -3758,88 +3758,76 @@ class SudokuGame {
             // Create a low-pass filter for smoother sounds
             const filter = this.audioContext.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(3000, this.audioContext.currentTime);
-            filter.Q.setValueAtTime(1, this.audioContext.currentTime);
-            filter.connect(masterGain);
-            
-            switch (soundType) {
+            filter.frequency.setValueAtTime(3000, this.audioC            switch (soundType) {
                 case 'place':
-                    // Soft, pleasant click with subtle pitch bend
+                    // Sharp mechanical click
                     const osc1 = this.audioContext.createOscillator();
                     const gain1 = this.audioContext.createGain();
                     osc1.connect(gain1);
                     gain1.connect(filter);
                     
                     osc1.type = 'sine';
-                    osc1.frequency.setValueAtTime(1200, this.audioContext.currentTime);
-                    osc1.frequency.exponentialRampToValueAtTime(800, this.audioContext.currentTime + 0.06);
+                    osc1.frequency.setValueAtTime(2000, this.audioContext.currentTime);
+                    osc1.frequency.exponentialRampToValueAtTime(1200, this.audioContext.currentTime + 0.04);
                     
                     gain1.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain1.gain.linearRampToValueAtTime(0.4, this.audioContext.currentTime + 0.005);
-                    gain1.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.06);
+                    gain1.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + 0.002);
+                    gain1.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.04);
                     
                     osc1.start();
-                    osc1.stop(this.audioContext.currentTime + 0.06);
+                    osc1.stop(this.audioContext.currentTime + 0.04);
                     break;
                     
                 case 'error':
-                    // Soft error tone with gentle vibrato
+                    // Sharp, short error alert
                     const osc2 = this.audioContext.createOscillator();
                     const gain2 = this.audioContext.createGain();
-                    const lfo = this.audioContext.createOscillator();
-                    
                     osc2.connect(gain2);
                     gain2.connect(filter);
-                    lfo.connect(osc2.frequency);
                     
                     osc2.type = 'triangle';
-                    osc2.frequency.setValueAtTime(300, this.audioContext.currentTime);
-                    lfo.type = 'sine';
-                    lfo.frequency.setValueAtTime(6, this.audioContext.currentTime);
-                    lfo.frequency.detune.setValueAtTime(20, this.audioContext.currentTime);
+                    osc2.frequency.setValueAtTime(440, this.audioContext.currentTime);
+                    osc2.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + 0.15);
                     
                     gain2.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain2.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + 0.01);
-                    gain2.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.2);
+                    gain2.gain.linearRampToValueAtTime(0.25, this.audioContext.currentTime + 0.01);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.15);
                     
                     osc2.start();
-                    lfo.start();
-                    osc2.stop(this.audioContext.currentTime + 0.2);
-                    lfo.stop(this.audioContext.currentTime + 0.2);
+                    osc2.stop(this.audioContext.currentTime + 0.15);
                     break;
                     
                 case 'note':
-                    // Gentle note sound with soft attack
+                    // Higher, drier click for notes
                     const osc3 = this.audioContext.createOscillator();
                     const gain3 = this.audioContext.createGain();
                     osc3.connect(gain3);
                     gain3.connect(filter);
                     
                     osc3.type = 'sine';
-                    osc3.frequency.setValueAtTime(800, this.audioContext.currentTime);
-                    osc3.frequency.exponentialRampToValueAtTime(600, this.audioContext.currentTime + 0.05);
+                    osc3.frequency.setValueAtTime(2400, this.audioContext.currentTime);
+                    osc3.frequency.exponentialRampToValueAtTime(1800, this.audioContext.currentTime + 0.03);
                     
                     gain3.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain3.gain.linearRampToValueAtTime(0.25, this.audioContext.currentTime + 0.008);
-                    gain3.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.05);
+                    gain3.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.002);
+                    gain3.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.03);
                     
                     osc3.start();
-                    osc3.stop(this.audioContext.currentTime + 0.05);
+                    osc3.stop(this.audioContext.currentTime + 0.03);
                     break;
                     
                 case 'noteError':
-                    // Subtle error for invalid notes
                     const osc4 = this.audioContext.createOscillator();
                     const gain4 = this.audioContext.createGain();
                     osc4.connect(gain4);
                     gain4.connect(filter);
                     
-                    osc4.type = 'sawtooth';
-                    osc4.frequency.setValueAtTime(200, this.audioContext.currentTime);
-                    osc4.frequency.exponentialRampToValueAtTime(150, this.audioContext.currentTime + 0.1);
+                    osc4.type = 'sine';
+                    osc4.frequency.setValueAtTime(300, this.audioContext.currentTime);
+                    osc4.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.1);
                     
                     gain4.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain4.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.005);
+                    gain4.gain.linearRampToValueAtTime(0.15, this.audioContext.currentTime + 0.005);
                     gain4.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
                     
                     osc4.start();
@@ -3847,60 +3835,39 @@ class SudokuGame {
                     break;
                     
                 case 'win':
-                    // Beautiful victory chord progression
-                    const chordNotes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    const chordNotes = [523.25, 659.25, 783.99, 1046.50]; 
                     chordNotes.forEach((freq, index) => {
                         const osc = this.audioContext.createOscillator();
                         const gain = this.audioContext.createGain();
                         osc.connect(gain);
                         gain.connect(filter);
-                        
                         osc.type = 'sine';
-                        osc.frequency.setValueAtTime(freq, this.audioContext.currentTime + index * 0.2);
-                        
-                        gain.gain.setValueAtTime(0, this.audioContext.currentTime + index * 0.2);
-                        gain.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + index * 0.2 + 0.01);
-                        gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + index * 0.2 + 0.5);
-                        
-                        osc.start(this.audioContext.currentTime + index * 0.2);
-                        osc.stop(this.audioContext.currentTime + index * 0.2 + 0.5);
+                        osc.frequency.setValueAtTime(freq, this.audioContext.currentTime + index * 0.15);
+                        gain.gain.setValueAtTime(0, this.audioContext.currentTime + index * 0.15);
+                        gain.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + index * 0.15 + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + index * 0.15 + 0.4);
+                        osc.start(this.audioContext.currentTime + index * 0.15);
+                        osc.stop(this.audioContext.currentTime + index * 0.15 + 0.4);
                     });
                     break;
                     
                 case 'hint':
-                    // Gentle hint sound with soft attack
+                case 'undo':
+                case 'redo':
+                    // Quick mechanical utility sound
                     const osc5 = this.audioContext.createOscillator();
                     const gain5 = this.audioContext.createGain();
                     osc5.connect(gain5);
                     gain5.connect(filter);
-                    
                     osc5.type = 'sine';
-                    osc5.frequency.setValueAtTime(1000, this.audioContext.currentTime);
-                    osc5.frequency.exponentialRampToValueAtTime(1200, this.audioContext.currentTime + 0.08);
-                    
+                    osc5.frequency.setValueAtTime(1500, this.audioContext.currentTime);
+                    osc5.frequency.exponentialRampToValueAtTime(2000, this.audioContext.currentTime + 0.05);
                     gain5.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain5.gain.linearRampToValueAtTime(0.25, this.audioContext.currentTime + 0.01);
-                    gain5.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.08);
-                    
+                    gain5.gain.linearRampToValueAtTime(0.15, this.audioContext.currentTime + 0.005);
+                    gain5.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.05);
                     osc5.start();
-                    osc5.stop(this.audioContext.currentTime + 0.08);
+                    osc5.stop(this.audioContext.currentTime + 0.05);
                     break;
-                    
-                case 'undo':
-                case 'redo':
-                    // Soft undo/redo sound
-                    const osc6 = this.audioContext.createOscillator();
-                    const gain6 = this.audioContext.createGain();
-                    osc6.connect(gain6);
-                    gain6.connect(filter);
-                    
-                    osc6.type = 'sine';
-                    osc6.frequency.setValueAtTime(600, this.audioContext.currentTime);
-                    osc6.frequency.exponentialRampToValueAtTime(400, this.audioContext.currentTime + 0.04);
-                    
-                    gain6.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain6.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.005);
-                    gain6.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.04);
                     
                     osc6.start();
                     osc6.stop(this.audioContext.currentTime + 0.04);
