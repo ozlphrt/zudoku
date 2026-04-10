@@ -372,70 +372,75 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.3);
             backdrop-filter: blur(8px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            gap: 32px;
-            padding: 20px;
+            padding: 24px;
         }
         #victoryOverlay.visible { display: flex; }
 
         .victory-content {
-            background: transparent;
-            backdrop-filter: none;
-            padding: 0;
-            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(30px);
+            padding: clamp(32px, 6vh, 64px) clamp(24px, 5vw, 48px);
+            border-radius: clamp(24px, 5vw, 40px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             text-align: center;
             width: 100%;
-            max-width: 95vw;
-            box-shadow: none;
+            max-width: 440px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
             display: flex;
             flex-direction: column;
             align-items: center;
+            animation: victoryPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            position: relative;
+        }
+        @keyframes victoryPop {
+            0% { transform: scale(0.8) translateY(40px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
         }
 
         .victory-icon {
-            font-size: clamp(80px, 25vw, 140px);
-            margin-bottom: 2vh;
+            font-size: clamp(64px, 15vw, 100px);
+            margin-bottom: 20px;
             display: block;
             line-height: 1;
+            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
         }
 
         .victory-content h1 {
-            font-size: clamp(42px, 16vw, 90px);
+            font-size: clamp(32px, 10vw, 56px);
             font-weight: 800;
-            margin-bottom: 1vh;
+            margin-bottom: 8px;
             color: var(--highlight);
             letter-spacing: -0.02em;
-            line-height: 1;
-            text-shadow: 0 0 30px var(--glow);
+            line-height: 1.1;
+            text-shadow: 0 0 20px var(--glow);
             width: 100%;
-            white-space: nowrap;
         }
 
         .victory-content p {
-            font-size: clamp(18px, 6vw, 32px);
+            font-size: clamp(16px, 4vw, 22px);
             opacity: 0.8;
-            margin-bottom: 4vh;
-            letter-spacing: 0.05em;
+            margin-bottom: 32px;
+            letter-spacing: 0.02em;
         }
 
         .primary-btn {
             background: var(--highlight);
             color: #000;
             border: none;
-            padding: 18px 56px;
+            padding: 16px 48px;
             border-radius: 12px;
             font-family: var(--font);
-            font-size: clamp(16px, 5vw, 24px);
+            font-size: clamp(14px, 4vw, 18px);
             font-weight: 700;
             letter-spacing: 0.05em;
             cursor: pointer;
             transition: transform 0.2s, background 0.2s;
-            max-width: 80vw;
+            width: 100%;
         }
         .primary-btn:active { transform: scale(0.96); }
         .timer-display {
@@ -826,7 +831,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.30</div>
+    <div class="version-tag">V1.1.32</div>
  </div>
 
 </div>
@@ -859,7 +864,7 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=149"></script>
+    <script src="script.js?v=150"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
