@@ -140,22 +140,33 @@
             box-shadow: 0 12px 30px rgba(0,0,0,0.5);
         }
 
-        /* Highly distinct 3x3 subgrid boundaries using inset shadow (does not affect cell size) */
-        .cell:nth-child(3n):not(:nth-child(9n)) { box-shadow: inset -3px 0 0 -1px rgba(255,255,255,0.15); }
-        .cell:nth-child(n+19):nth-child(-n+27),
-        .cell:nth-child(n+46):nth-child(-n+54) { box-shadow: inset 0 -3px 0 -1px rgba(255,255,255,0.15); }
+        /* 3x3 Subgrid Boundaries (Pseudo-layer to avoid shadow collision) */
+        .cell::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 1;
+            transition: box-shadow 0.1s;
+            border-radius: inherit;
+        }
+
+        /* Highly distinct 3x3 subgrid boundaries using inset shadow */
+        .cell:nth-child(3n):not(:nth-child(9n))::before { box-shadow: inset -3px 0 0 -1px rgba(255,255,255,0.15); }
+        .cell:nth-child(n+19):nth-child(-n+27)::before,
+        .cell:nth-child(n+46):nth-child(-n+54)::before { box-shadow: inset 0 -3px 0 -1px rgba(255,255,255,0.15); }
 
         /* Handle intersections (corner of 3x3 blocks) */
-        .cell:nth-child(21), .cell:nth-child(24),
-        .cell:nth-child(48), .cell:nth-child(51) { 
+        .cell:nth-child(21)::before, .cell:nth-child(24)::before,
+        .cell:nth-child(48)::before, .cell:nth-child(51)::before { 
             box-shadow: inset -3px -3px 0 -1px rgba(255,255,255,0.15) !important; 
         }
 
-        [data-theme="light"] .cell:nth-child(3n):not(:nth-child(9n)) { box-shadow: inset -3px 0 0 -1px rgba(0,0,0,0.1); }
-        [data-theme="light"] .cell:nth-child(n+19):nth-child(-n+27),
-        [data-theme="light"] .cell:nth-child(n+46):nth-child(-n+54) { box-shadow: inset 0 -3px 0 -1px rgba(0,0,0,0.1); }
-        [data-theme="light"] .cell:nth-child(21), [data-theme="light"] .cell:nth-child(24),
-        [data-theme="light"] .cell:nth-child(48), [data-theme="light"] .cell:nth-child(51) { 
+        [data-theme="light"] .cell:nth-child(3n):not(:nth-child(9n))::before { box-shadow: inset -3px 0 0 -1px rgba(0,0,0,0.1); }
+        [data-theme="light"] .cell:nth-child(n+19):nth-child(-n+27)::before,
+        [data-theme="light"] .cell:nth-child(n+46):nth-child(-n+54)::before { box-shadow: inset 0 -3px 0 -1px rgba(0,0,0,0.1); }
+        [data-theme="light"] .cell:nth-child(21)::before, [data-theme="light"] .cell:nth-child(24)::before,
+        [data-theme="light"] .cell:nth-child(48)::before, [data-theme="light"] .cell:nth-child(51)::before { 
             box-shadow: inset -3px -3px 0 -1px rgba(0,0,0,0.1) !important; 
         }
 
@@ -198,7 +209,7 @@
         .cell.same-number-highlight { 
             color: var(--highlight) !important;
             text-shadow: 0 0 8px var(--glow);
-            box-shadow: inset 0 0 0 1.5px var(--highlight), 0 0 12px var(--glow);
+            box-shadow: inset 0 0 0 1.5px var(--highlight), 0 0 12px var(--glow) !important;
             border-radius: 6px;
             background: rgba(87, 199, 255, 0.1);
             z-index: 5;
@@ -757,7 +768,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.17</div>
+    <div class="version-tag">V1.1.19</div>
  </div>
 
 </div>
@@ -790,7 +801,7 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=141"></script>
+    <script src="script.js?v=142"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
