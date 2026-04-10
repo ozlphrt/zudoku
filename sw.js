@@ -1,10 +1,9 @@
-const CACHE_NAME = 'zudoku-cache-v1.1.8';
+const CACHE_NAME = 'zudoku-cache-v1.1.9';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './layout-simplified.html',
   './script.js',
-  './puzzles-expanded.js',
   './public/192.png',
   './public/512.png',
   './manifest.json'

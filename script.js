@@ -2096,89 +2096,110 @@ class SudokuGame {
         this.loadPuzzleFromDatabase();
     }
     
-    loadPuzzleFromDatabase() {
-        try {
-            // Load puzzle from pre-generated database (built-in only)
-            const puzzleData = this.getRandomPuzzle(this.difficulty);
-            
-            // Load the puzzle into our grid
-            this.grid = puzzleData.puzzle.map(row => [...row]);
-            this.solution = puzzleData.solution.map(row => [...row]);
-            
-            // --- DYNAMIC CLUE BALANCING ---
-            const currentClues = [];
-            const emptyCells = [];
-            for (let r = 0; r < 9; r++) {
-                for (let c = 0; c < 9; c++) {
-                    if (this.grid[r][c] !== 0) currentClues.push({r, c});
-                    else emptyCells.push({r, c});
-                }
-            }
+    generateNewPuzzle() {
+        console.log(`✨ Generating NEW ${this.difficulty.toUpperCase()} puzzle in real-time...`);
+        this.showLoadingAnimation();
 
-            const targetClues = this.DIFFICULTY_LEVELS[this.difficulty.toLowerCase()].givenNumbers;
-            let diff = targetClues - currentClues.length;
-            
-            if (diff > 0) {
-                // We need MORE clues. Randomly reveal some from the solution.
-                console.log(`⚖️ Balancing: Adding ${diff} clues to meet target of ${targetClues}...`);
-                let added = 0;
-                while (added < diff && emptyCells.length > 0) {
-                    const idx = Math.floor(Math.random() * emptyCells.length);
-                    const {r, c} = emptyCells.splice(idx, 1)[0];
-                    const val = this.solution[r][c];
-                    
-                    // Critical: Even though solution should be valid, 
-                    // we verify no collision exists in the board before placing
-                    if (this.isValidMove(r, c, val)) {
-                        this.grid[r][c] = val;
-                        added++;
-                    }
-                }
-            } else if (diff < 0) {
-                // We need FEWER clues. Randomly hide some.
-                diff = Math.abs(diff);
-                console.log(`⚖️ Balancing: Removing ${diff} clues to meet target of ${targetClues}...`);
-                for (let i = 0; i < diff && currentClues.length > 0; i++) {
-                    const idx = Math.floor(Math.random() * currentClues.length);
-                    const {r, c} = currentClues.splice(idx, 1)[0];
-                    this.grid[r][c] = 0;
-                }
-            }
-            
-            // Mark given cells
-            this.givenCells = Array(9).fill().map(() => Array(9).fill(false));
-            let finalCount = 0;
-            for (let row = 0; row < 9; row++) {
-                for (let col = 0; col < 9; col++) {
-                    if (this.grid[row][col] !== 0) {
-                        this.givenCells[row][col] = true;
-                        finalCount++;
-                    }
-                }
-            }
-            
-            console.log(`📊 Final puzzle has ${finalCount} given numbers (Target: ${targetClues})`);
-            console.log(`✅ Dynamically balanced from database`);
-            
-            // Hide loading animation
-            this.hideLoadingAnimation();
-            
-            this.updateDisplay();
-            
-            // Update progress immediately
-            this.updateProgress();
-            
-            this.startTimer();
-            this.startAutoSave();
-            
-        } catch (error) {
-            console.error('❌ Failed to load puzzle from database:', error);
-            this.hideLoadingAnimation();
-            
-            // Try fallback puzzle generation
-            console.log('🔄 Attempting fallback puzzle generation...');
-            this.generateFallbackPuzzle();
+        // 1. Initialize empty grid and solution
+        this.grid = Array(9).fill().map(() => Array(9).fill(0));
+        this.solution = Array(9).fill().map(() => Array(9).fill(0));
+
+        // 2. Generate a full valid solution using shuffled backtracking
+        this.fillGrid(this.solution);
+        
+        // 3. Clone solution to active grid
+        this.grid = this.solution.map(row => [...row]);
+
+        // 4. Remove numbers based on difficulty
+        this.removeNumbers();
+
+        // 5. Final validation check
+        const errors = this.validateGrid(this.grid);
+        if (errors) {
+            console.error('⛔ Critical: Generated board contains rule violations! Retrying...', errors);
+            return this.generateNewPuzzle(); // Self-correction
         }
+
+        // 6. Set up given cells
+        this.givenCells = Array(9).fill().map(() => Array(9).fill(false));
+        let count = 0;
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (this.grid[r][c] !== 0) {
+                    this.givenCells[r][c] = true;
+                    count++;
+                }
+            }
+        }
+
+        console.log(`✅ Success: Generated ${count} clues.`);
+        this.hideLoadingAnimation();
+        this.updateDisplay();
+        this.updateProgress();
+        this.startTimer();
+        this.startAutoSave();
+    }
+
+    fillGrid(grid) {
+        const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        
+        for (let i = 0; i < 81; i++) {
+            const row = Math.floor(i / 9);
+            const col = i % 9;
+            
+            if (grid[row][col] === 0) {
+                // Shuffle numbers for unpredictable boards every time
+                const shuffled = [...numbers].sort(() => Math.random() - 0.5);
+                
+                for (let num of shuffled) {
+                    if (this.isValidMoveForGrid(grid, row, col, num)) {
+                        grid[row][col] = num;
+                        if (this.fillGrid(grid)) return true;
+                        grid[row][col] = 0;
+                    }
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+
+    removeNumbers() {
+        // Target counts: Easy ~38, Medium ~32, Hard ~24
+        const targetClues = this.DIFFICULTY_LEVELS[this.difficulty.toLowerCase()].givenNumbers;
+        let attempts = 81 - targetClues;
+        
+        while (attempts > 0) {
+            const row = Math.floor(Math.random() * 9);
+            const col = Math.floor(Math.random() * 9);
+            
+            if (this.grid[row][col] !== 0) {
+                this.grid[row][col] = 0;
+                attempts--;
+            }
+        }
+    }
+
+    validateGrid(grid) {
+        // Double-check row/col/box integrity for the starting board
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid[r][c] === 0) continue;
+                const val = grid[r][c];
+                grid[r][c] = 0; 
+                if (!this.isValidMoveForGrid(grid, r, c, val)) {
+                    grid[r][c] = val; // Restore
+                    return `Collision at ${r},${c} for value ${val}`;
+                }
+                grid[r][c] = val; // Restore
+            }
+        }
+        return null;
+    }
+
+    loadPuzzleFromDatabase() {
+        // Transition to real-time generator
+        this.generateNewPuzzle();
     }
     
     // Fallback puzzle generation using a known valid puzzle
