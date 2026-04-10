@@ -3972,13 +3972,13 @@ class SudokuGame {
                         const gain = this.audioContext.createGain();
                         osc.connect(gain);
                         gain.connect(filter);
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(freq, this.audioContext.currentTime + index * 0.1);
-                        gain.gain.setValueAtTime(0, this.audioContext.currentTime + index * 0.1);
-                        gain.gain.linearRampToValueAtTime(0.15, this.audioContext.currentTime + index * 0.1 + 0.01);
-                        gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + index * 0.1 + 0.3);
-                        osc.start(this.audioContext.currentTime + index * 0.1);
-                        osc.stop(this.audioContext.currentTime + index * 0.1 + 0.3);
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq * 1.5, this.audioContext.currentTime + index * 0.06);
+                        gain.gain.setValueAtTime(0, this.audioContext.currentTime + index * 0.06);
+                        gain.gain.linearRampToValueAtTime(0.12, this.audioContext.currentTime + index * 0.06 + 0.005);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + index * 0.06 + 0.08);
+                        osc.start(this.audioContext.currentTime + index * 0.06);
+                        osc.stop(this.audioContext.currentTime + index * 0.06 + 0.08);
                     });
                     break;
                     
