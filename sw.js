@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zudoku-cache-v1.1.15';
+const CACHE_NAME = 'zudoku-cache-v1.1.16';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

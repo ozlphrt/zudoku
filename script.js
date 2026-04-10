@@ -3758,7 +3758,11 @@ class SudokuGame {
             // Create a low-pass filter for smoother sounds
             const filter = this.audioContext.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(3000, this.audioC            switch (soundType) {
+            filter.frequency.setValueAtTime(3000, this.audioContext.currentTime);
+            filter.Q.setValueAtTime(1, this.audioContext.currentTime);
+            filter.connect(masterGain);
+            
+            switch (soundType) {
                 case 'place':
                     // Sharp mechanical click
                     const osc1 = this.audioContext.createOscillator();
