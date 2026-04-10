@@ -3891,26 +3891,26 @@ class SudokuGame {
             
             switch (soundType) {
                 case 'place':
-                    // Sharp mechanical click
+                    // Ultra-sharp mechanical snap
                     const osc1 = this.audioContext.createOscillator();
                     const gain1 = this.audioContext.createGain();
                     osc1.connect(gain1);
                     gain1.connect(filter);
                     
-                    osc1.type = 'sine';
-                    osc1.frequency.setValueAtTime(2000, this.audioContext.currentTime);
-                    osc1.frequency.exponentialRampToValueAtTime(1200, this.audioContext.currentTime + 0.04);
+                    osc1.type = 'triangle';
+                    osc1.frequency.setValueAtTime(3000, this.audioContext.currentTime);
+                    osc1.frequency.exponentialRampToValueAtTime(1500, this.audioContext.currentTime + 0.015);
                     
                     gain1.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain1.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + 0.002);
-                    gain1.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.04);
+                    gain1.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.001);
+                    gain1.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.015);
                     
                     osc1.start();
-                    osc1.stop(this.audioContext.currentTime + 0.04);
+                    osc1.stop(this.audioContext.currentTime + 0.015);
                     break;
                     
                 case 'error':
-                    // Sharp, short error alert
+                    // Sharp surgical error tone
                     const osc2 = this.audioContext.createOscillator();
                     const gain2 = this.audioContext.createGain();
                     osc2.connect(gain2);
@@ -3918,33 +3918,33 @@ class SudokuGame {
                     
                     osc2.type = 'triangle';
                     osc2.frequency.setValueAtTime(440, this.audioContext.currentTime);
-                    osc2.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + 0.15);
+                    osc2.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + 0.1);
                     
                     gain2.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain2.gain.linearRampToValueAtTime(0.25, this.audioContext.currentTime + 0.01);
-                    gain2.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.15);
+                    gain2.gain.linearRampToValueAtTime(0.15, this.audioContext.currentTime + 0.005);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
                     
                     osc2.start();
-                    osc2.stop(this.audioContext.currentTime + 0.15);
+                    osc2.stop(this.audioContext.currentTime + 0.1);
                     break;
                     
                 case 'note':
-                    // Higher, drier click for notes
+                    // Higher, drier surgical click
                     const osc3 = this.audioContext.createOscillator();
                     const gain3 = this.audioContext.createGain();
                     osc3.connect(gain3);
                     gain3.connect(filter);
                     
-                    osc3.type = 'sine';
-                    osc3.frequency.setValueAtTime(2400, this.audioContext.currentTime);
-                    osc3.frequency.exponentialRampToValueAtTime(1800, this.audioContext.currentTime + 0.03);
+                    osc3.type = 'triangle';
+                    osc3.frequency.setValueAtTime(4000, this.audioContext.currentTime);
+                    osc3.frequency.exponentialRampToValueAtTime(2500, this.audioContext.currentTime + 0.01);
                     
                     gain3.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain3.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.002);
-                    gain3.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.03);
+                    gain3.gain.linearRampToValueAtTime(0.12, this.audioContext.currentTime + 0.001);
+                    gain3.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.01);
                     
                     osc3.start();
-                    osc3.stop(this.audioContext.currentTime + 0.03);
+                    osc3.stop(this.audioContext.currentTime + 0.01);
                     break;
                     
                 case 'noteError':
@@ -3955,14 +3955,14 @@ class SudokuGame {
                     
                     osc4.type = 'sine';
                     osc4.frequency.setValueAtTime(300, this.audioContext.currentTime);
-                    osc4.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.1);
+                    osc4.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.08);
                     
                     gain4.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain4.gain.linearRampToValueAtTime(0.15, this.audioContext.currentTime + 0.005);
-                    gain4.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
+                    gain4.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.005);
+                    gain4.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.08);
                     
                     osc4.start();
-                    osc4.stop(this.audioContext.currentTime + 0.1);
+                    osc4.stop(this.audioContext.currentTime + 0.08);
                     break;
                     
                 case 'win':
@@ -3973,35 +3973,31 @@ class SudokuGame {
                         osc.connect(gain);
                         gain.connect(filter);
                         osc.type = 'sine';
-                        osc.frequency.setValueAtTime(freq, this.audioContext.currentTime + index * 0.15);
-                        gain.gain.setValueAtTime(0, this.audioContext.currentTime + index * 0.15);
-                        gain.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + index * 0.15 + 0.01);
-                        gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + index * 0.15 + 0.4);
-                        osc.start(this.audioContext.currentTime + index * 0.15);
-                        osc.stop(this.audioContext.currentTime + index * 0.15 + 0.4);
+                        osc.frequency.setValueAtTime(freq, this.audioContext.currentTime + index * 0.1);
+                        gain.gain.setValueAtTime(0, this.audioContext.currentTime + index * 0.1);
+                        gain.gain.linearRampToValueAtTime(0.15, this.audioContext.currentTime + index * 0.1 + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + index * 0.1 + 0.3);
+                        osc.start(this.audioContext.currentTime + index * 0.1);
+                        osc.stop(this.audioContext.currentTime + index * 0.1 + 0.3);
                     });
                     break;
                     
                 case 'hint':
                 case 'undo':
                 case 'redo':
-                    // Quick mechanical utility sound
+                    // Minimalist utility click
                     const osc5 = this.audioContext.createOscillator();
                     const gain5 = this.audioContext.createGain();
                     osc5.connect(gain5);
                     gain5.connect(filter);
-                    osc5.type = 'sine';
-                    osc5.frequency.setValueAtTime(1500, this.audioContext.currentTime);
-                    osc5.frequency.exponentialRampToValueAtTime(2000, this.audioContext.currentTime + 0.05);
+                    osc5.type = 'triangle';
+                    osc5.frequency.setValueAtTime(2500, this.audioContext.currentTime);
+                    osc5.frequency.exponentialRampToValueAtTime(3000, this.audioContext.currentTime + 0.02);
                     gain5.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gain5.gain.linearRampToValueAtTime(0.15, this.audioContext.currentTime + 0.005);
-                    gain5.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.05);
+                    gain5.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.002);
+                    gain5.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.02);
                     osc5.start();
-                    osc5.stop(this.audioContext.currentTime + 0.05);
-                    break;
-                    
-                    osc6.start();
-                    osc6.stop(this.audioContext.currentTime + 0.04);
+                    osc5.stop(this.audioContext.currentTime + 0.02);
                     break;
             }
         } catch (e) {
