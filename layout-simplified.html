@@ -93,29 +93,47 @@
 
 
         .num-btn {
-            flex: 1;
-            height: 60px;
-            background: none;
+            background: transparent;
             border: none;
+            width: 100%;
+            height: 100%;
             cursor: pointer;
             font-family: var(--font);
-            font-size: 30px;
-            font-weight: 300;
+            font-size: 32px;
+            font-weight: 600;
             color: var(--text);
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
-            transition: color 0.15s, background 0.15s;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             touch-action: manipulation;
         }
-        .num-btn:hover { color: var(--highlight); background: rgba(87,199,255,0.06); }
+        .num-btn:hover { color: var(--highlight); background: rgba(87,199,255,0.08); border-color: rgba(87,199,255,0.2); }
         .num-btn.selected {
             color: var(--highlight);
-            background: rgba(87,199,255,0.12);
-            font-weight: 600;
+            background: rgba(87,199,255,0.15);
+            font-weight: 800;
+            border-color: var(--highlight);
+            box-shadow: 0 0 15px var(--glow);
         }
-        .num-btn.completed { opacity: 0.1; pointer-events: none; scale: 0.8; }
+        .num-btn.completed { opacity: 0.05; pointer-events: none; scale: 0.85; filter: grayscale(1); }
+
+        [data-theme="light"] .num-btn {
+            color: #1a1a1a;
+            border-color: rgba(0, 0, 0, 0.08);
+            background: rgba(0, 0, 0, 0.02);
+        }
+        [data-theme="light"] .num-btn:hover {
+            background: rgba(0, 122, 255, 0.08);
+            color: #007aff;
+        }
+        [data-theme="light"] .num-btn.selected {
+            background: rgba(0, 122, 255, 0.12);
+            color: #007aff;
+            border-color: #007aff;
+        }
 
         /* ========================================
            SUDOKU GRID AREA
@@ -880,7 +898,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.36</div>
+    <div class="version-tag">V1.1.38</div>
  </div>
 
 </div>
@@ -921,7 +939,7 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=153"></script>
+    <script src="script.js?v=154"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
