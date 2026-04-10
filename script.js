@@ -3613,29 +3613,29 @@ class SudokuGame {
         }
         
         const currentTime = this.getElapsedTime();
-        const currentBest = this.bestTimes[this.difficulty];
+        const difficulty = this.difficulty.toLowerCase();
+        const currentBest = this.bestTimes[difficulty];
         
         if (!currentBest || currentTime < currentBest) {
-            this.bestTimes[this.difficulty] = currentTime;
+            this.bestTimes[difficulty] = currentTime;
             this.saveBestTimes();
-            const bestTimeElement = document.getElementById('bestTime');
-            if (bestTimeElement) {
-                bestTimeElement.textContent = this.formatTime(currentTime);
-                bestTimeElement.style.color = 'var(--success-color)';
-            }
+            this.updateBestTimeDisplay();
         }
-    }
-    
     updateBestTimeDisplay() {
-        const bestTime = this.bestTimes[this.difficulty];
+        const bestTime = this.bestTimes[this.difficulty.toLowerCase()];
         const bestTimeElement = document.getElementById('bestTime');
         if (bestTimeElement) {
             if (bestTime) {
-                bestTimeElement.textContent = this.formatTime(bestTime);
-                bestTimeElement.style.color = 'var(--accent-color)';
+                // If under an hour, show MM:SS, else HH:MM:SS
+                if (bestTime < 3600) {
+                    const mins = Math.floor(bestTime / 60);
+                    const secs = bestTime % 60;
+                    bestTimeElement.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                } else {
+                    bestTimeElement.textContent = this.formatTime(bestTime);
+                }
             } else {
-                bestTimeElement.textContent = '--:--:--';
-                bestTimeElement.style.color = 'var(--text-secondary)';
+                bestTimeElement.textContent = '--:--';
             }
         }
     }

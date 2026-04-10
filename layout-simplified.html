@@ -359,14 +359,37 @@
             gap: 16px;
         }
         #victoryOverlay.visible { display: flex; }
-        #victoryOverlay h2 {
+        .timer-display {
             color: var(--highlight);
-            font-size: 32px;
-            font-weight: 600;
-            letter-spacing: 0.05em;
+            font-size: 24px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--glow);
+            font-variant-numeric: tabular-nums;
         }
-        #victoryOverlay p { color: var(--text); font-size: 15px; }
-        .victory-btn {
+
+        .record-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-left: 12px;
+            opacity: 0.6;
+        }
+
+        .record-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--text);
+            text-transform: uppercase;
+        }
+
+        .record-value {
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            font-family: inherit;
+        }.victory-btn {
             background: var(--highlight);
             color: #000;
             border: none;
@@ -697,7 +720,13 @@
         </div>
 
         <div class="header-right">
-            <div id="timer_display">00:00</div>
+            <div class="timer-group" style="display: flex; align-items: center;">
+            <div id="game-timer" class="timer-display">00:00</div>
+            <div class="record-container">
+                <span class="record-label">Best</span>
+                <span id="bestTime" class="record-value">--:--</span>
+            </div>
+        </div>
         </div>
     </header>
 
@@ -718,7 +747,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.7</div>
+    <div class="version-tag">V1.1.8</div>
  </div>
 
 </div>
@@ -751,8 +780,8 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="puzzles-expanded.js?v=132"></script>
-    <script src="script.js?v=132"></script>
+    <script src="puzzles-expanded.js?v=133"></script>
+    <script src="script.js?v=133"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
