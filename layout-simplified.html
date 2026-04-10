@@ -133,21 +133,31 @@
             grid-template-columns: repeat(9, minmax(0, 1fr));
             grid-template-rows: repeat(9, minmax(0, 1fr));
             background: var(--grid-line);
-            gap: 1.5px;
+            gap: 2px; /* Snapped to integer for crisp rendering */
             width: min(calc(100vw - 16px), calc(100vh - 180px));
             height: min(calc(100vw - 16px), calc(100vh - 180px));
             border: 2px solid var(--grid-line);
             box-shadow: 0 12px 30px rgba(0,0,0,0.5);
         }
 
-        /* Highly distinct 3x3 subgrid boundaries */
-        .cell:nth-child(3n):not(:nth-child(9n)) { border-right: 3px solid #666 !important; }
+        /* Highly distinct 3x3 subgrid boundaries using inset shadow (does not affect cell size) */
+        .cell:nth-child(3n):not(:nth-child(9n)) { box-shadow: inset -3px 0 0 -1px rgba(255,255,255,0.15); }
         .cell:nth-child(n+19):nth-child(-n+27),
-        .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 3px solid #666 !important; }
+        .cell:nth-child(n+46):nth-child(-n+54) { box-shadow: inset 0 -3px 0 -1px rgba(255,255,255,0.15); }
 
-        [data-theme="light"] .cell:nth-child(3n):not(:nth-child(9n)) { border-right: 3px solid #999 !important; }
+        /* Handle intersections (corner of 3x3 blocks) */
+        .cell:nth-child(21), .cell:nth-child(24),
+        .cell:nth-child(48), .cell:nth-child(51) { 
+            box-shadow: inset -3px -3px 0 -1px rgba(255,255,255,0.15) !important; 
+        }
+
+        [data-theme="light"] .cell:nth-child(3n):not(:nth-child(9n)) { box-shadow: inset -3px 0 0 -1px rgba(0,0,0,0.1); }
         [data-theme="light"] .cell:nth-child(n+19):nth-child(-n+27),
-        [data-theme="light"] .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 3px solid #999 !important; }
+        [data-theme="light"] .cell:nth-child(n+46):nth-child(-n+54) { box-shadow: inset 0 -3px 0 -1px rgba(0,0,0,0.1); }
+        [data-theme="light"] .cell:nth-child(21), [data-theme="light"] .cell:nth-child(24),
+        [data-theme="light"] .cell:nth-child(48), [data-theme="light"] .cell:nth-child(51) { 
+            box-shadow: inset -3px -3px 0 -1px rgba(0,0,0,0.1) !important; 
+        }
 
         .cell {
             background: var(--bg);
@@ -172,7 +182,7 @@
 
         .cell.selected {
             background: rgba(87, 199, 255, 0.25) !important;
-            box-shadow: inset 0 0 0 2px var(--highlight), 0 0 25px var(--glow);
+            box-shadow: inset 0 0 0 2px var(--highlight), 0 0 25px var(--glow) !important;
             border-radius: 6px;
             z-index: 10;
         }
@@ -747,7 +757,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.16</div>
+    <div class="version-tag">V1.1.17</div>
  </div>
 
 </div>
@@ -780,7 +790,7 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=140"></script>
+    <script src="script.js?v=141"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
