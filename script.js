@@ -44,9 +44,9 @@ class SudokuGame {
         // Client-side generation difficulty system
         // Adjusted to match available puzzle database
         this.DIFFICULTY_LEVELS = {
-            easy: { label: 'Easy', givenNumbers: 38 },      // 38 clues (standard Easy)
-            medium: { label: 'Medium', givenNumbers: 30 },  // 30 clues (standard Medium)
-            hard: { label: 'Hard', givenNumbers: 24 }       // 24 clues (standard Hard)
+            easy: { label: 'Easy', givenNumbers: 44 },      // 44 clues (True Easy)
+            medium: { label: 'Medium', givenNumbers: 34 },  // 34 clues (Standard Medium)
+            hard: { label: 'Hard', givenNumbers: 24 }       // 24 clues (Challenging Hard)
         };
         
         // Puzzle database - initialize immediately
@@ -2110,8 +2110,18 @@ class SudokuGame {
         // 3. Clone solution to active grid
         this.grid = this.solution.map(row => [...row]);
 
-        // 4. Remove numbers based on difficulty
+        // 4. Remove numbers based on difficulty (using rotational symmetry)
         this.removeNumbers();
+
+        // 5. For 'Easy' mode, verify that the puzzle can be solved using simple logic
+        // If not, try again (usually takes 1-3 attempts to hit a naked-single solvable state)
+        if (this.difficulty.toLowerCase() === 'easy') {
+            const isEasy = this.isEasySolvable(this.grid);
+            if (!isEasy) {
+                console.log('🔄 Puzzle too complex for EASY mode. Regenerating...');
+                return this.generateNewPuzzle();
+            }
+        }
 
         // 5. Final validation check
         const errors = this.validateGrid(this.grid);
@@ -2165,19 +2175,136 @@ class SudokuGame {
     }
 
     removeNumbers() {
-        // Target counts: Easy ~38, Medium ~32, Hard ~24
         const targetClues = this.DIFFICULTY_LEVELS[this.difficulty.toLowerCase()].givenNumbers;
-        let attempts = 81 - targetClues;
         
-        while (attempts > 0) {
-            const row = Math.floor(Math.random() * 9);
-            const col = Math.floor(Math.random() * 9);
-            
-            if (this.grid[row][col] !== 0) {
-                this.grid[row][col] = 0;
-                attempts--;
+        // Use rotational symmetry for removal
+        // (r, c) matched with (8-r, 8-c)
+        let cluesToRemove = 81 - targetClues;
+        
+        // Create list of all pairs
+        const pairs = [];
+        for (let r = 0; r < 5; r++) { // Only go to middle row
+            for (let c = 0; c < 9; c++) {
+                if (r === 4 && c > 4) continue; // Don't duplicate self-pairing middle cell
+                
+                const r2 = 8 - r;
+                const c2 = 8 - c;
+                
+                if (r === r2 && c === c2) {
+                    pairs.push([{r, c}]); // Middle cell is alone
+                } else {
+                    pairs.push([{r, c}, {r: r2, c: c2}]);
+                }
             }
         }
+        
+        // Shuffle pairs
+        for (let i = pairs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+        }
+        
+        let removedCount = 0;
+        for (const pair of pairs) {
+            if (removedCount + pair.length <= cluesToRemove) {
+                for (const pos of pair) {
+                    this.grid[pos.r][pos.c] = 0;
+                }
+                removedCount += pair.length;
+            }
+            if (removedCount >= cluesToRemove) break;
+        }
+    }
+    
+    /**
+     * Logical solve-path validation
+     * Checks if the puzzle can be solved using ONLY basic singles (Naked/Hidden).
+     * This is what makes 'Easy' feel truly easy.
+     */
+    isEasySolvable(gridToTest) {
+        const tempGrid = gridToTest.map(row => [...row]);
+        let changed = true;
+        
+        while (changed) {
+            changed = false;
+            
+            // Look for naked singles
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (tempGrid[r][c] === 0) {
+                        const possibilities = this.getPossibleNumbersForGrid(tempGrid, r, c);
+                        if (possibilities.length === 1) {
+                            tempGrid[r][c] = possibilities[0];
+                            changed = true;
+                        }
+                    }
+                }
+            }
+            
+            if (changed) continue;
+            
+            // Look for hidden singles (only place in row/col/box)
+            const hiddenSingles = this.findAllHiddenSinglesForGrid(tempGrid);
+            if (hiddenSingles.length > 0) {
+                for (const hs of hiddenSingles) {
+                    tempGrid[hs.row][hs.col] = hs.number;
+                    changed = true;
+                }
+            }
+        }
+        
+        // If the grid is full, it was solvable using only singles
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (tempGrid[r][c] === 0) return false;
+            }
+        }
+        return true;
+    }
+    
+    getPossibleNumbersForGrid(grid, row, col) {
+        const possibilities = [];
+        for (let num = 1; num <= 9; num++) {
+            if (this.isValidMoveForGrid(grid, row, col, num)) {
+                possibilities.push(num);
+            }
+        }
+        return possibilities;
+    }
+    
+    findAllHiddenSinglesForGrid(grid) {
+        const hs = [];
+        for (let num = 1; num <= 9; num++) {
+            // Check rows
+            for (let r = 0; r < 9; r++) {
+                let possibleCols = [];
+                for (let c = 0; c < 9; c++) {
+                    if (grid[r][c] === 0 && this.isValidMoveForGrid(grid, r, c, num)) possibleCols.push(c);
+                }
+                if (possibleCols.length === 1) hs.push({row: r, col: possibleCols[0], number: num});
+            }
+            // Check cols
+            for (let c = 0; c < 9; c++) {
+                let possibleRows = [];
+                for (let r = 0; r < 9; r++) {
+                    if (grid[r][c] === 0 && this.isValidMoveForGrid(grid, r, c, num)) possibleRows.push(r);
+                }
+                if (possibleRows.length === 1) hs.push({row: possibleRows[0], col: c, number: num});
+            }
+            // Check boxes
+            for (let br = 0; br < 3; br++) {
+                for (let bc = 0; bc < 3; bc++) {
+                    let possibleCells = [];
+                    for (let r = br*3; r < br*3 + 3; r++) {
+                        for (let c = bc*3; c < bc*3 + 3; c++) {
+                            if (grid[r][c] === 0 && this.isValidMoveForGrid(grid, r, c, num)) possibleCells.push({r, c});
+                        }
+                    }
+                    if (possibleCells.length === 1) hs.push({row: possibleCells[0].r, col: possibleCells[0].c, number: num});
+                }
+            }
+        }
+        return hs;
     }
 
     validateGrid(grid) {
