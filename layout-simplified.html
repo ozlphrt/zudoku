@@ -747,7 +747,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.11</div>
+    <div class="version-tag">V1.1.12</div>
  </div>
 
 </div>
@@ -759,7 +759,7 @@
         <div id="moveCount">0</div>
         <div id="errorCount">0</div>
         <div id="hintCount">0</div>
-        <div id="bestTime">--:--:--</div>
+        <div id="bestTime_stub">--:--:--</div>
         <div id="cellsFilled">0/81</div>
         <div id="completionPercent">0%</div>
         <button id="pauseBtn"></button>
@@ -780,7 +780,7 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=136"></script>
+    <script src="script.js?v=137"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
@@ -790,7 +790,7 @@
 
     /* ---- Timer display ---- */
     function updateTimerDisplay(timeStr) {
-        const el = document.getElementById('timer_display');
+        const el = document.getElementById('game-timer');
         if (!el || !timeStr) return;
         
         // Convert 00:00:00 to 00:00 if hours are zero
@@ -890,7 +890,7 @@
                 origGameWon();
                 const overlay = document.getElementById('victoryOverlay');
                 if (overlay) {
-                    const timeEl = document.getElementById('timer');
+                    const timeEl = document.getElementById('game-timer');
                     document.getElementById('victoryTime').textContent =
                         timeEl ? 'Solved in ' + timeEl.textContent : '';
                     overlay.classList.add('visible');

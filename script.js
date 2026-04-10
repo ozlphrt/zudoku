@@ -3504,9 +3504,8 @@ class SudokuGame {
     }
     
     startTimer() {
-        if (!this.startTime) {
+        if (this.timer) clearInterval(this.timer);
         this.startTime = Date.now();
-        }
         this.isPaused = false;
         this.timer = setInterval(() => {
             this.updateTimer();
