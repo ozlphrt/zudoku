@@ -152,22 +152,22 @@
         }
 
         /* Highly distinct 3x3 subgrid boundaries using inset shadow */
-        .cell:nth-child(3n):not(:nth-child(9n))::before { box-shadow: inset -3px 0 0 -1px rgba(255,255,255,0.15); }
+        .cell:nth-child(3n):not(:nth-child(9n))::before { box-shadow: inset -4px 0 0 -1px rgba(255,255,255,0.3); }
         .cell:nth-child(n+19):nth-child(-n+27)::before,
-        .cell:nth-child(n+46):nth-child(-n+54)::before { box-shadow: inset 0 -3px 0 -1px rgba(255,255,255,0.15); }
+        .cell:nth-child(n+46):nth-child(-n+54)::before { box-shadow: inset 0 -4px 0 -1px rgba(255,255,255,0.3); }
 
         /* Handle intersections (corner of 3x3 blocks) */
         .cell:nth-child(21)::before, .cell:nth-child(24)::before,
         .cell:nth-child(48)::before, .cell:nth-child(51)::before { 
-            box-shadow: inset -3px -3px 0 -1px rgba(255,255,255,0.15) !important; 
+            box-shadow: inset -4px -4px 0 -1px rgba(255,255,255,0.3) !important; 
         }
 
-        [data-theme="light"] .cell:nth-child(3n):not(:nth-child(9n))::before { box-shadow: inset -3px 0 0 -1px rgba(0,0,0,0.1); }
+        [data-theme="light"] .cell:nth-child(3n):not(:nth-child(9n))::before { box-shadow: inset -4px 0 0 -1px rgba(0,0,0,0.2); }
         [data-theme="light"] .cell:nth-child(n+19):nth-child(-n+27)::before,
-        [data-theme="light"] .cell:nth-child(n+46):nth-child(-n+54)::before { box-shadow: inset 0 -3px 0 -1px rgba(0,0,0,0.1); }
+        [data-theme="light"] .cell:nth-child(n+46):nth-child(-n+54)::before { box-shadow: inset 0 -4px 0 -1px rgba(0,0,0,0.2); }
         [data-theme="light"] .cell:nth-child(21)::before, [data-theme="light"] .cell:nth-child(24)::before,
         [data-theme="light"] .cell:nth-child(48)::before, [data-theme="light"] .cell:nth-child(51)::before { 
-            box-shadow: inset -3px -3px 0 -1px rgba(0,0,0,0.1) !important; 
+            box-shadow: inset -4px -4px 0 -1px rgba(0,0,0,0.2) !important; 
         }
 
         .cell {
@@ -480,6 +480,18 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         .primary-btn:active { transform: scale(0.96); }
+
+        /* Light Theme Overrides for Victory Modal */
+        [data-theme="light"] .victory-content {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.15);
+        }
+        [data-theme="light"] .hero-time {
+            color: #1a1a1a;
+            text-shadow: none;
+        }
+
         .timer-display {
             color: var(--highlight);
             font-size: 24px;
@@ -868,7 +880,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.34</div>
+    <div class="version-tag">V1.1.36</div>
  </div>
 
 </div>
@@ -909,7 +921,7 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=152"></script>
+    <script src="script.js?v=153"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
@@ -935,7 +947,9 @@
     function toggleTheme() {
         const html = document.documentElement;
         const isLight = html.getAttribute('data-theme') === 'light';
-        html.setAttribute('data-theme', isLight ? '' : 'light');
+        const newTheme = isLight ? '' : 'light';
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('zudoku-theme', newTheme);
     }
 
     /* ---- Difficulty Cycling ---- */
@@ -1086,6 +1100,13 @@
     function initializeApp() {
         if (isInitialized) return;
         isInitialized = true;
+        
+        // Load theme from preference
+        const savedTheme = localStorage.getItem('zudoku-theme');
+        if (savedTheme !== null) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+        
         try {
             window.game = new SudokuGame();
             patchGame(window.game);
