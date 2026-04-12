@@ -20,24 +20,26 @@
            DESIGN TOKENS
         ======================================== */
         :root {
-            --bg:          #222222;
-            --text:        #A4A4A4;
-            --inactive:    #4D4D4D;
-            --grid-line:   #333333;
-            --highlight:   #57C7FF;
-            --glow:        rgba(87, 199, 255, 0.6);
-            --crosshair:   #2a2a2a;
-            --font:        'Avenir Next', 'Avenir', 'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif;
+            --bg:            #222222;
+            --text:          #A4A4A4;
+            --inactive:      #4D4D4D;
+            --grid-line:     #333333;
+            --highlight:     #57C7FF;
+            --highlight-rgb: 87, 199, 255;
+            --glow:          rgba(var(--highlight-rgb), 0.6);
+            --crosshair:     #2a2a2a;
+            --font:          'Avenir Next', 'Avenir', 'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif;
         }
 
         [data-theme="light"] {
-            --bg:          #e0e0e0;
-            --text:        #555555;
-            --inactive:    #999999;
-            --grid-line:   #CCCCCC;
-            --highlight:   #007AFF;
-            --glow:        rgba(0, 122, 255, 0.4);
-            --crosshair:   #d8d8d8;
+            --bg:            #e0e0e0;
+            --text:          #555555;
+            --inactive:      #999999;
+            --grid-line:     #CCCCCC;
+            --highlight:     #007AFF;
+            --highlight-rgb: 0, 122, 255;
+            --glow:          rgba(var(--highlight-rgb), 0.4);
+            --crosshair:     #d8d8d8;
         }
 
         /* ========================================
@@ -52,8 +54,8 @@
             background-color: var(--bg);
             /* Technical Grid Pattern (Ultra-Fine 4X) */
             background-image: 
-                linear-gradient(rgba(87, 199, 255, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(87, 199, 255, 0.1) 1px, transparent 1px);
+                linear-gradient(rgba(var(--highlight-rgb), 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(var(--highlight-rgb), 0.1) 1px, transparent 1px);
             background-size: 10px 10px;
             background-attachment: fixed;
             color: var(--text);
@@ -110,10 +112,10 @@
             transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             touch-action: manipulation;
         }
-        .num-btn:hover { color: var(--highlight); background: rgba(87,199,255,0.08); border-color: rgba(87,199,255,0.2); }
+        .num-btn:hover { color: var(--highlight); background: rgba(var(--highlight-rgb), 0.08); border-color: rgba(var(--highlight-rgb), 0.2); }
         .num-btn.selected {
             color: var(--highlight);
-            background: rgba(87,199,255,0.15);
+            background: rgba(var(--highlight-rgb), 0.15);
             font-weight: 800;
             border-color: var(--highlight);
             box-shadow: 0 0 15px var(--glow);
@@ -229,14 +231,14 @@
             text-shadow: 0 0 8px var(--glow);
             box-shadow: inset 0 0 0 1.5px var(--highlight), 0 0 12px var(--glow) !important;
             border-radius: 6px;
-            background: rgba(87, 199, 255, 0.1);
+            background: rgba(var(--highlight-rgb), 0.1);
             z-index: 5;
         }
         
         .cell.number-selected { 
-            background: rgba(87,199,255,0.08) !important; 
+            background: rgba(var(--highlight-rgb), 0.08) !important; 
         }
-        .cell.note-selected { background: rgba(87,199,255,0.04) !important; }
+        .cell.note-selected { background: rgba(var(--highlight-rgb), 0.04) !important; }
 
 
 
@@ -540,7 +542,131 @@
             font-weight: 400;
             letter-spacing: 1px;
             font-family: inherit;
-        }.victory-btn {
+        }
+            letter-spacing: 1px;
+            color: var(--text);
+            text-transform: uppercase;
+        }
+
+        .version-tag {
+            font-size: 10px;
+            opacity: 0.3;
+            letter-spacing: 0.1em;
+            margin-top: 10px;
+        }
+
+        /* Settings Modal & UI */
+        #settingsOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(12px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        #settingsOverlay.visible { display: flex; }
+
+        .settings-content {
+            background: rgba(30, 30, 30, 0.8);
+            backdrop-filter: blur(40px);
+            padding: 32px;
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            animation: victoryPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        [data-theme="light"] .settings-content {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0,0,0,0.1);
+        }
+
+        .settings-header {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--highlight);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        [data-theme="light"] .settings-row {
+            background: rgba(0,0,0,0.03);
+            border-color: rgba(0,0,0,0.05);
+        }
+
+        .settings-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .palette-picker {
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 10px;
+            background: var(--highlight);
+            cursor: pointer;
+            overflow: hidden;
+            padding: 0;
+        }
+        .palette-picker::-webkit-color-swatch-wrapper { padding: 0; }
+        .palette-picker::-webkit-color-swatch { border: none; }
+
+        .reset-btn {
+            background: rgba(255, 60, 60, 0.1);
+            color: #ff3c3c;
+            border: 1px solid rgba(255, 60, 60, 0.2);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .reset-btn:hover { background: rgba(255, 60, 60, 0.2); transform: scale(1.02); }
+
+        .ver-badge {
+            font-size: 12px;
+            opacity: 0.5;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .close-settings {
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .settings-gear {
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+        .settings-gear:hover { transform: rotate(45deg); color: var(--highlight); }.victory-btn {
             background: var(--highlight);
             color: #000;
             border: none;
@@ -865,6 +991,12 @@
             <button id="difficulty_cycle" onclick="cycleDifficulty()" title="Change Difficulty">
                 <span id="difficulty_toggle_label">EASY</span>
             </button>
+            <button id="settings_btn" class="settings-gear" onclick="toggleSettings()" title="Settings">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
         </div>
 
         <div class="header-center">
@@ -898,7 +1030,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.39</div>
+    <div class="version-tag">V1.1.41</div>
  </div>
 
 </div>
@@ -922,6 +1054,38 @@
         <input type="checkbox" id="noteModeToggle">
     </div>
 
+    <!-- Settings Overlay -->
+    <div id="settingsOverlay" class="victory-overlay" onclick="if(event.target === this) toggleSettings()">
+        <div class="settings-content">
+            <div class="settings-header">
+                System Config
+                <button class="close-settings" onclick="toggleSettings()">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="settings-row">
+                <span class="settings-label">Primary Palette</span>
+                <input type="color" id="palette_picker" class="palette-picker" onchange="applyPalette(this.value)">
+            </div>
+
+            <div class="settings-row">
+                <span class="settings-label">Software Version</span>
+                <span class="ver-badge">v1.1.41 Stable</span>
+            </div>
+
+            <div style="margin-top: 32px;">
+                <button class="reset-btn" style="width: 100%;" onclick="resetAllData()">RESET ALL DATA</button>
+                <p style="font-size: 11px; opacity: 0.4; text-align: center; margin-top: 12px; line-height: 1.4;">
+                    Removes all records, colors, and streaks.<br>This action cannot be undone.
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- Victory Overlay -->
     <div id="victoryOverlay" class="victory-overlay">
         <div class="victory-content">
@@ -939,7 +1103,7 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=155"></script>
+    <script src="script.js?v=156"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
@@ -960,6 +1124,53 @@
             el.textContent = timeStr;
         }
     }
+
+    /* ---- Settings & Palette ---- */
+    function toggleSettings() {
+        const el = document.getElementById('settingsOverlay');
+        if (el) {
+            el.classList.toggle('visible');
+            // If opening, sync picker color
+            if (el.classList.contains('visible')) {
+                const current = getComputedStyle(document.documentElement).getPropertyValue('--highlight').trim();
+                const picker = document.getElementById('palette_picker');
+                if (picker) picker.value = current;
+            }
+        }
+    }
+
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? 
+            `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : 
+            null;
+    }
+
+    function applyPalette(hex) {
+        if (!hex) return;
+        const rgb = hexToRgb(hex);
+        if (!rgb) return;
+        
+        document.documentElement.style.setProperty('--highlight', hex);
+        document.documentElement.style.setProperty('--highlight-rgb', rgb);
+        localStorage.setItem('zudoku-palette', hex);
+    }
+
+    function resetAllData() {
+        if (confirm("⚠️ WARNING: This will permanently delete ALL your records, personal bests, and preferences.\n\nAre you sure?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    /* ---- Surgical Auto-Pause (Visibility API) ---- */
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && window.game && !window.game.isPaused) {
+            window.game.pauseTimer();
+            // Trigger UI update if needed
+            if (window.game.updateTimerControls) window.game.updateTimerControls();
+        }
+    });
 
     /* ---- Theme toggle ---- */
     function toggleTheme() {
@@ -1125,6 +1336,12 @@
             document.documentElement.setAttribute('data-theme', savedTheme);
         }
 
+        // Load palette from preference
+        const savedPalette = localStorage.getItem('zudoku-palette');
+        if (savedPalette) {
+            applyPalette(savedPalette);
+        }
+
         // Load difficulty from preference
         const savedDiff = localStorage.getItem('zudoku-difficulty');
         
@@ -1146,15 +1363,35 @@
             }
 
             // Wrap global cycleDifficulty to persist choice
-            const originalCycle = window.cycleDifficulty;
-            window.cycleDifficulty = function() {
-                if (typeof originalCycle === 'function') {
-                    originalCycle();
-                    if (window.game) {
-                        localStorage.setItem('zudoku-difficulty', window.game.difficulty);
+        const originalCycle = window.cycleDifficulty;
+        window.cycleDifficulty = function() {
+            if (typeof originalCycle === 'function') {
+                originalCycle();
+                if (window.game) {
+                    localStorage.setItem('zudoku-difficulty', window.game.difficulty);
+                }
+            }
+        };
+
+        // Hook updateTimerControls to sync pause button icon
+        if (window.game) {
+            const origUTC = window.game.updateTimerControls.bind(window.game);
+            window.game.updateTimerControls = function() {
+                origUTC();
+                const btn = document.getElementById('pause_toggle');
+                if (btn) {
+                    if (window.game.isPaused) {
+                        // Play Icon
+                        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+                        btn.title = "Resume Game";
+                    } else {
+                        // Pause Icon
+                        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+                        btn.title = "Pause Game";
                     }
                 }
             };
+        }
 
         } catch(e) {
             console.error('❌ Game initialization error:', e);
