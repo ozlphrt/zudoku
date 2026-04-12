@@ -444,44 +444,6 @@
             font-variant-numeric: tabular-nums;
         }
 
-        .best-performance {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            margin-bottom: 40px;
-            padding: 12px 24px;
-            background: rgba(255,255,255,0.03);
-            border-radius: 16px;
-            width: 100%;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .best-label {
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--highlight);
-            opacity: 0.6;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-
-        .best-value-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .best-time-val {
-            font-size: 20px;
-            font-weight: 400;
-            color: var(--text);
-        }
-
-        .best-diff {
-            font-size: 16px;
-            font-weight: 600;
-        }
         .best-diff.better { color: #4cd964; }
         .best-diff.worse { color: #ff3b30; }        .primary-btn {
             background: var(--highlight);
@@ -527,9 +489,9 @@
         .podium-group {
             display: flex;
             justify-content: center;
-            gap: 8px;
-            margin-bottom: 16px;
-            padding-bottom: 16px;
+            gap: 6px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         [data-theme="light"] .podium-group { border-color: rgba(0, 0, 0, 0.05); }
@@ -540,14 +502,14 @@
             flex-direction: column;
             align-items: center;
             background: rgba(255, 255, 255, 0.03);
-            padding: 8px;
+            padding: 6px;
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
         [data-theme="light"] .podium-item { background: rgba(0, 0, 0, 0.03); border-color: rgba(0, 0, 0, 0.05); }
 
-        .podium-rank { font-size: 10px; font-weight: 900; margin-bottom: 2px; opacity: 0.5; }
-        .podium-time { font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .podium-rank { font-size: 9px; font-weight: 900; margin-bottom: 1px; opacity: 0.5; }
+        .podium-time { font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
 
         .podium-item.rank-1 { border-color: rgba(255, 215, 0, 0.3); background: rgba(255, 215, 0, 0.05); }
         .podium-item.rank-1 .podium-rank { color: #ffd700; opacity: 1; }
@@ -555,8 +517,8 @@
         .rank-slice-list {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            max-height: 180px; /* Limits size on mobile */
+            gap: 2px;
+            max-height: 220px; /* Expanded for denser list */
             overflow-y: auto;
             scrollbar-width: none;
         }
@@ -566,8 +528,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 12px;
-            border-radius: 8px;
+            padding: 4px 10px;
+            border-radius: 6px;
             font-size: 12px;
             opacity: 0.6;
         }
@@ -579,9 +541,10 @@
             color: var(--highlight);
         }
 
-        .rank-num { width: 30px; font-weight: 800; opacity: 0.5; }
-        .rank-row.current .rank-num { opacity: 1; }
-        .rank-time { font-family: 'JetBrains Mono', monospace; }        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        .rank-num { width: 28px; font-weight: 800; opacity: 0.4; font-size: 10px; }
+        .rank-row.current .rank-num { opacity: 0.8; }
+        .rank-time { font-family: 'JetBrains Mono', monospace; flex: 1; }
+        .rank-date { font-size: 10px; opacity: 0.4; font-weight: 400; text-align: right; min-width: 45px; }        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         .primary-btn:active { transform: scale(0.96); }
 
@@ -1176,14 +1139,6 @@
             <p class="victory-reaction">Solved</p>
             <h1 id="victoryTime" class="hero-time">00:00:00</h1>
             
-            <div class="best-performance">
-                <span class="best-label">Session Best</span>
-                <div class="best-value-row">
-                    <span id="bestTimeVal" class="best-time-val">--:--</span>
-                    <span id="bestTimeDiff" class="best-diff"></span>
-                </div>
-            </div>
-
             <div id="leaderboardSection" class="leaderboard-section">
                 <!-- Dynamically filled by JS -->
             </div>
@@ -1338,14 +1293,25 @@
         return board[diff.toLowerCase()] || [];
     }
 
+    function formatShortDate(ts) {
+        if (!ts) return '--';
+        return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
     function saveToLeaderboard(diff, seconds) {
         let board = JSON.parse(localStorage.getItem('zudoku-leaderboard') || '{}');
         let diffKey = diff.toLowerCase();
         if (!board[diffKey]) board[diffKey] = [];
         
-        board[diffKey].push(seconds);
-        board[diffKey].sort((a, b) => a - b);
-        board[diffKey] = board[diffKey].slice(0, 100);
+        // Push new entry as object
+        board[diffKey].push({ t: seconds, d: Date.now() });
+        
+        // Migration & Sort
+        board[diffKey] = board[diffKey].map(entry => {
+            // Convert old number-only entries to objects
+            if (typeof entry === 'number') return { t: entry, d: null };
+            return entry;
+        }).sort((a, b) => a.t - b.t).slice(0, 100);
         
         localStorage.setItem('zudoku-leaderboard', JSON.stringify(board));
         return board[diffKey];
@@ -1385,7 +1351,7 @@
 
                 // Leaderboard Logic
                 const latestBoard = saveToLeaderboard(diffLabel, currentTime / 1000);
-                const currentRank = latestBoard.indexOf(currentTime / 1000);
+                const currentRank = latestBoard.findIndex(e => e.t === (currentTime / 1000) && (Date.now() - e.d < 2000));
                 
                 // Render Leaderboard UI
                 const lbSection = document.getElementById('leaderboardSection');
@@ -1395,11 +1361,12 @@
                     // Podium (Top 3)
                     html += `<div class="podium-group">`;
                     for (let i = 0; i < 3; i++) {
-                        const time = latestBoard[i];
+                        const entry = latestBoard[i];
+                        if (!entry) break;
                         html += `
                             <div class="podium-item ${i === 0 ? 'rank-1' : ''}">
                                 <div class="podium-rank">#${i + 1}</div>
-                                <div class="podium-time">${shortenTime(game.formatTime(time * 1000))}</div>
+                                <div class="podium-time">${shortenTime(game.formatTime(entry.t * 1000))}</div>
                             </div>
                         `;
                     }
@@ -1411,11 +1378,12 @@
                     let end = Math.min(latestBoard.length, currentRank + 6);
                     
                     for (let i = start; i < end; i++) {
-                        const time = latestBoard[i];
+                        const entry = latestBoard[i];
                         html += `
                             <div class="rank-row ${i === currentRank ? 'current' : ''}">
                                 <div class="rank-num">#${i + 1}</div>
-                                <div class="rank-time">${shortenTime(game.formatTime(time * 1000))}</div>
+                                <div class="rank-time">${shortenTime(game.formatTime(entry.t * 1000))}</div>
+                                <div class="rank-date">${formatShortDate(entry.d)}</div>
                             </div>
                         `;
                     }
