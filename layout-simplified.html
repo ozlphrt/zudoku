@@ -76,6 +76,7 @@
             overflow: hidden;
             justify-content: center;
             align-items: center;
+            padding: 0 10px; /* Prevent edge touching */
         }
 
         /* ========================================
@@ -572,11 +573,11 @@
         .settings-content {
             background: rgba(30, 30, 30, 0.8);
             backdrop-filter: blur(40px);
-            padding: 32px;
+            padding: 24px;
             border-radius: 32px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            width: 100%;
-            max-width: 400px;
+            width: 90%;
+            max-width: 380px;
             box-shadow: 0 40px 100px rgba(0,0,0,0.5);
             animation: victoryPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
@@ -736,8 +737,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 16px;
-            min-height: 64px;
+            padding: 8px 12px;
+            min-height: 52px;
             background: rgba(255, 255, 255, 0.04);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(15px);
@@ -751,7 +752,7 @@
             display: flex;
             align-items: center;
             justify-content: flex-start;
-            gap: 12px;
+            gap: 6px;
         }
 
         .header-center {
@@ -772,16 +773,16 @@
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            gap: 10px;
+            gap: 6px;
         }
 
         .header-bar button {
             background: rgba(255, 255, 255, 0.12);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
-            padding: 8px 14px;
+            padding: 6px 10px;
             border-radius: 12px;
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -790,7 +791,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 4px;
         }
 
         .header-bar button:hover {
@@ -805,11 +806,11 @@
 
         #timer_display {
             font-family: 'JetBrains Mono', 'Courier New', monospace;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--highlight);
             letter-spacing: 1px;
-            min-width: 90px;
+            min-width: 70px;
             text-align: center;
             line-height:  1;
             display: flex;
@@ -1030,7 +1031,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.41</div>
+    <div class="version-tag">V1.1.42</div>
  </div>
 
 </div>
@@ -1074,7 +1075,7 @@
 
             <div class="settings-row">
                 <span class="settings-label">Software Version</span>
-                <span class="ver-badge">v1.1.41 Stable</span>
+                <span class="ver-badge">v1.1.42 Stable</span>
             </div>
 
             <div style="margin-top: 32px;">
@@ -1103,7 +1104,7 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=156"></script>
+    <script src="script.js?v=157"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
