@@ -898,7 +898,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.38</div>
+    <div class="version-tag">V1.1.39</div>
  </div>
 
 </div>
@@ -939,7 +939,7 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=154"></script>
+    <script src="script.js?v=155"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
@@ -1124,9 +1124,17 @@
         if (savedTheme !== null) {
             document.documentElement.setAttribute('data-theme', savedTheme);
         }
+
+        // Load difficulty from preference
+        const savedDiff = localStorage.getItem('zudoku-difficulty');
         
         try {
             window.game = new SudokuGame();
+            
+            if (savedDiff && ['easy', 'medium', 'hard', 'expert'].includes(savedDiff.toLowerCase())) {
+                window.game.difficulty = savedDiff.toLowerCase();
+            }
+
             patchGame(window.game);
             setupTimerObserver();
             syncNumBtnStates();
@@ -1136,6 +1144,18 @@
             if (diffLabel && window.game) {
                 diffLabel.textContent = window.game.difficulty.toUpperCase();
             }
+
+            // Wrap global cycleDifficulty to persist choice
+            const originalCycle = window.cycleDifficulty;
+            window.cycleDifficulty = function() {
+                if (typeof originalCycle === 'function') {
+                    originalCycle();
+                    if (window.game) {
+                        localStorage.setItem('zudoku-difficulty', window.game.difficulty);
+                    }
+                }
+            };
+
         } catch(e) {
             console.error('❌ Game initialization error:', e);
         }
