@@ -483,22 +483,105 @@
             font-weight: 600;
         }
         .best-diff.better { color: #4cd964; }
-        .best-diff.worse { color: #ff3b30; }
-
-        .primary-btn {
+        .best-diff.worse { color: #ff3b30; }        .primary-btn {
             background: var(--highlight);
             color: #000;
             border: none;
-            padding: 18px 48px;
+            padding: 16px 32px;
             border-radius: 12px;
             font-family: var(--font);
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             letter-spacing: 0.05em;
             cursor: pointer;
             transition: all 0.2s;
             width: 100%;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Leaderboard Styles */
+        .leaderboard-section {
+            width: 100%;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 16px;
+            overflow: hidden;
+        }
+        [data-theme="light"] .leaderboard-section {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .leaderboard-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--highlight);
+            margin-bottom: 12px;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .podium-group {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        [data-theme="light"] .podium-group { border-color: rgba(0, 0, 0, 0.05); }
+
+        .podium-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        [data-theme="light"] .podium-item { background: rgba(0, 0, 0, 0.03); border-color: rgba(0, 0, 0, 0.05); }
+
+        .podium-rank { font-size: 10px; font-weight: 900; margin-bottom: 2px; opacity: 0.5; }
+        .podium-time { font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+        .podium-item.rank-1 { border-color: rgba(255, 215, 0, 0.3); background: rgba(255, 215, 0, 0.05); }
+        .podium-item.rank-1 .podium-rank { color: #ffd700; opacity: 1; }
+
+        .rank-slice-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 180px; /* Limits size on mobile */
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .rank-slice-list::-webkit-scrollbar { display: none; }
+
+        .rank-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            opacity: 0.6;
+        }
+        .rank-row.current {
+            background: rgba(var(--highlight-rgb), 0.15);
+            border: 1px solid rgba(var(--highlight-rgb), 0.2);
+            opacity: 1;
+            font-weight: 700;
+            color: var(--highlight);
+        }
+
+        .rank-num { width: 30px; font-weight: 800; opacity: 0.5; }
+        .rank-row.current .rank-num { opacity: 1; }
+        .rank-time { font-family: 'JetBrains Mono', monospace; }        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         .primary-btn:active { transform: scale(0.96); }
 
@@ -1031,7 +1114,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.42</div>
+    <div class="version-tag">V1.1.43</div>
  </div>
 
 </div>
@@ -1075,7 +1158,7 @@
 
             <div class="settings-row">
                 <span class="settings-label">Software Version</span>
-                <span class="ver-badge">v1.1.42 Stable</span>
+                <span class="ver-badge">v1.1.43 Stable</span>
             </div>
 
             <div style="margin-top: 32px;">
@@ -1094,17 +1177,21 @@
             <h1 id="victoryTime" class="hero-time">00:00:00</h1>
             
             <div class="best-performance">
-                <span class="best-label">Personal Best</span>
+                <span class="best-label">Session Best</span>
                 <div class="best-value-row">
                     <span id="bestTimeVal" class="best-time-val">--:--</span>
                     <span id="bestTimeDiff" class="best-diff"></span>
                 </div>
             </div>
 
+            <div id="leaderboardSection" class="leaderboard-section">
+                <!-- Dynamically filled by JS -->
+            </div>
+
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=157"></script>
+    <script src="script.js?v=158"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
@@ -1245,6 +1332,25 @@
         obs.observe(timerEl, { childList: true, characterData: true, subtree: true });
     }
 
+    /* ---- Leaderboard Logic ---- */
+    function getLeaderboard(diff) {
+        let board = JSON.parse(localStorage.getItem('zudoku-leaderboard') || '{}');
+        return board[diff.toLowerCase()] || [];
+    }
+
+    function saveToLeaderboard(diff, seconds) {
+        let board = JSON.parse(localStorage.getItem('zudoku-leaderboard') || '{}');
+        let diffKey = diff.toLowerCase();
+        if (!board[diffKey]) board[diffKey] = [];
+        
+        board[diffKey].push(seconds);
+        board[diffKey].sort((a, b) => a - b);
+        board[diffKey] = board[diffKey].slice(0, 100);
+        
+        localStorage.setItem('zudoku-leaderboard', JSON.stringify(board));
+        return board[diffKey];
+    }
+
     /* ---- Hook SudokuGame methods for custom UI ---- */
     function patchGame(game) {
         /* Hook updateProgress to update our horizontal bar */
@@ -1276,6 +1382,46 @@
 
                 // Allow original gameWon to run (updates best time if needed)
                 origGameWon();
+
+                // Leaderboard Logic
+                const latestBoard = saveToLeaderboard(diffLabel, currentTime / 1000);
+                const currentRank = latestBoard.indexOf(currentTime / 1000);
+                
+                // Render Leaderboard UI
+                const lbSection = document.getElementById('leaderboardSection');
+                if (lbSection) {
+                    let html = `<div class="leaderboard-title">${diffLabel.toUpperCase()} LEADERBOARD</div>`;
+                    
+                    // Podium (Top 3)
+                    html += `<div class="podium-group">`;
+                    for (let i = 0; i < 3; i++) {
+                        const time = latestBoard[i];
+                        html += `
+                            <div class="podium-item ${i === 0 ? 'rank-1' : ''}">
+                                <div class="podium-rank">#${i + 1}</div>
+                                <div class="podium-time">${shortenTime(game.formatTime(time * 1000))}</div>
+                            </div>
+                        `;
+                    }
+                    html += `</div>`;
+
+                    // Rank Slice (±5)
+                    html += `<div class="rank-slice-list">`;
+                    let start = Math.max(0, currentRank - 5);
+                    let end = Math.min(latestBoard.length, currentRank + 6);
+                    
+                    for (let i = start; i < end; i++) {
+                        const time = latestBoard[i];
+                        html += `
+                            <div class="rank-row ${i === currentRank ? 'current' : ''}">
+                                <div class="rank-num">#${i + 1}</div>
+                                <div class="rank-time">${shortenTime(game.formatTime(time * 1000))}</div>
+                            </div>
+                        `;
+                    }
+                    html += `</div>`;
+                    lbSection.innerHTML = html;
+                }
 
                 const overlay = document.getElementById('victoryOverlay');
                 if (overlay) {
