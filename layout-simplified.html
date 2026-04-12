@@ -460,19 +460,14 @@
             width: 100%;
         }
 
-        /* Leaderboard Styles */
+        /* Leaderboard Styles - Flattened in 1.1.46 */
         .leaderboard-section {
             width: 100%;
             margin-bottom: 24px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 16px;
-            overflow: hidden;
-        }
-        [data-theme="light"] .leaderboard-section {
-            background: rgba(0, 0, 0, 0.02);
-            border-color: rgba(0, 0, 0, 0.05);
+            background: none;
+            border: none;
+            padding: 0;
+            overflow: visible;
         }
 
         .leaderboard-title {
@@ -501,15 +496,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 6px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.04);
+            padding: 10px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
         [data-theme="light"] .podium-item { background: rgba(0, 0, 0, 0.03); border-color: rgba(0, 0, 0, 0.05); }
 
-        .podium-rank { font-size: 9px; font-weight: 900; margin-bottom: 1px; opacity: 0.5; }
-        .podium-time { font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .podium-rank { font-size: 10px; font-weight: 900; margin-bottom: 2px; opacity: 0.5; }
+        .podium-time { font-size: 15px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
 
         .podium-item.rank-1 { border-color: rgba(255, 215, 0, 0.3); background: rgba(255, 215, 0, 0.05); }
         .podium-item.rank-1 .podium-rank { color: #ffd700; opacity: 1; }
@@ -528,23 +523,24 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 2px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            opacity: 0.85; /* Increased contrast */
+            padding: 6px 4px;
+            border-radius: 8px;
+            font-size: 16px; /* Upscaled from 12px */
+            opacity: 0.85;
         }
         .rank-row.current {
             background: rgba(var(--highlight-rgb), 0.15);
             border: 1px solid rgba(var(--highlight-rgb), 0.2);
             opacity: 1;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--highlight);
+            padding: 8px 12px; /* Extra breathing room for current score */
         }
 
-        .rank-num { width: 28px; font-weight: 800; opacity: 0.35; font-size: 10px; }
+        .rank-num { width: 34px; font-weight: 800; opacity: 0.35; font-size: 11px; }
         .rank-row.current .rank-num { opacity: 0.8; }
-        .rank-time { font-family: 'JetBrains Mono', monospace; flex: 1; opacity: 0.9; }
-        .rank-date { font-size: 10px; opacity: 0.35; font-weight: 400; text-align: right; min-width: 45px; }        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        .rank-time { font-family: 'JetBrains Mono', monospace; flex: 1; opacity: 0.95; letter-spacing: -0.02em; }
+        .rank-date { font-size: 11px; opacity: 0.4; font-weight: 400; text-align: right; min-width: 50px; }        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         .primary-btn:active { transform: scale(0.96); }
 
@@ -1077,7 +1073,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.45</div>
+    <div class="version-tag">V1.1.46</div>
  </div>
 
 </div>
@@ -1121,7 +1117,7 @@
 
             <div class="settings-row">
                 <span class="settings-label">Software Version</span>
-                <span class="ver-badge">v1.1.45 Stable</span>
+                <span class="ver-badge">v1.1.46 Stable</span>
             </div>
 
             <div style="margin-top: 32px;">
@@ -1146,7 +1142,7 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=160"></script>
+    <script src="script.js?v=161"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
