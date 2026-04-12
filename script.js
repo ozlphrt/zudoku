@@ -3749,7 +3749,8 @@ class SudokuGame {
         return {
             easy: parsed.easy || null,
             medium: parsed.medium || null,
-            hard: parsed.hard || null
+            hard: parsed.hard || null,
+            expert: parsed.expert || null
         };
     }
     
@@ -3807,7 +3808,8 @@ class SudokuGame {
         this.bestTimes = {
             easy: null,
             medium: null,
-            hard: null
+            hard: null,
+            expert: null
         };
         this.saveBestTimes();
         this.updateBestTimeDisplay();
@@ -3818,7 +3820,8 @@ class SudokuGame {
         const speedThresholds = {
             easy: { fast: 300, slow: 900 },      // 5min fast, 15min slow
             medium: { fast: 600, slow: 1800 },   // 10min fast, 30min slow
-            hard: { fast: 1200, slow: 3600 }     // 20min fast, 60min slow
+            hard: { fast: 1200, slow: 3600 },    // 20min fast, 60min slow
+            expert: { fast: 1800, slow: 5400 }   // 30min fast, 90min slow
         };
         
         const thresholds = speedThresholds[this.difficulty];
