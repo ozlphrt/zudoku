@@ -45,8 +45,9 @@ class SudokuGame {
         // Adjusted to match available puzzle database
         this.DIFFICULTY_LEVELS = {
             easy: { label: 'Easy', givenNumbers: 44 },      // 44 clues (True Easy)
-            medium: { label: 'Medium', givenNumbers: 34 },  // 34 clues (Standard Medium)
-            hard: { label: 'Hard', givenNumbers: 24 }       // 24 clues (Challenging Hard)
+            medium: { label: 'Medium', givenNumbers: 36 },  // 36 clues (Smoothed Medium)
+            hard: { label: 'Hard', givenNumbers: 29 },      // 29 clues (Smoothed Hard)
+            expert: { label: 'Expert', givenNumbers: 22 }   // 22 clues (New Level)
         };
         
         // Puzzle database - initialize immediately
@@ -55,7 +56,7 @@ class SudokuGame {
         // Merge with expanded puzzle database if available
         if (typeof expandedPuzzleDatabase !== 'undefined') {
             console.log('🔄 Merging expanded puzzle database...');
-            for (const difficulty of ['easy', 'medium', 'hard']) {
+            for (const difficulty of ['easy', 'medium', 'hard', 'expert']) {
                 if (expandedPuzzleDatabase[difficulty]) {
                     this.puzzleDatabase[difficulty] = this.puzzleDatabase[difficulty].concat(expandedPuzzleDatabase[difficulty]);
                     console.log(`📚 Added ${expandedPuzzleDatabase[difficulty].length} ${difficulty} puzzles from expanded database`);
@@ -119,9 +120,10 @@ class SudokuGame {
         // This method is kept for compatibility but not used in client-side generation
         // The actual clue counts are determined by the generation algorithm
         const clueCounts = {
-            easy: 42,    // 39 cells removed (36-49 range)
-            medium: 33,  // 48 cells removed (32-35 range)
-            hard: 28     // 53 cells removed (25-31 range)
+            easy: 44,    // Easy
+            medium: 36,  // Medium
+            hard: 29,    // Hard
+            expert: 22   // Expert
         };
         return clueCounts[this.difficulty] || 42;
     }
@@ -366,6 +368,9 @@ class SudokuGame {
                 {puzzle:[[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,3,0,8,5],[0,0,1,0,2,0,0,0,0],[0,0,0,5,0,7,0,0,0],[0,0,4,0,0,0,1,0,0],[0,9,0,0,0,0,0,0,0],[5,0,0,0,0,0,0,7,3],[0,0,2,0,1,0,0,0,0],[0,0,0,0,4,0,0,0,9]],solution:[[9,8,7,6,5,4,3,2,1],[2,4,6,1,7,3,9,8,5],[3,5,1,9,2,8,7,4,6],[1,2,8,5,3,7,6,9,4],[6,3,4,8,9,2,1,5,7],[7,9,5,4,6,1,8,3,2],[5,1,9,2,8,6,4,7,3],[4,7,2,3,1,9,5,6,8],[8,6,3,7,4,5,2,1,9]]},
                 {puzzle:[[6,0,2,0,5,0,0,0,0],[0,0,0,0,0,3,0,4,0],[0,0,0,0,0,0,0,0,0],[4,3,0,0,0,8,0,0,0],[0,1,0,0,0,0,0,0,2],[0,0,0,0,0,0,0,7,5],[0,0,0,0,0,0,0,0,0],[0,2,0,6,0,0,0,0,0],[0,0,0,0,4,0,7,0,6]],solution:[[6,7,2,1,5,4,3,8,9],[9,8,5,7,2,3,6,4,1],[1,4,3,9,8,6,2,5,7],[4,3,7,2,6,8,5,9,1],[5,1,6,4,3,7,8,9,2],[2,9,8,5,1,9,4,7,5],[7,5,4,8,9,2,1,6,3],[8,2,1,6,7,5,9,3,4],[3,6,9,3,4,1,7,2,6]]},
                 {puzzle:[[0,3,0,0,0,0,0,0,0],[0,0,0,1,9,5,0,0,0],[0,0,8,0,0,0,0,6,0],[8,0,0,0,6,0,0,0,0],[4,0,0,8,0,0,0,0,1],[0,0,0,0,2,0,0,0,0],[0,6,0,0,0,0,2,8,0],[0,0,0,4,1,9,0,0,5],[0,0,0,0,8,0,0,0,0]],solution:[[1,3,4,6,7,8,9,2,5],[6,7,2,1,9,5,3,4,8],[5,9,8,3,4,2,7,6,1],[8,5,9,7,6,1,4,3,2],[4,2,6,8,5,3,7,9,1],[7,1,3,9,2,4,5,7,6],[9,6,1,5,3,7,2,8,4],[2,8,7,4,1,9,6,5,5],[3,4,5,2,8,6,1,7,9]]}
+            ],
+            expert: [
+                // Expert puzzles placeholder (generator will fill this)
             ],
             medium: [
                 // Puzzle 1 - Medium (24 clues)
@@ -5367,7 +5372,7 @@ function togglePause() {
 }
 
 function cycleDifficulty() {
-    const levels = ['easy', 'medium', 'hard'];
+    const levels = ['easy', 'medium', 'hard', 'expert'];
     let currentIndex = levels.indexOf(game.difficulty.toLowerCase());
     if (currentIndex === -1) currentIndex = 0;
     const nextIndex = (currentIndex + 1) % levels.length;
@@ -5646,6 +5651,7 @@ function checkPuzzleDatabase() {
         console.log(`Easy: ${game.getPuzzleCount('easy')} puzzles`);
         console.log(`Medium: ${game.getPuzzleCount('medium')} puzzles`);
         console.log(`Hard: ${game.getPuzzleCount('hard')} puzzles`);
+        console.log(`Expert: ${game.getPuzzleCount('expert')} puzzles`);
     }
 }
 
@@ -5840,7 +5846,7 @@ function testPuzzleGeneration() {
     
     try {
         // Test different difficulty levels
-        const difficulties = ['easy', 'medium', 'advanced', 'hard'];
+        const difficulties = ['easy', 'medium', 'hard', 'expert'];
         for (const diff of difficulties) {
             console.log(`Testing ${diff} difficulty...`);
             
@@ -5858,7 +5864,7 @@ function testPuzzleGeneration() {
                 }
             }
             
-            const target = game.difficulties[diff];
+            const target = game.DIFFICULTY_LEVELS[diff].givenNumbers;
             const isValid = game.validateGameState();
             
             console.log(`✅ ${diff}: ${givenCount} given numbers (target: ${target}), valid: ${isValid}`);
@@ -5898,7 +5904,7 @@ function testDifficultyLevel(difficulty) {
         }
         
         console.log(`Difficulty: ${difficulty}`);
-        console.log(`Given numbers: ${givenCount} (target: ${game.difficulties[difficulty]})`);
+        console.log(`Given numbers: ${givenCount} (target: ${game.DIFFICULTY_LEVELS[difficulty].givenNumbers})`);
         console.log(`Valid puzzle: ${isValid ? '✅ Yes' : '❌ No'}`);
         
         return { difficulty, givenCount, isValid };
@@ -5923,11 +5929,7 @@ function debugCurrentPuzzle() {
         console.log(`Current puzzle debug:`);
         console.log(`- Difficulty: ${game.difficulty}`);
         console.log(`- Given numbers: ${givenCount}`);
-        console.log(`- Target: ${game.difficulties[game.difficulty]}`);
-        console.log(`- Valid: ${game.validateGameState()}`);
-        console.log(`- Library available: ${typeof SudokuGenerator !== 'undefined'}`);
-        
-        return { difficulty: game.difficulty, givenCount, target: game.difficulties[game.difficulty] };
+        return { difficulty: game.difficulty, givenCount, target: game.DIFFICULTY_LEVELS[game.difficulty].givenNumbers };
     }
 }
 
