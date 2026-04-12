@@ -490,8 +490,8 @@
             display: flex;
             justify-content: center;
             gap: 6px;
-            margin-bottom: 12px;
-            padding-bottom: 12px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         [data-theme="light"] .podium-group { border-color: rgba(0, 0, 0, 0.05); }
@@ -517,8 +517,8 @@
         .rank-slice-list {
             display: flex;
             flex-direction: column;
-            gap: 2px;
-            max-height: 220px; /* Expanded for denser list */
+            gap: 0px;
+            max-height: 240px; /* Expanded for denser list */
             overflow-y: auto;
             scrollbar-width: none;
         }
@@ -528,10 +528,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 4px 10px;
+            padding: 2px 10px;
             border-radius: 6px;
             font-size: 12px;
-            opacity: 0.6;
+            opacity: 0.85; /* Increased contrast */
         }
         .rank-row.current {
             background: rgba(var(--highlight-rgb), 0.15);
@@ -541,10 +541,10 @@
             color: var(--highlight);
         }
 
-        .rank-num { width: 28px; font-weight: 800; opacity: 0.4; font-size: 10px; }
+        .rank-num { width: 28px; font-weight: 800; opacity: 0.35; font-size: 10px; }
         .rank-row.current .rank-num { opacity: 0.8; }
-        .rank-time { font-family: 'JetBrains Mono', monospace; flex: 1; }
-        .rank-date { font-size: 10px; opacity: 0.4; font-weight: 400; text-align: right; min-width: 45px; }        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        .rank-time { font-family: 'JetBrains Mono', monospace; flex: 1; opacity: 0.9; }
+        .rank-date { font-size: 10px; opacity: 0.35; font-weight: 400; text-align: right; min-width: 45px; }        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         .primary-btn:active { transform: scale(0.96); }
 
@@ -1077,7 +1077,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.44</div>
+    <div class="version-tag">V1.1.45</div>
  </div>
 
 </div>
@@ -1121,7 +1121,7 @@
 
             <div class="settings-row">
                 <span class="settings-label">Software Version</span>
-                <span class="ver-badge">v1.1.44 Stable</span>
+                <span class="ver-badge">v1.1.45 Stable</span>
             </div>
 
             <div style="margin-top: 32px;">
@@ -1146,7 +1146,7 @@
             <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
         </div>
     </div>
-    <script src="script.js?v=159"></script>
+    <script src="script.js?v=160"></script>
 <script>
     /* =============================================
        BRIDGE — connects new UI to existing SudokuGame
