@@ -24,8 +24,8 @@
             --text:          #A4A4A4;
             --inactive:      #4D4D4D;
             --grid-line:     #333333;
-            --highlight:     #57C7FF;
-            --highlight-rgb: 87, 199, 255;
+            --highlight:     #d9540d;
+            --highlight-rgb: 217, 84, 13;
             --glow:          rgba(var(--highlight-rgb), 0.6);
             --crosshair:     #2a2a2a;
             --font:          'Avenir Next', 'Avenir', 'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif;
@@ -36,8 +36,8 @@
             --text:          #555555;
             --inactive:      #999999;
             --grid-line:     #CCCCCC;
-            --highlight:     #007AFF;
-            --highlight-rgb: 0, 122, 255;
+            --highlight:     #d9540d;
+            --highlight-rgb: 217, 84, 13;
             --glow:          rgba(var(--highlight-rgb), 0.4);
             --crosshair:     #d8d8d8;
         }
@@ -1073,7 +1073,7 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.47</div>
+    <div class="version-tag">V1.1.48</div>
  </div>
 
 </div>
@@ -1117,7 +1117,7 @@
 
             <div class="settings-row">
                 <span class="settings-label">Software Version</span>
-                <span class="ver-badge">v1.1.47 Stable</span>
+                <span class="ver-badge">v1.1.48 Stable</span>
             </div>
 
             <div style="margin-top: 32px;">
@@ -1448,10 +1448,8 @@
         }
 
         // Load palette from preference
-        const savedPalette = localStorage.getItem('zudoku-palette');
-        if (savedPalette) {
-            applyPalette(savedPalette);
-        }
+        const savedPalette = localStorage.getItem('zudoku-palette') || '#d9540d';
+        applyPalette(savedPalette);
 
         // Load difficulty from preference
         const savedDiff = localStorage.getItem('zudoku-difficulty');
