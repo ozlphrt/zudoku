@@ -78,10 +78,11 @@ class SudokuGame {
         // Validate and set initial difficulty (Default to 'AUTO')
         this.difficulty = 'auto';
 
-        // One-time force reset to AUTO for v1.1.55
-        const autoResetKey = 'zudoku-auto-force-reset-v1155';
+        // One-time force reset to AUTO for v1.2.6
+        const autoResetKey = 'zudoku-auto-force-reset-v126';
         if (!localStorage.getItem(autoResetKey)) {
-            console.log('🔄 Performing one-time reset to AUTO difficulty...');
+            console.log('🔄 Performing one-time reset to AUTO difficulty (L50)...');
+            this.difficulty = 'auto'; // Force mode
             localStorage.setItem(autoResetKey, 'true');
         } else {
             // After the force reset happens once, we go back to validated difficulty from memory
@@ -3807,8 +3808,8 @@ class SudokuGame {
     loadAutoModeState() {
         const saved = localStorage.getItem('zudoku-auto-state');
         const state = saved ? JSON.parse(saved) : {
-            active: false,
-            currentClues: 44,
+            active: true, // Default to true for new users
+            currentClues: 50, // Default to easiest (L50)
             winsInLevel: 0,
             totalTries: 0,
             triesInRank: 0
