@@ -24,8 +24,8 @@
             --text:          #A4A4A4;
             --inactive:      #4D4D4D;
             --grid-line:     #333333;
-            --highlight:     #d9540d;
-            --highlight-rgb: 217, 84, 13;
+            --highlight:     #DA5100;
+            --highlight-rgb: 218, 81, 0;
             --glow:          rgba(var(--highlight-rgb), 0.6);
             --crosshair:     #2a2a2a;
             --font:          'Avenir Next', 'Avenir', 'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif;
@@ -36,8 +36,8 @@
             --text:          #555555;
             --inactive:      #999999;
             --grid-line:     #CCCCCC;
-            --highlight:     #d9540d;
-            --highlight-rgb: 217, 84, 13;
+            --highlight:     #DA5100;
+            --highlight-rgb: 218, 81, 0;
             --glow:          rgba(var(--highlight-rgb), 0.4);
             --crosshair:     #d8d8d8;
         }
@@ -101,10 +101,11 @@
             width: 100%;
             height: 100%;
             cursor: pointer;
-            font-family: var(--font);
-            font-size: 32px;
-            font-weight: 600;
-            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--highlight);
+            text-shadow: 0 0 10px var(--glow);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -141,6 +142,48 @@
         /* ========================================
            SUDOKU GRID AREA
         ======================================== */
+        .restart-level-container {
+            width: 100%;
+            max-width: 750px;
+            margin: 12px auto 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .restart-level-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        @media (hover: hover) {
+            .restart-level-btn:hover {
+                background: rgba(var(--highlight-rgb), 0.15);
+                border-color: var(--highlight);
+                color: #fff;
+                box-shadow: 0 0 15px var(--glow);
+            }
+        }
+
+        .restart-level-btn:active {
+            background: rgba(var(--highlight-rgb), 0.3);
+            transform: scale(0.98);
+            transition: none;
+        }
+
+        .restart-level-btn:focus {
+            outline: none;
+        }
+
         .grid-area {
             display: flex;
             align-items: center;
@@ -340,6 +383,39 @@
             z-index: 20;
         }
 
+        .hint-region-highlight {
+            background: rgba(218, 81, 0, 0.2) !important;
+            box-shadow: inset 0 0 25px rgba(218, 81, 0, 0.3);
+            transition: background 0.4s ease;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Border glow for reason reasoning */
+        .hint-region-highlight::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1px solid rgba(218, 81, 0, 0.4);
+            pointer-events: none;
+        }
+        
+        #hintBtn:hover {
+            background: rgba(218, 81, 0, 0.3) !important;
+            transform: translateY(-2px);
+        }
+
+        .hint-highlight {
+            background: rgba(218, 81, 0, 0.4) !important;
+            z-index: 10;
+            animation: pulseHintGlow 1.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes pulseHintGlow {
+            from { mask-image: radial-gradient(circle, white 0%, transparent 100%); opacity: 0.5; background: #DA5100; }
+            to { mask-image: radial-gradient(circle, white 100%, transparent 100%); opacity: 1; background: #FF7043; box-shadow: 0 0 30px #DA5100; }
+        }
+
         /* ========================================
            LIGHT THEME OVERRIDES
         ======================================== */
@@ -389,25 +465,33 @@
         /* ========================================
            VICTORY OVERLAY
         ======================================== */
-        #victoryOverlay {
+        /* Modern Modal System */
+        .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.3);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(14px);
+            z-index: 2000;
             align-items: center;
             justify-content: center;
             padding: 24px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
-        #victoryOverlay.visible { display: flex; }
+        .modal-overlay.visible { 
+            display: flex;
+            opacity: 1;
+        }
+
+        #victoryOverlay { z-index: 1000; }
 
         .victory-content {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(40px);
             padding: clamp(32px, 6vh, 64px) clamp(24px, 5vw, 48px);
             border-radius: clamp(24px, 5vw, 40px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
             text-align: center;
             width: 100%;
             max-width: 440px;
@@ -730,7 +814,7 @@
             .header-bar { height: 52px; padding: 12px 16px 0; }
             .difficulty-selector { gap: 24px; height: 44px; margin-top: 8px; }
             .input-number-bar { height: 44px; padding: 0 8px; }
-            .num-btn { font-size: 18px; }
+            .num-btn { font-size: 26px; }
             .grid-area { padding: 8px 8px 12px; }
         }
 
@@ -893,10 +977,10 @@
         }
         .keypad-btn.active {
             background: var(--highlight);
-            color: #000;
+            color: #fff; /* High contrast white text on deep orange */
             transform: scale(1.15);
-            box-shadow: 0 0 20px var(--glow);
-            font-weight: 600;
+            box-shadow: 0 0 25px var(--glow), inset 0 0 0 2px rgba(255,255,255,0.3);
+            font-weight: 800;
             z-index: 10;
         }
         .keypad-btn.backspace {
@@ -912,9 +996,9 @@
             text-transform: uppercase;
         }
         .keypad-btn.backspace.active {
-            background: var(--highlight);
-            color: #000;
-            box-shadow: 0 0 25px var(--glow);
+            background: #ff3b30; /* Distinct red for delete */
+            color: #fff;
+            box-shadow: 0 0 25px rgba(255, 59, 48, 0.4);
             transform: scale(1.05);
         }
 
@@ -924,6 +1008,8 @@
             50% { transform: scale(1.25); }
             100% { transform: scale(1.15); }
         }
+
+        /* AUTO Mode Dashboard Styles */
         .keypad-btn.active.tick {
             animation: visual-tick 0.1s ease-out;
         }
@@ -1005,6 +1091,125 @@
             transform: scale(0.95);
         }
 
+        /* ========================================
+           LEVEL SCROLLER
+        ======================================== */
+        #level-scroller-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: transparent;
+            z-index: 5000;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+            /* Dynamic variables set by JS */
+            --scrub-color: var(--highlight);
+            --scrub-glow: var(--glow);
+        }
+
+        #level-scroller-overlay.active {
+            display: flex;
+            opacity: 1;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scroller-track {
+            position: relative;
+            width: 24px;
+            height: 500px;
+            background: linear-gradient(to top, 
+                /* Ultra (5-15) */ rgba(160, 32, 240, 0.5) 0%, rgba(160, 32, 240, 0.5) 23.9%,
+                /* Expert (16-24) */ rgba(255, 0, 0, 0.5) 23.9%, rgba(255, 0, 0, 0.5) 43.5%,
+                /* Hard (25-34) */ rgba(255, 165, 0, 0.5) 43.5%, rgba(255, 165, 0, 0.5) 65.2%,
+                /* Medium (35-44) */ rgba(255, 255, 0, 0.4) 65.2%, rgba(255, 255, 0, 0.4) 86.9%,
+                /* Easy (45-50) */ rgba(0, 255, 255, 0.4) 86.9%, rgba(0, 255, 255, 0.4) 100%
+            );
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: visible;
+            touch-action: none;
+        }
+
+        .scroller-label {
+            width: 130px;
+            text-align: left;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+            opacity: 0.15;
+            letter-spacing: 1.5px;
+            pointer-events: none;
+            transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+            position: absolute;
+            left: 100%;
+            margin-left: 25px;
+            transform: translateY(-50%);
+        }
+
+        .scroller-label.active {
+            opacity: 1;
+            color: var(--scrub-color);
+            text-shadow: 0 0 15px var(--scrub-glow);
+            transform: translateY(-50%) scale(1.2);
+        }
+
+        #scroller-thumb {
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            background: var(--scrub-color);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--scrub-glow);
+            z-index: 10;
+            pointer-events: none;
+            transition: top 0.05s linear;
+        }
+
+        #scroller-value-pill {
+            position: absolute;
+            right: 115%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--scrub-color);
+            border: 2px solid #fff;
+            border-radius: 30px;
+            padding: 8px 18px;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 15px var(--scrub-glow);
+            opacity: 1; /* Fully Opaque based on feedback */
+            transition: all 0.1s ease;
+        }
+
+        #scroller-value {
+            font-family: var(--font);
+            font-size: 24px;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            white-space: nowrap;
+            letter-spacing: -0.5px;
+        }
+
+        [data-theme="light"] .scroller-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+        [data-theme="light"] .scroller-label { color: #000; }
+
         /* Adjustments for safe area */
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
             .update-toast {
@@ -1016,6 +1221,7 @@
 
 <body>
 <div class="shell container">
+
 
     <!-- HEADER BAR -->
     <header class="header-bar">
@@ -1031,15 +1237,9 @@
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
             </button>
-            <button id="difficulty_cycle" onclick="cycleDifficulty()" title="Change Difficulty">
-                <span id="difficulty_toggle_label">EASY</span>
-            </button>
-            <button id="settings_btn" class="settings-gear" onclick="toggleSettings()" title="Settings">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-            </button>
+            <button id="level_indicator" 
+                    onpointerdown="game.initScrubber(event)"
+                    style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--highlight); cursor: pointer; padding: 6px 16px; font-size: 20px; letter-spacing: 1.5px; text-shadow: 0 0 12px var(--glow); background: rgba(255, 255, 255, 0.08); border: 2px solid var(--highlight); border-radius: 20px; margin-left: 10px; -webkit-user-select: none; user-select: none; touch-action: none; transition: all 0.2s; -webkit-tap-highlight-color: transparent; box-shadow: 0 0 12px var(--glow);">L--</button>
         </div>
 
         <div class="header-center">
@@ -1073,9 +1273,60 @@
         <button class="num-btn" onclick="selectNumber(8, event)">8</button>
         <button class="num-btn" onclick="selectNumber(9, event)">9</button>
     </div>
-    <div class="version-tag">V1.1.48</div>
+
+    <div class="restart-level-container" style="display: flex; gap: 8px; justify-content: center; align-items: stretch; padding: 0 4px;">
+        <!-- RESTART ICON -->
+        <button class="restart-level-btn" onclick="showConfirmRestart()" title="Restart Game" style="width: 50px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 0;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+            </svg>
+        </button>
+
+        <!-- HINT ICON -->
+        <button id="hintBtn" class="restart-level-btn" onclick="showSmartHint()" title="Get Smart Hint" style="width: 50px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 0;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.1.7.7 1.3 1.5 1.5 2.5"></path>
+                <path d="M9 18h6"></path>
+                <path d="M10 22h4"></path>
+            </svg>
+        </button>
+
+        <!-- SETTINGS ICON -->
+        <button id="settings_btn" class="restart-level-btn" onclick="toggleSettings()" title="Puzzle Settings" style="width: 50px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 0;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+        </button>
+
+        <!-- DIFFICULTY PILL (Fills remaining space) -->
+        <button id="difficulty_cycle" class="restart-level-btn" onclick="cycleDifficulty()" style="flex: 1; min-width: 80px; font-weight: 700;">
+            <span id="difficulty_toggle_label">EASY</span>
+        </button>
+    </div>
+
+    <div class="version-tag">V1.2.5</div>
  </div>
 
+</div>
+
+<!-- LEVEL SCROLLER UI -->
+<div id="level-scroller-overlay">
+    <div class="scroller-track" id="scroller-track">
+        <!-- Labels will be positioned by JS based on range 5-50 -->
+        <span class="scroller-label" data-value="44" style="top: 15%">EASY</span>
+        <span class="scroller-label" data-value="36" style="top: 35%">MEDIUM</span>
+        <span class="scroller-label" data-value="29" style="top: 55%">HARD</span>
+        <span class="scroller-label" data-value="22" style="top: 75%">EXPERT</span>
+        <span class="scroller-label" data-value="5" style="top: 95%">ULTRA</span>
+        
+        <div id="scroller-thumb">
+            <div id="scroller-value-pill">
+                <span id="scroller-value">44</span>
+            </div>
+        </div>
+    </div>
 </div>
 
     <div id="compatibility-stubs" style="display: none !important;" aria-hidden="true">
@@ -1130,7 +1381,7 @@
     </div>
 
     <!-- Victory Overlay -->
-    <div id="victoryOverlay" class="victory-overlay">
+    <div id="victoryOverlay" class="modal-overlay">
         <div class="victory-content">
             <p class="victory-reaction">Solved</p>
             <h1 id="victoryTime" class="hero-time">00:00:00</h1>
@@ -1139,9 +1390,46 @@
                 <!-- Dynamically filled by JS -->
             </div>
 
-            <button class="primary-btn" onclick="location.reload()">NEW GAME</button>
+            <button class="primary-btn" onclick="advanceToNextLevel()">CONTINUE</button>
         </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmOverlay" class="modal-overlay" onclick="if(event.target === this) closeModal('confirmOverlay')">
+        <div class="victory-content" style="max-width: 380px;">
+            <p class="victory-reaction">Restart Level?</p>
+            <p style="margin: 16px 0 32px; opacity: 0.7; font-size: 15px; line-height: 1.5;">This will clear all your progress on the current puzzle. Clues stay the same.</p>
+            <div style="display: flex; gap: 12px; width: 100%;">
+                <button class="primary-btn" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.1); flex: 1;" onclick="closeModal('confirmOverlay')">GO BACK</button>
+                <button class="primary-btn" style="flex: 1;" onclick="proceedWithRestart()">YES, CLEAR</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Hint Tooltip (Dynamic) -->
+    <div id="hintTooltip" style="display: none; position: fixed; z-index: 4000; pointer-events: auto; transform: translate(-50%, -100%); margin-top: -12px; transition: opacity 0.3s ease; flex-direction: column; align-items: center;">
+        <div class="victory-content" style="padding: 16px 20px; border-radius: 12px; border-color: #DA5100; max-width: 280px; text-align: left; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <p id="hintTitle" style="color: #DA5100; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px;">LOGIC HINT</p>
+            <p id="hintDescription" style="font-size: 14px; line-height: 1.5; opacity: 0.95; color: #fff; margin-bottom: 16px;"></p>
+            <button class="primary-btn" onclick="applyHintMove()" style="padding: 8px 16px; font-size: 12px; height: auto; width: 100%; background: #DA5100; border: none;">TAP TO FILL</button>
+        </div>
+        <!-- Tooltip Arrow -->
+        <div style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid #DA5100; margin: 0 auto; opacity: 0.8;"></div>
+    </div>
+
+    <style>
+        .loading-pulse-ring {
+            width: 64px;
+            height: 64px;
+            border: 3px solid rgba(var(--highlight-rgb), 0.2);
+            border-top-color: var(--highlight);
+            border-radius: 50%;
+            margin: 40px auto;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
     <script src="script.js?v=161"></script>
 <script>
     /* =============================================
@@ -1262,13 +1550,47 @@
     function resetBestTime(){ if (window.game) window.game.resetBestTime(); }
     function newGame()      { if (window.game) window.game.newGame(); }
 
-    /* Sync num-btn completed class */
+    /* -- Helper: find next incomplete number, wrapping around 1-9 -- */
+    function getNextIncompleteNumber(startFrom) {
+        if (!window.game) return null;
+        const grid = window.game.grid.flat();
+        // Try startFrom..9, then 1..startFrom-1 (wrap)
+        for (let offset = 0; offset < 9; offset++) {
+            const n = ((startFrom - 1 + offset) % 9) + 1;
+            if (grid.filter(v => v === n).length < 9) return n;
+        }
+        return null; // all complete (game won)
+    }
+
+    /* Sync num-btn completed class + auto-advance highlight */
     function syncNumBtnStates() {
         if (!window.game) return;
         const btns = document.querySelectorAll('.num-btn');
+        const grid = window.game.grid.flat();
+
+        let justCompleted = null;
+
         for (let n = 1; n <= 9; n++) {
-            const count = window.game.grid.flat().filter(v => v === n).length;
-            if (btns[n-1]) btns[n-1].classList.toggle('completed', count >= 9);
+            const count = grid.filter(v => v === n).length;
+            const isNowComplete = count >= 9;
+            const wasComplete = btns[n-1]?.classList.contains('completed');
+
+            if (btns[n-1]) btns[n-1].classList.toggle('completed', isNowComplete);
+
+            // Detect a number that JUST became complete this tick
+            if (isNowComplete && !wasComplete) {
+                justCompleted = n;
+            }
+        }
+
+        // Auto-advance: if the just-completed number was the selected one,
+        // or no selection exists yet, pick the next incomplete number.
+        if (justCompleted !== null) {
+            const currentSelected = selectedPadNumber;
+            if (currentSelected === justCompleted || !currentSelected) {
+                const next = getNextIncompleteNumber(justCompleted + 1 > 9 ? 1 : justCompleted + 1);
+                if (next) selectNumber(next);
+            }
         }
     }
 
@@ -1418,6 +1740,11 @@
                         }
                     }
                     
+                    const mainBtn = overlay.querySelector('.primary-btn');
+                    if (mainBtn) {
+                        mainBtn.textContent = game.autoMode.active ? "CONTINUE" : "NEW GAME";
+                    }
+                    
                     overlay.classList.add('visible');
                 }
             };
@@ -1429,11 +1756,169 @@
             if (n !== null && n > 0) {
                 const btns = document.querySelectorAll('.num-btn');
                 if (btns[n - 1]) btns[n - 1].classList.add('selected');
-                selectedPadNumber = n; // Keep internal toggle variable in sync
+                selectedPadNumber = n; 
             } else {
                 selectedPadNumber = null;
             }
         };
+    }
+
+    /* Modal Controls */
+    let currentHint = null;
+    let hintHideTimeout = null;
+
+    function showSmartHint() {
+        if (!window.game) return;
+        
+        // Clear any pended timeout
+        if (hintHideTimeout) clearTimeout(hintHideTimeout);
+        
+        currentHint = window.game.getSmartHint();
+        if (!currentHint) {
+            alert("No obvious logical hints found! Try filling some cells first.");
+            return;
+        }
+
+        const cellIndex = currentHint.row * 9 + currentHint.col;
+        const cell = document.querySelector(`[data-index="${cellIndex}"]`);
+        if (!cell) return;
+
+        // Highlight mapping logic
+        if (currentHint.unitType && currentHint.unitIndex !== undefined) {
+            window.game.highlightHintRegion(currentHint.unitType, currentHint.unitIndex);
+        }
+        cell.classList.add('hint-highlight');
+
+        // Tooltip positioning
+        const tooltip = document.getElementById('hintTooltip');
+        const rect = cell.getBoundingClientRect();
+        
+        tooltip.style.display = 'block';
+        tooltip.style.opacity = '0';
+        
+        // Dynamic Title
+        document.getElementById('hintTitle').textContent = 
+            currentHint.type === 'naked' ? 'NAKED SINGLE FOUND' : 
+            currentHint.type === 'fullhouse' ? 'FULL HOUSE DETECTED' : 'HIDDEN SINGLE FOUND';
+        document.getElementById('hintDescription').textContent = currentHint.reason;
+
+        // Position Logic: Intelligent placement to avoid bleeding
+        const padding = 20;
+        const viewportWidth = window.innerWidth;
+        const tooltipWidth = 280; // from style
+        const tooltipHeight = tooltip.offsetHeight || 180; // approximate if hidden
+
+        let top = rect.top + window.scrollY;
+        let left = Math.max(tooltipWidth / 2 + padding, Math.min(viewportWidth - tooltipWidth / 2 - padding, rect.left + window.scrollX + (rect.width / 2)));
+        
+        // Check if we should flip to bottom
+        const arrow = tooltip.querySelector('div:last-child');
+        if (rect.top < 220) {
+            // Show below
+            top = rect.bottom + window.scrollY + 12;
+            tooltip.style.transform = 'translate(-50%, 0)';
+            if (arrow) {
+                arrow.style.order = '-1';
+                arrow.style.borderTop = 'none';
+                arrow.style.borderBottom = '8px solid #DA5100';
+                arrow.style.marginBottom = '0';
+                arrow.style.marginTop = '0';
+            }
+            tooltip.style.marginTop = '0';
+            tooltip.querySelector('.victory-content').style.marginTop = '8px';
+        } else {
+            // Show above (Default)
+            top = rect.top + window.scrollY;
+            tooltip.style.transform = 'translate(-50%, -100%)';
+            if (arrow) {
+                arrow.style.order = '1';
+                arrow.style.borderBottom = 'none';
+                arrow.style.borderTop = '8px solid #DA5100';
+                arrow.style.marginTop = '0';
+            }
+            tooltip.style.marginTop = '-12px';
+            tooltip.querySelector('.victory-content').style.marginTop = '0';
+        }
+
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+        
+        // Fade in
+        setTimeout(() => { tooltip.style.opacity = '1'; }, 50);
+
+        // Auto-fade after 6 seconds of no action
+        hintHideTimeout = setTimeout(closeHintModal, 6000);
+    }
+
+    function applyHintMove() {
+        if (window.game && currentHint) {
+            window.game.applySmartMove(currentHint.row, currentHint.col, currentHint.number);
+            closeHintModal();
+        }
+    }
+
+    function closeHintModal() {
+        const tooltip = document.getElementById('hintTooltip');
+        if (tooltip) tooltip.style.opacity = '0';
+        
+        setTimeout(() => {
+            if (tooltip) tooltip.style.display = 'none';
+            if (window.game) {
+                const cells = document.querySelectorAll('.hint-region-highlight, .hint-highlight');
+                cells.forEach(c => c.classList.remove('hint-region-highlight', 'hint-highlight'));
+            }
+        }, 300);
+        
+        currentHint = null;
+        if (hintHideTimeout) clearTimeout(hintHideTimeout);
+    }
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.remove('visible');
+            setTimeout(() => { if (!modal.classList.contains('visible')) modal.style.display = 'none'; }, 300);
+        }
+    }
+
+    function showModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.style.display = 'flex';
+            modal.offsetHeight; // force reflow
+            modal.classList.add('visible');
+        }
+    }
+
+    function showConfirmRestart() {
+        showModal('confirmOverlay');
+    }
+
+    function proceedWithRestart() {
+        if (window.game) window.game.restartLevel();
+        closeModal('confirmOverlay');
+    }
+
+    function advanceToNextLevel() {
+        // Hide Victory Overlay
+        closeModal('victoryOverlay');
+
+        // Silent Reload for next level
+        setTimeout(() => {
+            location.reload();
+        }, 300); // Quick refresh for seamless feel
+    }
+
+    function checkLevelIntro() {
+        const autoState = JSON.parse(localStorage.getItem('zudoku-auto-state') || '{}');
+        // Silent Progression: Clear flags without showing modal
+        if (autoState.levelUpPending || autoState.pendedMessage) {
+            console.log(`🚀 Seamless Progression: Level ${autoState.currentClues} reached.`);
+            autoState.levelUpPending = false;
+            autoState.pendedMessage = null;
+            autoState.pendedTitle = null;
+            localStorage.setItem('zudoku-auto-state', JSON.stringify(autoState));
+        }
     }
 
     /* ---- Init ---- */
@@ -1448,9 +1933,8 @@
         }
 
         // Load palette from preference
-        const savedPalette = localStorage.getItem('zudoku-palette') || '#d9540d';
+        const savedPalette = localStorage.getItem('zudoku-palette') || '#DA5100';
         applyPalette(savedPalette);
-
         // Load difficulty from preference
         const savedDiff = localStorage.getItem('zudoku-difficulty');
         
@@ -1464,44 +1948,29 @@
             patchGame(window.game);
             setupTimerObserver();
             syncNumBtnStates();
-            
+            checkLevelIntro();
+
+            // Auto-highlight the first incomplete number on game start
+            const firstNum = getNextIncompleteNumber(1);
+            if (firstNum) selectNumber(firstNum);
+
             // Initial UI sync
             const diffLabel = document.getElementById('difficulty_toggle_label');
             if (diffLabel && window.game) {
-                diffLabel.textContent = window.game.difficulty.toUpperCase();
+                const diff = window.game.difficulty.toUpperCase();
+                diffLabel.textContent = diff === 'AUTO' ? 'AUTO LEVEL' : diff;
             }
 
             // Wrap global cycleDifficulty to persist choice
-        const originalCycle = window.cycleDifficulty;
-        window.cycleDifficulty = function() {
-            if (typeof originalCycle === 'function') {
-                originalCycle();
-                if (window.game) {
-                    localStorage.setItem('zudoku-difficulty', window.game.difficulty);
-                }
-            }
-        };
-
-        // Hook updateTimerControls to sync pause button icon
-        if (window.game) {
-            const origUTC = window.game.updateTimerControls.bind(window.game);
-            window.game.updateTimerControls = function() {
-                origUTC();
-                const btn = document.getElementById('pause_toggle');
-                if (btn) {
-                    if (window.game.isPaused) {
-                        // Play Icon
-                        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
-                        btn.title = "Resume Game";
-                    } else {
-                        // Pause Icon
-                        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
-                        btn.title = "Pause Game";
+            const originalCycle = window.cycleDifficulty;
+            window.cycleDifficulty = function() {
+                if (typeof originalCycle === 'function') {
+                    originalCycle();
+                    if (window.game) {
+                        localStorage.setItem('zudoku-difficulty', window.game.difficulty);
                     }
                 }
             };
-        }
-
         } catch(e) {
             console.error('❌ Game initialization error:', e);
         }
@@ -1540,6 +2009,7 @@
             if (!container) return;
 
             const toast = document.createElement('div');
+            const CACHE_NAME = 'zudoku-cache-v1.2.0';
             toast.className = 'update-toast';
             toast.innerHTML = `
                 <div class="update-toast-text">New version available!</div>

@@ -75,8 +75,18 @@ class SudokuGame {
             sudokuBench: 'https://pub.sakana.ai/sudoku/'
         };
         
-        // Validate and set initial difficulty
-        this.difficulty = this.isValidDifficulty(this.difficulty) ? this.difficulty : 'easy';
+        // Validate and set initial difficulty (Default to 'AUTO')
+        this.difficulty = 'auto';
+
+        // One-time force reset to AUTO for v1.1.55
+        const autoResetKey = 'zudoku-auto-force-reset-v1155';
+        if (!localStorage.getItem(autoResetKey)) {
+            console.log('🔄 Performing one-time reset to AUTO difficulty...');
+            localStorage.setItem(autoResetKey, 'true');
+        } else {
+            // After the force reset happens once, we go back to validated difficulty from memory
+            this.difficulty = this.isValidDifficulty(this.difficulty) ? this.difficulty : 'auto';
+        }
         
         // Auto-save system
         this.autoSaveInterval = null;
@@ -99,9 +109,14 @@ class SudokuGame {
         this.challengeStreak = this.loadChallengeStreak();
         this.challengeCompleted = this.loadChallengeCompleted();
         
+        // AUTO Mode Progression Logic
+        this.autoMode = this.loadAutoModeState();
+        if (this.difficulty === 'auto') this.autoMode.active = true;
+        
         this.createGrid();
         this.addWheelListener();
         this.updateBestTimeDisplay();
+        this.updateAutoDashboard();
         this.newGame();
         
         // Simple, reliable UI update
@@ -113,22 +128,26 @@ class SudokuGame {
     
     // Difficulty helper methods
     isValidDifficulty(difficulty) {
-        return this.DIFFICULTY_LEVELS.hasOwnProperty(difficulty);
+        return this.DIFFICULTY_LEVELS.hasOwnProperty(difficulty) || difficulty === 'auto';
     }
     
     getTargetGivenNumbers() {
-        // This method is kept for compatibility but not used in client-side generation
-        // The actual clue counts are determined by the generation algorithm
+        if (this.autoMode && this.autoMode.active) {
+            return this.autoMode.currentClues;
+        }
         const clueCounts = {
-            easy: 44,    // Easy
-            medium: 36,  // Medium
-            hard: 29,    // Hard
-            expert: 22   // Expert
+            easy: 44,
+            medium: 36,
+            hard: 29,
+            expert: 22
         };
         return clueCounts[this.difficulty] || 42;
     }
     
     getDifficultyLabel() {
+        if (this.difficulty === 'auto') {
+            return `AUTO LEVEL (${this.autoMode.currentClues})`;
+        }
         return this.DIFFICULTY_LEVELS[this.difficulty]?.label || 'Easy';
     }
     
@@ -552,8 +571,9 @@ class SudokuGame {
                         if (puzzle && this.validatePuzzleFormat(puzzle)) {
                             const givenCount = puzzle.flat().filter(num => num !== 0).length;
                             
-                            // Check if given count matches our target (allow ±2 tolerance)
-                            if (Math.abs(givenCount - targetGivenNumbers) <= 2) {
+                            // Check if given count matches our target (stricter for AUTO/Custom modes)
+                            const tolerance = (this.autoMode && this.autoMode.active) ? 0 : 2;
+                            if (Math.abs(givenCount - targetGivenNumbers) <= tolerance) {
                                 console.log(`✅ Loaded ${difficulty} puzzle from Tdoku database: ${givenCount} given numbers (target: ${targetGivenNumbers})`);
                                 return puzzle;
                             } else {
@@ -1787,6 +1807,39 @@ class SudokuGame {
         
         // Show victory celebration animation
         this.animateVictoryCelebration();
+
+        // Handle AUTO mode progression
+        if (this.autoMode && this.autoMode.active) {
+            this.autoMode.winsInLevel++;
+            
+            let message = "";
+            let title = "Great Work!";
+            
+            if (this.autoMode.winsInLevel >= 1) {
+                // Level Up case (1 win is enough)
+                const oldClues = this.autoMode.currentClues;
+                this.autoMode.currentClues--;
+                this.autoMode.winsInLevel = 0;
+                this.autoMode.triesInRank = 0; // Reset tries on level up
+                this.autoMode.levelUpPending = true;
+                
+                title = "Level Up!";
+                const diffLabel = this.getAutoDifficultyLabel(this.autoMode.currentClues);
+                const oldLabel = this.getAutoDifficultyLabel(oldClues);
+                
+                if (diffLabel !== oldLabel) {
+                    message = `Incredible! You've advanced to ${diffLabel} difficulty. Ready for the next tier?`;
+                } else {
+                    message = `Masterful! Clue count refined to ${this.autoMode.currentClues}. You're getting sharper.`;
+                }
+            }
+            
+            this.autoMode.pendedMessage = message;
+            this.autoMode.pendedTitle = title;
+            
+            this.saveAutoModeState();
+            this.updateAutoDashboard();
+        }
         
         // Show win animation
         const cells = document.querySelectorAll('.cell');
@@ -1912,15 +1965,18 @@ class SudokuGame {
                 // Try removing this cell
                 this.grid[row][col] = 0;
                 
-                // Check if puzzle still has unique solution AND no duplicates
-                if (this.hasUniqueSolution() && this.validateGameState()) {
+                // Strict uniqueness for standard difficulty; Absolute precision for AUTO/Custom
+                const isAuto = this.autoMode && this.autoMode.active;
+                const canRemove = (isAuto || this.hasUniqueSolution()) && this.validateGameState();
+
+                if (canRemove) {
                     this.givenCells[row][col] = false;
                     removedCount++;
                     foundRemovable = true;
                     
                     if (removedCount >= targetCellsToRemove) break;
                 } else {
-                    // Restore value if removal breaks uniqueness or creates duplicates
+                    // Restore value if removal breaks uniqueness (for standard modes)
                     this.grid[row][col] = originalValue;
                 }
             }
@@ -2080,6 +2136,43 @@ class SudokuGame {
         }
     }
     
+    restartLevel() {
+        if (this.isGameWon) return; 
+        
+        // Reset grid to starting values
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (!this.givenCells[r][c]) {
+                    this.grid[r][c] = 0;
+                }
+            }
+        }
+        
+        // Clear all notes
+        this.notes = Array(9).fill().map(() => Array(9).fill().map(() => new Set()));
+        
+        // Reset move history
+        this.moveHistory = [];
+        this.historyIndex = -1;
+        
+        // Update stats
+        this.moveCount = 0;
+        this.errorCount = 0;
+        this.hintCount = 0;
+        this.startTime = Date.now();
+        this.pausedTime = 0;
+        this.isPaused = false;
+        
+        // Update UI
+        this.updateDisplay();
+        this.updateProgress();
+        this.updateAutoDashboard();
+        this.saveGameState();
+        this.playSound('click');
+        
+        console.log('🔄 Level restarted (Progress preserved).');
+    }
+
     newGame() {
         this.resetGame();
         
@@ -2090,6 +2183,14 @@ class SudokuGame {
                 console.log('✅ Resumed saved game');
                 return;
             }
+        }
+        
+        // Handle AUTO mode metrics
+        if (this.autoMode && this.autoMode.active) {
+            this.autoMode.totalTries = (this.autoMode.totalTries || 0) + 1;
+            this.autoMode.triesInRank = (this.autoMode.triesInRank || 0) + 1;
+            this.saveAutoModeState();
+            this.updateAutoDashboard();
         }
         
         console.log(`Loading new ${this.difficulty} puzzle...`);
@@ -2180,7 +2281,12 @@ class SudokuGame {
     }
 
     removeNumbers() {
-        const targetClues = this.DIFFICULTY_LEVELS[this.difficulty.toLowerCase()].givenNumbers;
+        let targetClues = 44;
+        if (this.autoMode && this.autoMode.active) {
+            targetClues = this.autoMode.currentClues;
+        } else {
+            targetClues = this.DIFFICULTY_LEVELS[this.difficulty.toLowerCase()].givenNumbers;
+        }
         
         // Use rotational symmetry for removal
         // (r, c) matched with (8-r, 8-c)
@@ -3299,51 +3405,117 @@ class SudokuGame {
         if (this.isPaused) this.resumeTimer();
         if (this.isGameWon) return;
         
-        // Try to find a cell with only one possible number (naked single)
+        const hint = this.getSmartHint();
+        if (!hint) return null;
+
+        // Note: For 'surgical' hint use, we just return the hint object 
+        // the bridge will handle the modal and call applySmartMove later.
+        return hint;
+    }
+
+    applySmartMove(row, col, number) {
+        if (this.grid[row][col] === 0) {
+            this.grid[row][col] = number;
+            this.notes[row][col].clear();
+            this.hintCount++;
+            this.updateHintCount();
+            this.removeInvalidNotes();
+            this.updateDisplay();
+            this.updateProgress();
+            this.playSound('hint');
+            this.animateHint(row, col);
+            this.saveGameState();
+            return true;
+        }
+        return false;
+    }
+
+    getSmartHint() {
+        // Priority 1: Full House (Missing only 1 number in a unit)
+        // This is the easiest logic for a user to follow.
+        const fullHouse = this.findFullHouse();
+        if (fullHouse) return fullHouse;
+
+        // Priority 2: Naked Single (Cell has only 1 possible candidate)
         for (let row = 0; row < 9; row++) {
             for (let col = 0; col < 9; col++) {
                 if (this.grid[row][col] === 0) {
-                    const possibleNumbers = this.getPossibleNumbers(row, col);
-                    if (possibleNumbers.length === 1) {
-                        this.grid[row][col] = possibleNumbers[0];
-                        this.notes[row][col].clear(); // Clear any existing notes
-                        this.hintCount++;
-                        this.updateHintCount();
-                        
-                        // Remove invalid notes from entire grid after hint reveal
-                        this.removeInvalidNotes();
-                        
-                        this.updateDisplay();
-                        this.updateProgress();
-                        this.highlightHintCell(row, col);
-                        this.playSound('hint');
-                        this.animateHint(row, col);
-                        return;
+                    const possibilities = this.getPossibleNumbers(row, col);
+                    if (possibilities.length === 1) {
+                        return {
+                            row, col,
+                            number: possibilities[0],
+                            type: 'naked',
+                            reason: `This cell can only contain ${possibilities[0]} because all other numbers already exist in its row, column, or 3x3 block.`
+                        };
                     }
                 }
             }
         }
-        
-        // Try to find a hidden single (number that can only go in one cell in a row/column/box)
+
+        // Priority 3: Hidden Single (Number can only go in one spot in a unit)
         const hiddenSingle = this.findHiddenSingle();
         if (hiddenSingle) {
-            this.grid[hiddenSingle.row][hiddenSingle.col] = hiddenSingle.number;
-            this.notes[hiddenSingle.row][hiddenSingle.col].clear(); // Clear any existing notes
-            this.hintCount++;
-            this.updateHintCount();
-            
-            // Remove invalid notes from entire grid after hint reveal
-            this.removeInvalidNotes();
-            
-            this.updateDisplay();
-            this.updateProgress();
-            this.highlightHintCell(hiddenSingle.row, hiddenSingle.col);
-            this.playSound('hint');
-            this.animateHint(hiddenSingle.row, hiddenSingle.col);
-            return;
+            let unitText = hiddenSingle.reason === '3x3 box' ? '3x3 block' : hiddenSingle.reason;
+            return {
+                row: hiddenSingle.row,
+                col: hiddenSingle.col,
+                number: hiddenSingle.number,
+                type: 'hidden',
+                unitType: hiddenSingle.reason,
+                unitIndex: hiddenSingle.unitIndex,
+                reason: `In this ${unitText}, the number ${hiddenSingle.number} can only fit in this specific cell.`
+            };
         }
-        
-        // If no easy hints found, do nothing (no popup)
+
+        return null;
+    }
+
+    findFullHouse() {
+        // Check Rows
+        for (let r = 0; r < 9; r++) {
+            const filled = [];
+            let emptyPos = -1;
+            for (let c = 0; c < 9; c++) {
+                if (this.grid[r][c] !== 0) filled.push(this.grid[r][c]);
+                else emptyPos = c;
+            }
+            if (filled.length === 8) {
+                const missing = [1,2,3,4,5,6,7,8,9].find(n => !filled.includes(n));
+                return { row: r, col: emptyPos, number: missing, type: 'fullhouse', unitType: 'row', unitIndex: r, reason: `This row is only missing one number: ${missing}.` };
+            }
+        }
+        // Check Columns
+        for (let c = 0; c < 9; c++) {
+            const filled = [];
+            let emptyPos = -1;
+            for (let r = 0; r < 9; r++) {
+                if (this.grid[r][c] !== 0) filled.push(this.grid[r][c]);
+                else emptyPos = r;
+            }
+            if (filled.length === 8) {
+                const missing = [1,2,3,4,5,6,7,8,9].find(n => !filled.includes(n));
+                return { row: emptyPos, col: c, number: missing, type: 'fullhouse', unitType: 'column', unitIndex: c, reason: `This column is only missing one number: ${missing}.` };
+            }
+        }
+        // Check Blocks
+        for (let b = 0; b < 9; b++) {
+            const rowStart = Math.floor(b / 3) * 3;
+            const colStart = (b % 3) * 3;
+            const filled = [];
+            let emptyPos = null;
+            for (let r = rowStart; r < rowStart + 3; r++) {
+                for (let c = colStart; c < colStart + 3; c++) {
+                    if (this.grid[r][c] !== 0) filled.push(this.grid[r][c]);
+                    else emptyPos = {r, c};
+                }
+            }
+            if (filled.length === 8) {
+                const missing = [1,2,3,4,5,6,7,8,9].find(n => !filled.includes(n));
+                return { row: emptyPos.r, col: emptyPos.c, number: missing, type: 'fullhouse', unitType: '3x3 box', unitIndex: b, reason: `This 3x3 block is only missing one number: ${missing}.` };
+            }
+        }
+        return null;
     }
     
     solvePuzzle() {
@@ -3443,7 +3615,7 @@ class SudokuGame {
                     }
                 }
                 if (possibleCells.length === 1) {
-                    return { row, col: possibleCells[0], number: num, reason: 'row' };
+                    return { row, col: possibleCells[0], number: num, reason: 'row', unitIndex: row };
                 }
             }
         }
@@ -3458,7 +3630,7 @@ class SudokuGame {
                     }
                 }
                 if (possibleCells.length === 1) {
-                    return { row: possibleCells[0], col, number: num, reason: 'column' };
+                    return { row: possibleCells[0], col, number: num, reason: 'column', unitIndex: col };
                 }
             }
         }
@@ -3480,7 +3652,8 @@ class SudokuGame {
                             row: possibleCells[0].row, 
                             col: possibleCells[0].col, 
                             number: num, 
-                            reason: '3x3 box' 
+                            reason: '3x3 box',
+                            unitIndex: boxRow * 3 + boxCol
                         };
                     }
                 }
@@ -3488,6 +3661,31 @@ class SudokuGame {
         }
         
         return null;
+    }
+
+    highlightHintRegion(type, index) {
+        this.clearAllHighlights(); // Reset previous visual state
+        
+        if (type === 'row') {
+            for (let c = 0; c < 9; c++) {
+                const cell = document.querySelector(`[data-index="${index * 9 + c}"]`);
+                if (cell) cell.classList.add('hint-region-highlight');
+            }
+        } else if (type === 'column') {
+            for (let r = 0; r < 9; r++) {
+                const cell = document.querySelector(`[data-index="${r * 9 + index}"]`);
+                if (cell) cell.classList.add('hint-region-highlight');
+            }
+        } else if (type === '3x3 box') {
+            const rowStart = Math.floor(index / 3) * 3;
+            const colStart = (index % 3) * 3;
+            for (let r = rowStart; r < rowStart + 3; r++) {
+                for (let c = colStart; c < colStart + 3; c++) {
+                    const cell = document.querySelector(`[data-index="${r * 9 + c}"]`);
+                    if (cell) cell.classList.add('hint-region-highlight');
+                }
+            }
+        }
     }
     
     highlightHintCell(row, col) {
@@ -3605,15 +3803,172 @@ class SudokuGame {
         this.updateDisplay();
     }
     
-    setDifficulty(difficulty) {
-        // Validate difficulty
-        if (!this.isValidDifficulty(difficulty)) {
-            console.error(`Invalid difficulty: ${difficulty}, defaulting to easy`);
-            difficulty = 'easy';
+    // AUTO Mode Logic
+    loadAutoModeState() {
+        const saved = localStorage.getItem('zudoku-auto-state');
+        const state = saved ? JSON.parse(saved) : {
+            active: false,
+            currentClues: 44,
+            winsInLevel: 0,
+            totalTries: 0,
+            triesInRank: 0
+        };
+
+        // Migration for existing users
+        if (state.triesInRank === undefined) state.triesInRank = state.totalTries || 0;
+        return state;
+    }
+    
+    saveAutoModeState() {
+        localStorage.setItem('zudoku-auto-state', JSON.stringify(this.autoMode));
+    }
+    
+    getAutoDifficultyLabel(clues) {
+        if (clues >= 37) return "EASY";
+        if (clues >= 30) return "MEDIUM";
+        if (clues >= 23) return "HARD";
+        return "EXPERT";
+    }
+    
+    updateAutoDashboard() {
+        // Unified Level Indicator in Header (Lxx)
+        const levelBtn = document.getElementById('level_indicator');
+        if (levelBtn) {
+            levelBtn.textContent = `L${this.getTargetGivenNumbers()}`;
+        }
+    }
+    
+    initScrubber(e) {
+        if (!this.autoMode) return;
+        
+        const overlay = document.getElementById('level-scroller-overlay');
+        const track = document.getElementById('scroller-track');
+        if (!overlay || !track) return;
+        
+        // Prevent default browser touch actions and capture the pointer
+        e.preventDefault();
+        try {
+            e.target.setPointerCapture(e.pointerId);
+        } catch (err) {
+            console.log("Pointer capture failed", err);
         }
         
-        this.difficulty = difficulty;
+        this.scrubbing = true;
+        overlay.classList.add('active');
+        
+        // Initial position
+        this.handleScrubberMove(e);
+        
+        // Global listeners
+        const onMove = (me) => this.handleScrubberMove(me);
+        const onUp = (ue) => {
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup', onUp);
+            try {
+                if (e.target.hasPointerCapture(e.pointerId)) {
+                    e.target.releasePointerCapture(e.pointerId);
+                }
+            } catch (err) {}
+            this.handleScrubberRelease();
+        };
+        
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+    }
+    
+    handleScrubberMove(e) {
+        if (!this.scrubbing) return;
+        
+        const overlay = document.getElementById('level-scroller-overlay');
+        const track = document.getElementById('scroller-track');
+        const thumb = document.getElementById('scroller-thumb');
+        const valEl = document.getElementById('scroller-value');
+        if (!overlay || !track || !thumb) return;
+        
+        const rect = track.getBoundingClientRect();
+        // Balanced padding for the 500px high professional track
+        const padding = 25; 
+        const availableHeight = rect.height - (padding * 2);
+        
+        let y = e.clientY - rect.top;
+        y = Math.max(padding, Math.min(rect.height - padding, y));
+        
+        const percent = (y - padding) / availableHeight;
+        const value = Math.round(50 - (percent * (50 - 5)));
+        
+        // Update Thumb visual (centered on track)
+        thumb.style.top = `${y}px`;
+        
+        // Performance-first DOM updates
+        if (value !== this.tempScrubValue) {
+            if (valEl) {
+                let zone = "EASY";
+                if (value <= 15) zone = "ULTRA";
+                else if (value <= 24) zone = "EXPERT";
+                else if (value <= 34) zone = "HARD";
+                else if (value <= 44) zone = "MEDIUM";
+                
+                valEl.textContent = `${zone} ${value}`;
+            }
+            this.tempScrubValue = value;
+            
+            // CSS Variable Pipeline for 60fps color shifts
+            let hue = 185; // Natural Easy (Cyan)
+            if (value <= 15) hue = 280;      // Ultra (Purple)
+            else if (value <= 24) hue = 0;   // Expert (Red)
+            else if (value <= 34) hue = 32;  // Hard (Orange)
+            else if (value <= 44) hue = 50;  // Medium (Yellow)
+            
+            overlay.style.setProperty('--scrub-color', `hsl(${hue}, 80%, 55%)`);
+            overlay.style.setProperty('--scrub-glow', `hsla(${hue}, 80%, 55%, 0.3)`);
+            
+            // Refined Label Activation
+            const labels = document.querySelectorAll('.scroller-label');
+            for (let i = 0; i < labels.length; i++) {
+                const labelVal = parseInt(labels[i].dataset.value);
+                // Wider hit-zone for the long 500px track
+                const threshold = (labelVal === 50 || labelVal === 5) ? 5 : 4;
+                if (Math.abs(value - labelVal) <= threshold) {
+                    labels[i].classList.add('active');
+                } else {
+                    labels[i].classList.remove('active');
+                }
+            }
+        }
+    }
+    
+    handleScrubberRelease() {
+        if (!this.scrubbing) return;
+        this.scrubbing = false;
+        
+        const overlay = document.getElementById('level-scroller-overlay');
+        if (overlay) overlay.classList.remove('active');
+        
+        const finalValue = this.tempScrubValue;
+        if (finalValue && finalValue !== this.autoMode.currentClues) {
+            // Apply new custom level in AUTO mode
+            this.setDifficulty('auto');
+            this.autoMode.currentClues = finalValue;
+            this.saveAutoModeState();
+            this.generateNewPuzzle();
+            this.updateAutoDashboard();
+        }
+    }
+    
+    setDifficulty(difficulty) {
+        // Handle virtual 'auto' difficulty
+        if (difficulty === 'auto') {
+            this.autoMode.active = true;
+            this.difficulty = 'auto'; // Internal virtual difficulty
+        } else {
+            this.autoMode.active = false;
+            this.difficulty = difficulty;
+        }
+        
         console.log(`✅ Difficulty set to: ${this.getDifficultyLabel()} (${this.getTargetGivenNumbers()} given numbers)`);
+        
+        this.saveAutoModeState();
+        this.updateAutoDashboard();
         
         // Clear highlights and selection
         this.clearSelection();
@@ -3750,7 +4105,8 @@ class SudokuGame {
             easy: parsed.easy || null,
             medium: parsed.medium || null,
             hard: parsed.hard || null,
-            expert: parsed.expert || null
+            expert: parsed.expert || null,
+            auto: parsed.auto || null
         };
     }
     
@@ -3809,7 +4165,8 @@ class SudokuGame {
             easy: null,
             medium: null,
             hard: null,
-            expert: null
+            expert: null,
+            auto: null
         };
         this.saveBestTimes();
         this.updateBestTimeDisplay();
@@ -3824,7 +4181,12 @@ class SudokuGame {
             expert: { fast: 1800, slow: 5400 }   // 30min fast, 90min slow
         };
         
-        const thresholds = speedThresholds[this.difficulty];
+        let effectiveDifficulty = this.difficulty.toLowerCase();
+        if (effectiveDifficulty === 'auto' && this.autoMode) {
+            effectiveDifficulty = this.getAutoDifficultyLabel(this.autoMode.currentClues).toLowerCase();
+        }
+        
+        const thresholds = speedThresholds[effectiveDifficulty] || speedThresholds.easy;
         let speedText = 'Average';
         let speedColor = 'var(--accent-color)';
         
@@ -4249,7 +4611,7 @@ class SudokuGame {
                 console.log('⚠️ Converting old "advanced" difficulty to "hard"');
                 loadedDifficulty = 'hard';
             }
-            this.difficulty = this.isValidDifficulty(loadedDifficulty) ? loadedDifficulty : 'easy';
+            this.difficulty = this.isValidDifficulty(loadedDifficulty) ? loadedDifficulty : 'auto';
             
             this.startTime = gameState.startTime;
             this.moveCount = gameState.moveCount;
@@ -4270,6 +4632,8 @@ class SudokuGame {
             // Start timer from saved time
             this.startTimer();
             this.startAutoSave();
+            
+            this.updateAutoDashboard();
             
             console.log('💾 Game state loaded successfully');
             return true;
@@ -5375,7 +5739,7 @@ function togglePause() {
 }
 
 function cycleDifficulty() {
-    const levels = ['easy', 'medium', 'hard', 'expert'];
+    const levels = ['easy', 'medium', 'hard', 'expert', 'auto'];
     let currentIndex = levels.indexOf(game.difficulty.toLowerCase());
     if (currentIndex === -1) currentIndex = 0;
     const nextIndex = (currentIndex + 1) % levels.length;
@@ -5386,13 +5750,14 @@ function cycleDifficulty() {
     
     // Update the button text immediately
     const btn = document.getElementById('difficulty_toggle_label');
-    if (btn) btn.textContent = nextDifficulty.toUpperCase();
+    if (btn) {
+        btn.textContent = nextDifficulty === 'auto' ? "AUTO LEVEL" : nextDifficulty.toUpperCase();
+    }
 }
 
 function setDifficulty(difficulty) {
     if (game) {
-        game.difficulty = difficulty;
-        game.newGame();
+        game.setDifficulty(difficulty);
     }
 }
 
@@ -5453,15 +5818,13 @@ SudokuGame.prototype.showTouchKeypad = function(clientX, clientY, cellIndex) {
     // Clear previous selection
     keypad.querySelectorAll('.keypad-btn').forEach(btn => btn.classList.remove('active', 'tick'));
     
-    // Smart Pre-selection: If a number is currently highlighted in the bottom bar,
-    // pre-select it in the keypad so the user can just release to record it.
-    if (this.isPaintMode && this.paintNumber) {
+    // Surgical Pre-selection: Highlight the number currently active in the bottom bar.
+    if (this.paintNumber) {
         const val = this.paintNumber.toString();
         const preselectBtn = keypad.querySelector(`.keypad-btn[data-value="${val}"]`);
         if (preselectBtn) {
             preselectBtn.classList.add('active');
             this.selectedKeypadValue = val;
-            // Apply the visual 'tick' animation to show it's selected
             preselectBtn.classList.add('tick');
         }
     }
@@ -5506,7 +5869,10 @@ SudokuGame.prototype.confirmTouchKeypad = function() {
         const col = index % 9;
         
         if (value === 'delete') {
-            this.setNumber(row, col, 0);
+            // Surgical Erase: Remove the note for the currently highlighted bottom-bar number
+            if (this.paintNumber && this.notes[row][col].has(this.paintNumber)) {
+                this.toggleNote(row, col, this.paintNumber);
+            }
         } else {
             const num = parseInt(value);
             this.toggleNote(row, col, num);
