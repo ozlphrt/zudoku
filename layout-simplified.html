@@ -164,7 +164,7 @@
            CUSTOM SOFTWARE CURSOR (Desktop Only)
            ======================================== */
         @media (hover: hover) and (pointer: fine) {
-            * { cursor: none !important; }
+            html, body, *, *::before, *::after { cursor: none !important; }
             
             #custom-cursor {
                 display: block;
@@ -176,7 +176,7 @@
                 border: 2px solid var(--highlight);
                 border-radius: 50%;
                 pointer-events: none;
-                z-index: 20000;
+                z-index: 100000; /* Absolute top */
                 transform: translate(-50%, -50%);
                 transition: width 0.2s, height 0.2s, background 0.2s, border-width 0.2s;
                 mix-blend-mode: normal;
@@ -1375,7 +1375,7 @@
         </button>
     </div>
 
-    <div class="version-tag">V1.2.8</div>
+    <div class="version-tag">V1.2.9</div>
  </div>
 
 </div>
@@ -2109,7 +2109,7 @@
             if (!container) return;
 
             const toast = document.createElement('div');
-            const CACHE_NAME = 'zudoku-cache-v1.2.7';
+            const CACHE_NAME = 'zudoku-cache-v1.2.9';
             toast.className = 'update-toast';
             toast.innerHTML = `
                 <div class="update-toast-text">New version available!</div>
