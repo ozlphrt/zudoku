@@ -1197,17 +1197,18 @@
 
         .scroller-track {
             position: relative;
-            width: 2px;
+            width: 8px; /* Slightly wider for the 'slot' effect */
             height: 500px;
-            background: rgba(var(--highlight-rgb), 0.1);
-            border: none;
-            backdrop-filter: none;
+            background: rgba(255, 255, 255, 0.03); /* Subtle glass groove */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             overflow: visible;
             touch-action: none;
-            border-radius: 1px;
+            border-radius: 4px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
         }
 
         .scroller-label {
