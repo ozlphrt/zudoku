@@ -76,7 +76,28 @@
             overflow: hidden;
             justify-content: center;
             align-items: center;
-            padding: 0 10px; /* Prevent edge touching */
+            padding: 0 10px;
+            margin: 0 auto; /* Center on desktop */
+        }
+
+        /* DESKTOP PILLAR - Constrain width to mobile-like vertical stack on large screens */
+        @media (min-width: 600px) {
+            .shell {
+                max-width: 540px;
+                border-left: 1px solid rgba(255, 255, 255, 0.05);
+                border-right: 1px solid rgba(255, 255, 255, 0.05);
+                background: rgba(0, 0, 0, 0.2);
+                box-shadow: 0 0 100px rgba(0,0,0,0.5);
+            }
+            
+            .input-number-bar, .restart-level-container, .header-bar {
+                max-width: 100% !important;
+            }
+
+            .sudoku-grid {
+                width: 500px !important;
+                height: 500px !important;
+            }
         }
 
         /* ========================================
@@ -1306,7 +1327,7 @@
         </button>
     </div>
 
-    <div class="version-tag">V1.2.6</div>
+    <div class="version-tag">V1.2.7</div>
  </div>
 
 </div>
@@ -2009,7 +2030,7 @@
             if (!container) return;
 
             const toast = document.createElement('div');
-            const CACHE_NAME = 'zudoku-cache-v1.2.0';
+            const CACHE_NAME = 'zudoku-cache-v1.2.7';
             toast.className = 'update-toast';
             toast.innerHTML = `
                 <div class="update-toast-text">New version available!</div>

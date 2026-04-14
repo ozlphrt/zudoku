@@ -647,38 +647,38 @@ class SudokuGame {
             });
             
             // Touch support - let browser handle pointer events naturally
-            // Touch support
-            let touchStartX = 0;
-            let touchStartY = 0;
-            let touchStartTime = 0;
+            // --- Universal Interaction (Pointer Events) ---
+            let ptrStartX = 0;
+            let ptrStartY = 0;
+            let ptrStartTime = 0;
             let longPressTriggered = false;
             
-            cell.addEventListener('touchstart', (e) => {
+            cell.addEventListener('pointerdown', (e) => {
                 if (this.isGameWon) return;
                 
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-                touchStartTime = Date.now();
+                ptrStartX = e.clientX;
+                ptrStartY = e.clientY;
+                ptrStartTime = Date.now();
                 longPressTriggered = false;
                 
+                // Set capture to track movements even if they leave the cell
+                cell.setPointerCapture(e.pointerId);
+                
                 // Clear any existing timer
-                if (this.touchKeypadTimer) {
-                    clearTimeout(this.touchKeypadTimer);
-                }
+                if (this.touchKeypadTimer) clearTimeout(this.touchKeypadTimer);
                 
                 // Start long press timer for the keypad
                 this.touchKeypadTimer = setTimeout(() => {
-                    this.showTouchKeypad(touchStartX, touchStartY, i);
+                    this.showTouchKeypad(ptrStartX, ptrStartY, i);
                     longPressTriggered = true;
                     this.vibrate(15);
                 }, 350);
-            }, { passive: true });
+            });
             
-            cell.addEventListener('touchend', (e) => {
-                const touchEndTime = Date.now();
-                const touchDuration = touchEndTime - touchStartTime;
+            cell.addEventListener('pointerup', (e) => {
+                const ptrEndTime = Date.now();
+                const ptrDuration = ptrEndTime - ptrStartTime;
                 
-                // Clear timer
                 if (this.touchKeypadTimer) {
                     clearTimeout(this.touchKeypadTimer);
                     this.touchKeypadTimer = null;
@@ -687,52 +687,40 @@ class SudokuGame {
                 // If keypad is active, confirm the selection
                 if (this.touchKeypadActive) {
                     this.confirmTouchKeypad();
-                    e.preventDefault();
                     return;
                 }
                 
-                // Existing flick logic below...
-                
-                // If long press was triggered, don't process other touch events
-                if (longPressTriggered) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                }
+                // If long press was already handled, just return
+                if (longPressTriggered) return;
                 
                 // Check for flick gestures (quick swipe up/down)
-                if (touchDuration < 300 && e.changedTouches.length > 0) {
-                    const touchEndX = e.changedTouches[0].clientX;
-                    const touchEndY = e.changedTouches[0].clientY;
-                    const deltaX = touchEndX - touchStartX;
-                    const deltaY = touchEndY - touchStartY;
-                    
+                const ptrEndX = e.clientX;
+                const ptrEndY = e.clientY;
+                const deltaX = ptrEndX - ptrStartX;
+                const deltaY = ptrEndY - ptrStartY;
+                
+                if (ptrDuration < 300) {
                     // Flick up: deltaY < -20 and |deltaX| < 60 (note mode)
                     if (deltaY < -20 && Math.abs(deltaX) < 60) {
-                        e.preventDefault();
-                        e.stopPropagation();
                         this.handleFlickUp(i);
                         return;
                     }
                     
                     // Flick down: deltaY > 20 and |deltaX| < 60 (undo)
                     if (deltaY > 20 && Math.abs(deltaX) < 60) {
-                        e.preventDefault();
-                        e.stopPropagation();
                         this.handleFlickDown();
                         return;
                     }
                 }
-                
-            }, { passive: false });
+            });
             
-            cell.addEventListener('touchmove', (e) => {
-                const x = e.touches[0].clientX;
-                const y = e.touches[0].clientY;
+            cell.addEventListener('pointermove', (e) => {
+                const x = e.clientX;
+                const y = e.clientY;
                 
                 // If they move significantly before long-press, cancel it
                 if (!this.touchKeypadActive && this.touchKeypadTimer) {
-                    const dist = Math.sqrt(Math.pow(x - touchStartX, 2) + Math.pow(y - touchStartY, 2));
+                    const dist = Math.sqrt(Math.pow(x - ptrStartX, 2) + Math.pow(y - ptrStartY, 2));
                     if (dist > 15) {
                         clearTimeout(this.touchKeypadTimer);
                         this.touchKeypadTimer = null;
@@ -742,9 +730,15 @@ class SudokuGame {
                 // If keypad is active, update selection
                 if (this.touchKeypadActive) {
                     this.updateTouchKeypad(x, y);
-                    e.preventDefault();
                 }
-            }, { passive: false });
+            });
+            
+            cell.addEventListener('pointercancel', (e) => {
+                if (this.touchKeypadTimer) {
+                    clearTimeout(this.touchKeypadTimer);
+                    this.touchKeypadTimer = null;
+                }
+            });
             
             
             gridElement.appendChild(cell);
