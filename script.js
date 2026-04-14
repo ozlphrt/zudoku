@@ -3917,18 +3917,35 @@ class SudokuGame {
             overlay.style.setProperty('--scrub-color', `hsl(${hue}, 80%, 55%)`);
             overlay.style.setProperty('--scrub-glow', `hsla(${hue}, 80%, 55%, 0.3)`);
             
-            // Refined Label Activation
+            // --- Cybernetic Magnifier Engine ---
             const labels = document.querySelectorAll('.scroller-label');
-            for (let i = 0; i < labels.length; i++) {
-                const labelVal = parseInt(labels[i].dataset.value);
-                // Wider hit-zone for the long 500px track
-                const threshold = (labelVal === 50 || labelVal === 5) ? 5 : 4;
-                if (Math.abs(value - labelVal) <= threshold) {
-                    labels[i].classList.add('active');
+            labels.forEach(lbl => {
+                // Get position of label relative to the track
+                const lblY = parseFloat(lbl.style.top) / 100 * rect.height;
+                const dist = Math.abs(y - lblY);
+                
+                // Gaussian falloff for smooth magnification (sigma = spread)
+                const sigma = 50; 
+                const intensity = Math.exp(-(dist * dist) / (2 * (sigma * sigma)));
+                
+                // Curve mapping
+                const scale = 0.7 + (0.6 * intensity);   // 0.7x to 1.3x
+                const opacity = 0.05 + (0.95 * intensity); // 0.05 to 1.0
+                
+                lbl.style.transform = `translateY(-50%) scale(${scale})`;
+                lbl.style.opacity = opacity;
+                
+                // Colorize based on intensity
+                if (intensity > 0.3) {
+                    lbl.style.color = 'var(--scrub-color)';
+                    lbl.style.fontWeight = '900';
+                    lbl.style.textShadow = `0 0 ${15 * intensity}px var(--scrub-glow)`;
                 } else {
-                    labels[i].classList.remove('active');
+                    lbl.style.color = ''; 
+                    lbl.style.fontWeight = '';
+                    lbl.style.textShadow = '';
                 }
-            }
+            });
         }
     }
     
