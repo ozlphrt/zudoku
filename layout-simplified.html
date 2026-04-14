@@ -161,6 +161,53 @@
         }
 
         /* ========================================
+           CUSTOM SOFTWARE CURSOR (Desktop Only)
+           ======================================== */
+        @media (hover: hover) and (pointer: fine) {
+            * { cursor: none !important; }
+            
+            #custom-cursor {
+                display: block;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 32px;
+                height: 32px;
+                border: 2px solid var(--highlight);
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 20000;
+                transform: translate(-50%, -50%);
+                transition: width 0.2s, height 0.2s, background 0.2s, border-width 0.2s;
+                mix-blend-mode: normal;
+                box-shadow: 0 0 15px var(--glow);
+                will-change: transform;
+            }
+
+            #custom-cursor::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 6px;
+                height: 6px;
+                background: var(--highlight);
+                border-radius: 50%;
+                transform: translate(-50%, -50%);
+                box-shadow: 0 0 8px var(--glow);
+            }
+
+            body:active #custom-cursor {
+                width: 24px;
+                height: 24px;
+                background: rgba(var(--highlight-rgb), 0.1);
+                border-width: 3px;
+            }
+        }
+
+        #custom-cursor { display: none; } /* Default hidden (Mobile/Touch) */
+
+        /* ========================================
            SUDOKU GRID AREA
         ======================================== */
         .restart-level-container {
@@ -1241,6 +1288,7 @@
 </head>
 
 <body>
+<div id="custom-cursor"></div>
 <div class="shell container">
 
 
@@ -1327,7 +1375,7 @@
         </button>
     </div>
 
-    <div class="version-tag">V1.2.7</div>
+    <div class="version-tag">V1.2.8</div>
  </div>
 
 </div>
@@ -1998,6 +2046,37 @@
     }
 
     window.addEventListener('load', initializeApp);
+
+    // --- Premium Custom Cursor Tracking ---
+    (function initCustomCursor() {
+        const cursor = document.getElementById('custom-cursor');
+        if (!cursor) return;
+
+        let lastX = 0;
+        let lastY = 0;
+        let isTouch = false;
+
+        window.addEventListener('pointermove', (e) => {
+            isTouch = e.pointerType === 'touch';
+            if (isTouch) {
+                cursor.style.display = 'none';
+                return;
+            }
+            
+            cursor.style.display = 'block';
+            lastX = e.clientX;
+            lastY = e.clientY;
+            cursor.style.transform = `translate3d(${lastX}px, ${lastY}px, 0)`;
+        }, { passive: true });
+
+        // Hide when mouse leaves window
+        document.addEventListener('mouseleave', () => {
+            cursor.style.opacity = '0';
+        });
+        document.addEventListener('mouseenter', () => {
+            if (!isTouch) cursor.style.opacity = '1';
+        });
+    })();
     window.addEventListener('beforeunload', () => {
         if (window.game) {
             if (window.game.autoSaveInterval) clearInterval(window.game.autoSaveInterval);
