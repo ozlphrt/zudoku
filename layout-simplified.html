@@ -33,12 +33,12 @@
 
         [data-theme="light"] {
             --bg:            #e0e0e0;
-            --text:          #555555;
-            --inactive:      #999999;
+            --text:          #1a1a1a;
+            --inactive:      #888888;
             --grid-line:     #CCCCCC;
-            --highlight:     #DA5100;
+            --highlight:     #DA5100; /* Standardized to Vibrant Orange for visibility */
             --highlight-rgb: 218, 81, 0;
-            --glow:          rgba(var(--highlight-rgb), 0.4);
+            --glow:          rgba(var(--highlight-rgb), 0.3);
             --crosshair:     #d8d8d8;
         }
 
@@ -137,8 +137,8 @@
         }
         .num-btn:hover { color: var(--highlight); background: rgba(var(--highlight-rgb), 0.08); border-color: rgba(var(--highlight-rgb), 0.2); }
         .num-btn.selected {
-            color: var(--highlight);
-            background: rgba(var(--highlight-rgb), 0.15);
+            background: var(--highlight) !important;
+            color: var(--bg) !important;
             font-weight: 800;
             border-color: var(--highlight);
             box-shadow: 0 0 15px var(--glow);
@@ -337,18 +337,21 @@
             background: var(--crosshair) !important; 
         }
 
-        /* Rounded Outer Glow for high-vis highlights */
-        .cell.same-number-highlight { 
-            color: var(--highlight) !important;
-            text-shadow: 0 0 8px var(--glow);
-            box-shadow: inset 0 0 0 1.5px var(--highlight), 0 0 12px var(--glow) !important;
-            border-radius: 6px;
-            background: rgba(var(--highlight-rgb), 0.1);
-            z-index: 5;
+        /* Unified "Carved Out" Highlight Style - High Specificity */
+        .cell.same-number-highlight,
+        [data-theme] .cell.same-number-highlight { 
+            background: var(--highlight) !important;
+            color: var(--bg) !important;
+            font-weight: 900 !important;
+            box-shadow: 0 0 15px var(--glow) !important;
+            border-radius: 4px;
+            z-index: 10 !important;
+            text-shadow: none !important;
+            opacity: 1 !important; /* Force visibility over completion states */
         }
         
         .cell.number-selected { 
-            background: rgba(var(--highlight-rgb), 0.08) !important; 
+            background: rgba(var(--highlight-rgb), 0.12) !important; 
         }
         .cell.note-selected { background: rgba(var(--highlight-rgb), 0.04) !important; }
 
@@ -411,7 +414,6 @@
         }
         
         [data-theme="light"] .cell.notes .note-number {
-             background: rgba(0, 122, 255, 0.18); /* More opaque for visibility */
              color: #0056b3; /* Deeper blue for high-contrast on light background */
         }
 
@@ -419,9 +421,10 @@
 
         .note-number-highlight {
             background: var(--highlight) !important;
-            color: #111111 !important; /* Dark text on cyan for better contrast in dark theme */
+            color: var(--bg) !important; /* Theme-aware carved out note */
             box-shadow: 0 0 8px var(--glow);
             border-radius: 2px;
+            font-weight: 900;
         }
 
         /* Number complete */
@@ -484,19 +487,12 @@
             to { mask-image: radial-gradient(circle, white 100%, transparent 100%); opacity: 1; background: #FF7043; box-shadow: 0 0 30px #DA5100; }
         }
 
-        /* ========================================
-           LIGHT THEME OVERRIDES
-        ======================================== */
         [data-theme="light"] {
-            --bg:       #e0e0e0;
-            --text:     #1a1a1a;
-            --inactive: #888888;
-            --grid-line:#CCCCCC;
-            --highlight:#007AFF;
+            /* Handled in consolidated tokens at top */
         }
         [data-theme="light"] .cell.given { 
-            color: #111; 
-            background: #d2d2d2 !important; /* Solid light gray instead of semi-transparent */
+            color: #1a1a1a; 
+            background: #d6d6d6 !important; 
         }
         [data-theme="light"] body {
             background-image: 
@@ -505,6 +501,21 @@
             background-size: 10px 10px;
         }      [data-theme="light"] .cell:hover { background: rgba(0,0,0,0.05); }
         [data-theme="light"] .cell { background: var(--bg); }
+
+        /* ══ CARVED-OUT HIGHLIGHT: Must be LAST to win over all cell rules ══ */
+        .cell.same-number-highlight,
+        [data-theme] .cell.same-number-highlight,
+        [data-theme="light"] .cell.given.same-number-highlight,
+        [data-theme="light"] .cell.same-number-highlight {
+            background: var(--highlight) !important;
+            color: var(--bg) !important;
+            font-weight: 900 !important;
+            box-shadow: 0 0 15px var(--glow) !important;
+            border-radius: 4px !important;
+            z-index: 10 !important;
+            text-shadow: none !important;
+            opacity: 1 !important;
+        }
 
         /* ========================================
            ERROR MESSAGE
