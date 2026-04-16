@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Zudoku — Glassmorphism</title>
+    <title>Zudoku â€” Glassmorphism</title>
     
     <!-- PWA Integration -->
     <link rel="manifest" href="manifest.json">
@@ -66,7 +66,7 @@
         }
 
         /* ========================================
-           OUTER SHELL — full-height column
+           OUTER SHELL â€” full-height column
         ======================================== */
         .shell {
             display: flex;
@@ -502,7 +502,7 @@
         }      [data-theme="light"] .cell:hover { background: rgba(0,0,0,0.05); }
         [data-theme="light"] .cell { background: var(--bg); }
 
-        /* ══ CARVED-OUT HIGHLIGHT: Must be LAST to win over all cell rules ══ */
+        /* â•â• CARVED-OUT HIGHLIGHT: Must be LAST to win over all cell rules â•â• */
         .cell.same-number-highlight,
         [data-theme] .cell.same-number-highlight,
         [data-theme="light"] .cell.given.same-number-highlight,
@@ -887,7 +887,7 @@
         }
 
         /* ========================================
-           MOBILE — stack tighter
+           MOBILE â€” stack tighter
         ======================================== */
         @media (max-width: 480px) {
             .header-bar { height: 52px; padding: 12px 16px 0; }
@@ -1381,7 +1381,7 @@
         </button>
     </div>
 
-    <div class="version-tag">V1.2.17</div>
+    <div class="version-tag">V1.2.18</div>
  </div>
 
 </div>
@@ -1508,7 +1508,7 @@
     <script src="script.js?v=162"></script>
 <script>
     /* =============================================
-       BRIDGE — connects new UI to existing SudokuGame
+       BRIDGE â€” connects new UI to existing SudokuGame
     ============================================= */
 
     let isInitialized = false;
@@ -1559,7 +1559,7 @@
     }
 
     function resetAllData() {
-        if (confirm("⚠️ WARNING: This will permanently delete ALL your records, personal bests, and preferences.\n\nAre you sure?")) {
+        if (confirm("âš ï¸ WARNING: This will permanently delete ALL your records, personal bests, and preferences.\n\nAre you sure?")) {
             localStorage.clear();
             location.reload();
         }
@@ -1669,7 +1669,7 @@
         }
     }
 
-    /* ---- MutationObserver: sync hidden #timer (from script.js) → #timer_display ---- */
+    /* ---- MutationObserver: sync hidden #timer (from script.js) â†’ #timer_display ---- */
     function setupTimerObserver() {
         const timerEl = document.getElementById('timer');
         if (!timerEl) return;
@@ -1765,7 +1765,7 @@
                     }
                     html += `</div>`;
 
-                    // Rank Slice (±5)
+                    // Rank Slice (Â±5)
                     html += `<div class="rank-slice-list">`;
                     let start = Math.max(0, currentRank - 5);
                     let end = Math.min(latestBoard.length, currentRank + 6);
@@ -1988,7 +1988,7 @@
         const autoState = JSON.parse(localStorage.getItem('zudoku-auto-state') || '{}');
         // Silent Progression: Clear flags without showing modal
         if (autoState.levelUpPending || autoState.pendedMessage) {
-            console.log(`🚀 Seamless Progression: Level ${autoState.currentClues} reached.`);
+            console.log(`ðŸš€ Seamless Progression: Level ${autoState.currentClues} reached.`);
             autoState.levelUpPending = false;
             autoState.pendedMessage = null;
             autoState.pendedTitle = null;
@@ -2047,7 +2047,7 @@
                 }
             };
         } catch(e) {
-            console.error('❌ Game initialization error:', e);
+            console.error('âŒ Game initialization error:', e);
         }
     }
 
@@ -2115,7 +2115,7 @@
             if (!container) return;
 
             const toast = document.createElement('div');
-            const CACHE_NAME = 'zudoku-cache-v1.2.17';
+            const CACHE_NAME = 'zudoku-cache-v1.2.18';
             toast.className = 'update-toast';
             toast.innerHTML = `
                 <div class="update-toast-text">New version available!</div>
@@ -2139,14 +2139,14 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
                     .then(reg => {
-                        console.log('✅ Service Worker registered');
+                        console.log('âœ… Service Worker registered');
                         
                         // 1. Check for updates IMMEDIATELY on launch
                         reg.update();
 
                         // 2. Periodic periodic check every 1 hour (3600000ms)
                         setInterval(() => {
-                            console.log('🔍 Checking for PWA updates...');
+                            console.log('ðŸ” Checking for PWA updates...');
                             reg.update();
                         }, 3600000);
 
@@ -2157,13 +2157,35 @@
                                 // Once the new worker is installed, it becomes the 'waiting' worker
                                 // In our sw.js, we call skipWaiting() so it activates quickly
                                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log('🚀 New version detected and ready.');
+                                    console.log('ðŸš€ New version detected and ready.');
                                     showUpdateToast(reg);
                                 }
                             });
                         });
+                        // 4. Check for updates whenever the user switches back to the app (mobile focus)
+                        document.addEventListener('visibilitychange', () => {
+                            if (document.visibilityState === 'visible') {
+                                console.log('ðŸ“± App resumed - checking for updates...');
+                                reg.update();
+                            }
+                        });
                     })
-                    .catch(err => console.error('❌ Service Worker registration failed:', err));
+                    .catch(err => console.error('âŒ Service Worker registration failed:', err));
+            });
+
+            // Handle automatic reload when the new Service Worker takes control
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (refreshing) return;
+                refreshing = true;
+                console.log('🔄 New Service Worker active. Reloading for seamless update...');
+                
+                // Ensure game state is saved before reload
+                if (window.game && typeof window.game.saveGameState === 'function') {
+                    window.game.saveGameState();
+                }
+                
+                window.location.reload();
             });
         }
     </script>
