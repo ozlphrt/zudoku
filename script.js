@@ -2356,7 +2356,7 @@ class SudokuGame {
             }
             
             this.currentPuzzleGrade = grade;
-            console.log(`✅ Sarp Approved! Elegance: ${grade.eleganceScore}, Max Tech: ${grade.maxStepDifficulty} (${grade.difficultyLabel})`);
+            console.log(`✅ Sarp Approved! Elegance: ${grade.eleganceScore}, Curve: ${grade.solveCurveShape}, Max Tech: ${grade.maxStepDifficulty} (${grade.difficultyLabel})`);
         } else {
             // Reset count for normal mode too
             this.sarpAttemptCount = 0;
@@ -2366,7 +2366,7 @@ class SudokuGame {
             // Normal mode still runs solver for hints/grading but with relaxed thresholds
             const grade = this.sarpSolver.solve(this.grid);
             this.currentPuzzleGrade = grade;
-            console.log(`📊 Puzzle Graded: Elegance: ${grade.eleganceScore}, Solved Logically: ${grade.solved}`);
+            console.log(`📊 Puzzle Graded: Elegance: ${grade.eleganceScore}, Curve: ${grade.solveCurveShape}, Solved Logically: ${grade.solved}`);
         }
 
         console.log(`✅ Success: Generated ${count} clues.`);
@@ -2412,39 +2412,158 @@ class SudokuGame {
         // (r, c) matched with (8-r, 8-c)
         let cluesToRemove = 81 - targetClues;
         
-        // Create list of all pairs
+        // Create list of all symmetric pairs
         const pairs = [];
-        for (let r = 0; r < 5; r++) { // Only go to middle row
+        for (let r = 0; r < 5; r++) {
             for (let c = 0; c < 9; c++) {
-                if (r === 4 && c > 4) continue; // Don't duplicate self-pairing middle cell
+                if (r === 4 && c > 4) continue;
                 
                 const r2 = 8 - r;
                 const c2 = 8 - c;
                 
                 if (r === r2 && c === c2) {
-                    pairs.push([{r, c}]); // Middle cell is alone
+                    pairs.push([{r, c}]);
                 } else {
                     pairs.push([{r, c}, {r: r2, c: c2}]);
                 }
             }
         }
         
-        // Shuffle pairs
+        // Shuffle pairs for variety
         for (let i = pairs.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
         }
         
         let removedCount = 0;
+        const startTime = Date.now();
+        const timeoutMs = 3000; // 3-second hard cap
+        
         for (const pair of pairs) {
-            if (removedCount + pair.length <= cluesToRemove) {
-                for (const pos of pair) {
-                    this.grid[pos.r][pos.c] = 0;
-                }
-                removedCount += pair.length;
+            if (removedCount >= cluesToRemove) break;
+            if (removedCount + pair.length > cluesToRemove) continue;
+            
+            // Safety timeout
+            if (Date.now() - startTime > timeoutMs) {
+                console.log(`⏱️ Removal timeout after ${removedCount} removals. Accepting current state.`);
+                break;
             }
-        if (removedCount >= cluesToRemove) break;
+            
+            // Check distribution constraints for ALL cells in this pair
+            let constraintsPassed = true;
+            for (const pos of pair) {
+                if (!this.isRemovalAllowed(this.grid, pos.r, pos.c, targetClues)) {
+                    constraintsPassed = false;
+                    break;
+                }
+            }
+            if (!constraintsPassed) continue;
+            
+            // Tentatively remove
+            const savedValues = pair.map(pos => ({ ...pos, val: this.grid[pos.r][pos.c] }));
+            for (const pos of pair) {
+                this.grid[pos.r][pos.c] = 0;
+            }
+            
+            // Verify unique solution (skip for high clue counts where it's almost always unique)
+            const currentClues = 81 - removedCount - pair.length;
+            let isUnique = true;
+            if (currentClues <= 35) {
+                // Only run the expensive uniqueness check when clue count is low enough to matter
+                const solutions = this.countSolutions(this.grid, 2);
+                isUnique = (solutions === 1);
+            }
+            
+            if (!isUnique) {
+                // Undo removal — multiple solutions detected
+                for (const sv of savedValues) {
+                    this.grid[sv.r][sv.c] = sv.val;
+                }
+                continue;
+            }
+            
+            removedCount += pair.length;
         }
+        
+        console.log(`🎯 Removed ${removedCount} clues (target: ${cluesToRemove}). Final clues: ${81 - removedCount}`);
+    }
+
+    /**
+     * Distribution constraint checker for human-feel clue placement.
+     * Ensures no "desert rows," balanced box density, and digit coverage.
+     */
+    isRemovalAllowed(grid, r, c, targetClues) {
+        if (grid[r][c] === 0) return false; // Already empty
+        
+        const val = grid[r][c];
+        
+        // 1. Row must keep at least 1 clue
+        let rowCount = 0;
+        for (let j = 0; j < 9; j++) {
+            if (j !== c && grid[r][j] !== 0) rowCount++;
+        }
+        if (rowCount < 1) return false;
+        
+        // 2. Column must keep at least 1 clue
+        let colCount = 0;
+        for (let i = 0; i < 9; i++) {
+            if (i !== r && grid[i][c] !== 0) colCount++;
+        }
+        if (colCount < 1) return false;
+        
+        // 3. Each digit (1-9) must appear at least once in starting clues
+        //    (Relaxed for Expert-tier: skip if target clues < 20)
+        if (targetClues >= 20) {
+            let digitCount = 0;
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    if (i === r && j === c) continue;
+                    if (grid[i][j] === val) { digitCount++; break; }
+                }
+                if (digitCount > 0) break;
+            }
+            if (digitCount === 0) return false; // This is the last instance of this digit
+        }
+        
+        // 4. Box must keep at least 1 clue
+        const br = Math.floor(r / 3) * 3;
+        const bc = Math.floor(c / 3) * 3;
+        let boxCount = 0;
+        for (let i = br; i < br + 3; i++) {
+            for (let j = bc; j < bc + 3; j++) {
+                if (i === r && j === c) continue;
+                if (grid[i][j] !== 0) boxCount++;
+            }
+        }
+        if (boxCount < 1) return false;
+        
+        return true;
+    }
+
+    /**
+     * Bounded backtracking solution counter.
+     * Returns the number of solutions found, up to 'limit'.
+     * Used ONLY during generation to verify puzzle uniqueness.
+     */
+    countSolutions(grid, limit = 2) {
+        // Find first empty cell (row-major scan)
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid[r][c] === 0) {
+                    let count = 0;
+                    for (let num = 1; num <= 9; num++) {
+                        if (this.isValidMoveForGrid(grid, r, c, num)) {
+                            grid[r][c] = num;
+                            count += this.countSolutions(grid, limit - count);
+                            grid[r][c] = 0;
+                            if (count >= limit) return count;
+                        }
+                    }
+                    return count;
+                }
+            }
+        }
+        return 1; // Grid is full — one solution found
     }
     
     /**

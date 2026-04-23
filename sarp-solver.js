@@ -67,8 +67,10 @@ class SarpSolver {
         if (solved) {
             result.eleganceScore = this.computeElegance(solveSteps, options);
             result.difficultyLabel = this.getDifficultyLabel(result.maxStepDifficulty);
+            result.solveCurveShape = this.classifySolveCurve(solveSteps);
         } else {
             result.eleganceScore = 0;
+            result.solveCurveShape = 'unsolvable';
         }
         
         return result;
@@ -406,9 +408,59 @@ class SarpSolver {
     }
 
     findHiddenPair(grid, candidates) {
-        // Similar to naked subset but looking for number occurrences
-        // Hidden Pair weight: 2.0
-        return null; // Implementation pending if needed for complexity
+        const units = [];
+        for (let i = 0; i < 9; i++) {
+            units.push({ cells: this.getRowCells(i), name: `row ${i+1}` });
+            units.push({ cells: this.getColCells(i), name: `col ${i+1}` });
+            units.push({ cells: this.getBoxCells(i), name: `box ${i+1}` });
+        }
+
+        for (const unit of units) {
+            const unsolved = unit.cells.filter(cell => grid[cell.r][cell.c] === 0 && candidates[cell.r][cell.c].size > 0);
+            if (unsolved.length < 3) continue;
+
+            // Find which numbers appear in only 2 cells in this unit
+            const numPositions = new Map();
+            for (let num = 1; num <= 9; num++) {
+                const positions = unsolved.filter(cell => candidates[cell.r][cell.c].has(num));
+                if (positions.length === 2) {
+                    numPositions.set(num, positions);
+                }
+            }
+
+            // Check all pairs of such numbers
+            const nums = [...numPositions.keys()];
+            for (let i = 0; i < nums.length; i++) {
+                for (let j = i + 1; j < nums.length; j++) {
+                    const pos1 = numPositions.get(nums[i]);
+                    const pos2 = numPositions.get(nums[j]);
+                    // Same two cells?
+                    if (pos1[0].r === pos2[0].r && pos1[0].c === pos2[0].c &&
+                        pos1[1].r === pos2[1].r && pos1[1].c === pos2[1].c) {
+                        // Hidden Pair found! Remove other candidates from these two cells
+                        const pairNums = new Set([nums[i], nums[j]]);
+                        const candidatesRemoved = [];
+                        for (const cell of [pos1[0], pos1[1]]) {
+                            for (const cand of candidates[cell.r][cell.c]) {
+                                if (!pairNums.has(cand)) {
+                                    candidatesRemoved.push({ row: cell.r, col: cell.c, number: cand });
+                                }
+                            }
+                        }
+                        if (candidatesRemoved.length > 0) {
+                            return {
+                                technique: 'Hidden Pair',
+                                type: 'elimination',
+                                difficultyWeight: this.weights['Hidden Pair'],
+                                candidatesRemoved: candidatesRemoved,
+                                reason: `Hidden Pair {${nums[i]},${nums[j]}} in ${unit.name} at cells (${pos1[0].r+1},${pos1[0].c+1}) and (${pos1[1].r+1},${pos1[1].c+1}).`
+                            };
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     findNakedTriple(grid, candidates) {
@@ -416,11 +468,74 @@ class SarpSolver {
             const result = this.findNakedSubsetInUnit(candidates, this.getRowCells(r), 3);
             if (result) return { ...result, technique: 'Naked Triple', difficultyWeight: this.weights['Naked Triple'] };
         }
-        // ... same for cols/boxes
+        for (let c = 0; c < 9; c++) {
+            const result = this.findNakedSubsetInUnit(candidates, this.getColCells(c), 3);
+            if (result) return { ...result, technique: 'Naked Triple', difficultyWeight: this.weights['Naked Triple'] };
+        }
+        for (let b = 0; b < 9; b++) {
+            const result = this.findNakedSubsetInUnit(candidates, this.getBoxCells(b), 3);
+            if (result) return { ...result, technique: 'Naked Triple', difficultyWeight: this.weights['Naked Triple'] };
+        }
         return null;
     }
 
     findHiddenTriple(grid, candidates) {
+        const units = [];
+        for (let i = 0; i < 9; i++) {
+            units.push({ cells: this.getRowCells(i), name: `row ${i+1}` });
+            units.push({ cells: this.getColCells(i), name: `col ${i+1}` });
+            units.push({ cells: this.getBoxCells(i), name: `box ${i+1}` });
+        }
+
+        for (const unit of units) {
+            const unsolved = unit.cells.filter(cell => grid[cell.r][cell.c] === 0 && candidates[cell.r][cell.c].size > 0);
+            if (unsolved.length < 4) continue;
+
+            // Find numbers that appear in 2 or 3 cells
+            const numPositions = new Map();
+            for (let num = 1; num <= 9; num++) {
+                const positions = unsolved.filter(cell => candidates[cell.r][cell.c].has(num));
+                if (positions.length >= 2 && positions.length <= 3) {
+                    numPositions.set(num, positions);
+                }
+            }
+
+            const nums = [...numPositions.keys()];
+            if (nums.length < 3) continue;
+
+            const combos = this.getCombinations(nums, 3);
+            for (const tripleNums of combos) {
+                // Collect all cells containing any of these three numbers
+                const cellSet = new Set();
+                for (const n of tripleNums) {
+                    for (const pos of numPositions.get(n)) {
+                        cellSet.add(`${pos.r},${pos.c}`);
+                    }
+                }
+                if (cellSet.size === 3) {
+                    // Hidden Triple found!
+                    const tripleSet = new Set(tripleNums);
+                    const candidatesRemoved = [];
+                    for (const key of cellSet) {
+                        const [r, c] = key.split(',').map(Number);
+                        for (const cand of candidates[r][c]) {
+                            if (!tripleSet.has(cand)) {
+                                candidatesRemoved.push({ row: r, col: c, number: cand });
+                            }
+                        }
+                    }
+                    if (candidatesRemoved.length > 0) {
+                        return {
+                            technique: 'Hidden Triple',
+                            type: 'elimination',
+                            difficultyWeight: this.weights['Hidden Triple'],
+                            candidatesRemoved: candidatesRemoved,
+                            reason: `Hidden Triple {${tripleNums.join(',')}} in ${unit.name}.`
+                        };
+                    }
+                }
+            }
+        }
         return null;
     }
 
@@ -621,14 +736,59 @@ class SarpSolver {
                 consecutiveCount++;
                 if (consecutiveCount > 6) {
                     score -= 5;
-                    consecutiveCount = 1; // Reset to avoid double penalty for same sequence
+                    consecutiveCount = 1;
                 }
             } else {
                 consecutiveCount = 1;
             }
         }
         
-        // E. Path Smoothness (Reward gradual increase)
+        // D. Opening Cascade — first 8 steps should be easy Singles
+        const openingSize = Math.min(8, steps.length);
+        let openingAllSingles = true;
+        for (let i = 0; i < openingSize; i++) {
+            if (steps[i].difficultyWeight > 1.5) {
+                openingAllSingles = false;
+                break;
+            }
+        }
+        if (openingAllSingles) {
+            score += 10; // Reward smooth opening
+        } else {
+            score -= 15; // Punish jarring starts
+        }
+        
+        // E. Single Crux — at most 1 contiguous hard section (weight > 3.0)
+        let hardSections = 0;
+        let inHardSection = false;
+        for (const step of steps) {
+            if (step.difficultyWeight > 3.0) {
+                if (!inHardSection) {
+                    hardSections++;
+                    inHardSection = true;
+                }
+            } else {
+                inHardSection = false;
+            }
+        }
+        if (hardSections <= 1) {
+            score += 5; // Clean single crux
+        } else {
+            score -= (hardSections - 1) * 10; // Multiple hard sections feel choppy
+        }
+        
+        // F. Resolution Speed — last 25% of steps should be Singles
+        const tailStart = Math.floor(steps.length * 0.75);
+        let tailAllSingles = true;
+        for (let i = tailStart; i < steps.length; i++) {
+            if (steps[i].difficultyWeight > 1.5) {
+                tailAllSingles = false;
+                break;
+            }
+        }
+        if (tailAllSingles) score += 5;
+        
+        // G. Path Smoothness (Reward gradual increase)
         let increasing = true;
         for (let i = 0; i < Math.min(steps.length - 1, 10); i++) {
             if (steps[i+1].difficultyWeight < steps[i].difficultyWeight) {
@@ -639,6 +799,32 @@ class SarpSolver {
         if (increasing) score += 5;
         
         return Math.max(0, Math.min(100, score));
+    }
+
+    /**
+     * Classifies the solve path shape for diagnostic visibility.
+     * Returns: 'cascade' | 'plateau' | 'spike' | 'choppy'
+     */
+    classifySolveCurve(steps) {
+        if (steps.length === 0) return 'cascade';
+        
+        const maxWeight = Math.max(...steps.map(s => s.difficultyWeight));
+        if (maxWeight <= 1.5) return 'cascade'; // All singles — perfect flow
+        
+        // Find hard sections (weight > 3.0)
+        let hardSections = 0;
+        let inHard = false;
+        for (const step of steps) {
+            if (step.difficultyWeight > 3.0) {
+                if (!inHard) { hardSections++; inHard = true; }
+            } else {
+                inHard = false;
+            }
+        }
+        
+        if (hardSections === 0) return 'plateau'; // Medium techniques throughout, no spikes
+        if (hardSections === 1) return 'spike';     // One hard moment — acceptable crux
+        return 'choppy'; // Multiple hard spots — feels random
     }
 
     getDifficultyLabel(maxWeight) {
