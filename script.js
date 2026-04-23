@@ -20,12 +20,13 @@ class SudokuGame {
         this.isGameWon = false;
         this.wasAutoSolved = false;
         
-        // Touch Keypad state
-        this.touchKeypadActive = false;
-        this.activeTouchCellIndex = null;
-        this.selectedKeypadValue = null;
-        this.touchKeypadTimer = null;
+        // Sarp Mode Engine
+        this.sarpSolver = new SarpSolver();
+        this.sarpMode = this.loadSarpMode();
+        this.currentPuzzleGrade = null;
+        this.sarpAttemptCount = 0;
         
+        // Touch Keypad state
         this.touchKeypadActive = false;
         this.activeTouchCellIndex = null;
         this.selectedKeypadValue = null;
@@ -836,18 +837,26 @@ class SudokuGame {
         }
 
         // Toggle number highlight off if clicking a cell with the already active paint number
+        // Toggle Erase: If tapping a cell with the already active paint number
         if (cellValue !== 0 && this.isPaintMode && this.paintNumber === cellValue) {
-            // Also erase the number if it's not a given cell
             if (!this.givenCells[row][col]) {
+                // Erase user-placed number
                 this.setNumber(row, col, 0);
+                this.updateDisplay();
+                this.highlightAllInstances(cellValue); // Refresh highlights for remaining instances
+                return;
+            } else {
+                // If it's a given cell, just un-highlight everything
+                this.clearSelection();
+                this.clearHighlights();
+                this.clearNoteHighlights();
+                this.clearNumberCursor();
+                this.isPaintMode = false;
+                this.paintNumber = null;
+                if (typeof selectedPadNumber !== 'undefined') selectedPadNumber = null;
+                document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
+                return;
             }
-            
-            this.clearSelection();
-            this.clearHighlights();
-            this.clearNoteHighlights();
-            this.isPaintMode = false;
-            this.paintNumber = null;
-            return;
         }
         
         // If clicking on a cell with a number, highlight all instances of that number
@@ -947,6 +956,15 @@ class SudokuGame {
                 }
             }
         }
+
+        // Sync visual state of number pad buttons
+        document.querySelectorAll('.num-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        if (number > 0) {
+            const btn = document.querySelector(`.num-btn[data-number="${number}"]`);
+            if (btn) btn.classList.add('selected');
+        }
     }
 
     clearHighlights() {
@@ -972,6 +990,11 @@ class SudokuGame {
             noteNumbers.forEach(n => n.classList.remove('note-number-highlight'));
         });
         this.clearNumberCursor();
+
+        // Sync visual state of number pad buttons
+        document.querySelectorAll('.num-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
     }
     
     setNumberCursor(number) {
@@ -1236,9 +1259,12 @@ class SudokuGame {
             this.clearSelection();
             }
             
-            // Check for completed rows/columns/blocks (only if placing a number, not erasing)
-            if (number !== 0) {
-                this.checkCompletion(row, col, number);
+            // Update all completion states (Flash and Dim)
+            this.fullCompletionScan();
+            
+            // Auto-advance logic: If a number is complete and we're in paint mode, notify UI
+            if (number !== 0 && this.isNumberComplete(number) && this.onNumberComplete) {
+                this.onNumberComplete(number);
             }
             
             // Check for win
@@ -1519,49 +1545,73 @@ class SudokuGame {
     }
     
     updateDisplay() {
+        if (!this.cellCache) {
+            this.cellCache = [];
+            for (let i = 0; i < 81; i++) {
+                this.cellCache[i] = document.querySelector(`[data-index="${i}"]`);
+            }
+        }
+
         for (let i = 0; i < 81; i++) {
             const row = Math.floor(i / 9);
             const col = i % 9;
-            const cell = document.querySelector(`[data-index="${i}"]`);
+            const cell = this.cellCache[i];
+            if (!cell) continue;
             
-            cell.classList.remove('given', 'notes', 'number-complete');
+            const val = this.grid[row][col];
+            const isGiven = this.givenCells[row][col];
+            const notes = this.notes[row][col];
             
-            if (this.givenCells[row][col]) {
-                cell.classList.add('given');
-                cell.textContent = this.grid[row][col] || '';
-                
-                // Check if this number is complete (all 9 instances placed)
-                if (this.grid[row][col] !== 0 && this.isNumberComplete(this.grid[row][col])) {
-                    cell.classList.add('number-complete');
-                }
-            } else if (this.grid[row][col] !== 0) {
-                // If cell has a number, show the number (not notes)
-                cell.textContent = this.grid[row][col];
-                
-                // Check if this number is complete (all 9 instances placed)
-                if (this.isNumberComplete(this.grid[row][col])) {
-                    cell.classList.add('number-complete');
-                }
-            } else if (this.notes[row][col].size > 0) {
-                // Only show notes if cell is empty
-                cell.classList.add('notes');
-                cell.innerHTML = this.formatNotes(this.notes[row][col]);
-                
-                // Re-apply note highlighting if we're in paint mode
-                if (this.isPaintMode && this.paintNumber) {
-                    const noteNumbers = cell.querySelectorAll('.note-number');
-                    noteNumbers.forEach(noteSpan => {
-                        if (noteSpan.textContent === this.paintNumber.toString()) {
-                            noteSpan.classList.add('note-number-highlight');
-                        }
-                    });
+            // Determine new state
+            let newText = '';
+            let newClasses = ['cell'];
+            let isNotes = false;
+
+            if (isGiven) {
+                newClasses.push('given');
+                newText = val || '';
+                if (val !== 0 && this.isNumberComplete(val)) newClasses.push('number-complete');
+            } else if (val !== 0) {
+                newText = val.toString();
+                if (this.isNumberComplete(val)) newClasses.push('number-complete');
+            } else if (notes.size > 0) {
+                isNotes = true;
+                newClasses.push('notes');
+            }
+
+            // Apply highlighting (preserved from existing logic)
+            if (cell.classList.contains('selected')) newClasses.push('selected');
+            if (cell.classList.contains('same-number-highlight')) newClasses.push('same-number-highlight');
+            if (cell.classList.contains('related-highlight')) newClasses.push('related-highlight');
+            if (cell.classList.contains('error')) newClasses.push('error');
+
+            // Only update DOM if changed
+            const classString = newClasses.join(' ');
+            if (cell.className !== classString) {
+                cell.className = classString;
+            }
+
+            if (isNotes) {
+                const notesHtml = this.formatNotes(notes);
+                if (cell.innerHTML !== notesHtml) {
+                    cell.innerHTML = notesHtml;
+                    // Note highlighting logic
+                    if (this.isPaintMode && this.paintNumber) {
+                        cell.querySelectorAll('.note-number').forEach(noteSpan => {
+                            if (noteSpan.textContent === this.paintNumber.toString()) {
+                                noteSpan.classList.add('note-number-highlight');
+                            }
+                        });
+                    }
                 }
             } else {
-                cell.textContent = '';
+                const textStr = newText.toString();
+                if (cell.textContent !== textStr) {
+                    cell.textContent = textStr;
+                }
             }
         }
         
-        // Update number pad counts
         if (typeof updateNumberCounts === 'function') {
             updateNumberCounts();
         }
@@ -1652,32 +1702,32 @@ class SudokuGame {
         for (let col = 0; col < 9; col++) {
             const index = row * 9 + col;
             const cell = document.querySelector(`[data-index="${index}"]`);
-            cell.classList.add('celebrate');
+            if (cell) cell.classList.add('celebrate');
         }
         
         setTimeout(() => {
             for (let col = 0; col < 9; col++) {
                 const index = row * 9 + col;
                 const cell = document.querySelector(`[data-index="${index}"]`);
-                cell.classList.remove('celebrate');
+                if (cell) cell.classList.remove('celebrate');
             }
-        }, 600);
+        }, 1000);
     }
     
     highlightColumn(col) {
         for (let row = 0; row < 9; row++) {
             const index = row * 9 + col;
             const cell = document.querySelector(`[data-index="${index}"]`);
-            cell.classList.add('celebrate');
+            if (cell) cell.classList.add('celebrate');
         }
         
         setTimeout(() => {
             for (let row = 0; row < 9; row++) {
                 const index = row * 9 + col;
                 const cell = document.querySelector(`[data-index="${index}"]`);
-                cell.classList.remove('celebrate');
+                if (cell) cell.classList.remove('celebrate');
             }
-        }, 600);
+        }, 1000);
     }
     
     clearAllHighlights() {
@@ -1720,7 +1770,7 @@ class SudokuGame {
             for (let col = startCol; col < startCol + 3; col++) {
                 const index = row * 9 + col;
                 const cell = document.querySelector(`[data-index="${index}"]`);
-                cell.classList.add('celebrate');
+                if (cell) cell.classList.add('celebrate');
             }
         }
         
@@ -1729,10 +1779,10 @@ class SudokuGame {
                 for (let col = startCol; col < startCol + 3; col++) {
                     const index = row * 9 + col;
                     const cell = document.querySelector(`[data-index="${index}"]`);
-                    cell.classList.remove('celebrate');
+                    if (cell) cell.classList.remove('celebrate');
                 }
             }
-        }, 600);
+        }, 1000);
     }
     
     isNumberComplete(number) {
@@ -1748,27 +1798,34 @@ class SudokuGame {
     }
     
     highlightNumber(number) {
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
-                if (this.grid[row][col] === number) {
-                    const index = row * 9 + col;
-                    const cell = document.querySelector(`[data-index="${index}"]`);
-                    cell.classList.add('celebrate');
-                }
+        // Now handled by centralized fullCompletionScan
+        this.fullCompletionScan();
+    }
+    
+    fullCompletionScan() {
+        const completedCells = new Set();
+        
+        // 1. Identify all cells that belong to completed number sets
+        // (Rows, columns, and blocks no longer dim)
+        for (let n = 1; n <= 9; n++) if (this.isNumberComplete(n)) {
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) if (this.grid[r][c] === n) completedCells.add(r * 9 + c);
             }
         }
         
-        setTimeout(() => {
-            for (let row = 0; row < 9; row++) {
-                for (let col = 0; col < 9; col++) {
-                    if (this.grid[row][col] === number) {
-                        const index = row * 9 + col;
-                        const cell = document.querySelector(`[data-index="${index}"]`);
-                        cell.classList.remove('celebrate');
+        // 2. Efficiently update DOM classes
+        for (let i = 0; i < 81; i++) {
+            const cell = document.querySelector(`[data-index="${i}"]`);
+            if (cell) {
+                if (completedCells.has(i)) {
+                    if (!cell.classList.contains('zone-completed')) {
+                        cell.classList.add('zone-completed');
                     }
+                } else {
+                    cell.classList.remove('zone-completed');
                 }
             }
-        }, 600);
+        }
     }
 
     checkWin() {
@@ -2199,7 +2256,16 @@ class SudokuGame {
     
     generateNewPuzzle() {
         console.log(`✨ Generating NEW ${this.difficulty.toUpperCase()} puzzle in real-time...`);
-        this.showLoadingAnimation();
+        this.sarpAttemptCount++;
+        
+        // Report progress to UI
+        if (typeof updateLoadingProgress === 'function') {
+            const progress = Math.min(98, this.sarpAttemptCount * 7);
+            const subtext = this.sarpMode ? `Scanning for elegance (Attempt ${this.sarpAttemptCount})` : `Generating puzzle...`;
+            updateLoadingProgress(progress, subtext);
+        } else {
+            this.showLoadingAnimation();
+        }
 
         // 1. Initialize empty grid and solution
         this.grid = Array(9).fill().map(() => Array(9).fill(0));
@@ -2243,8 +2309,67 @@ class SudokuGame {
             }
         }
 
+        // --- Sarp Mode Grading & Filtering ---
+        if (this.sarpMode) {
+            console.log(`⚡ Sarp Mode Active: Validating puzzle elegance (Attempt ${this.sarpAttemptCount})...`);
+            const grade = this.sarpSolver.solve(this.grid);
+            
+            // Dynamic thresholds to prevent infinite loops (like the Attempt 2941 case)
+            // We start strict (85) and relax every 10 attempts
+            let eleganceThreshold = 85;
+            if (this.sarpAttemptCount > 40) eleganceThreshold = 0;   // Accept any logically solvable puzzle
+            else if (this.sarpAttemptCount > 30) eleganceThreshold = 50;
+            else if (this.sarpAttemptCount > 20) eleganceThreshold = 65;
+            else if (this.sarpAttemptCount > 10) eleganceThreshold = 75;
+
+            // Sarp strict filters
+            // After 50 attempts, if still not solved, we might need a fallback or just accept it
+            let rejected = !grade.solved || grade.eleganceScore < eleganceThreshold;
+            
+            // If we're really stuck (>100 attempts), Sarp Mode relaxes to 'Any valid puzzle' 
+            // to prevent freezing the browser/device
+            if (this.sarpAttemptCount > 60) rejected = false;
+
+            // Check for spikes (only in early attempts for maximum polish)
+            if (grade.solved && !rejected && this.sarpAttemptCount < 15) {
+                for (let i = 0; i < grade.solveSteps.length - 1; i++) {
+                    if (grade.solveSteps[i+1].difficultyWeight > grade.solveSteps[i].difficultyWeight * 1.8) {
+                        rejected = true;
+                        grade.rejectionReason = "Difficulty spike detected";
+                        break;
+                    }
+                }
+            }
+
+            if (rejected) {
+                const reason = grade.rejectionReason || (!grade.solved ? "No logical path found" : `Low elegance (${grade.eleganceScore} < ${eleganceThreshold})`);
+                console.log(`❌ Attempt ${this.sarpAttemptCount} rejected: ${reason}. Retrying...`);
+                // Use a slight delay to prevent stack overflow
+                setTimeout(() => this.generateNewPuzzle(), 10);
+                return;
+            }
+            
+            // Accepted!
+            this.sarpAttemptCount = 0;
+            if (typeof hideLoadingProgress === 'function') {
+                hideLoadingProgress();
+            }
+            
+            this.currentPuzzleGrade = grade;
+            console.log(`✅ Sarp Approved! Elegance: ${grade.eleganceScore}, Max Tech: ${grade.maxStepDifficulty} (${grade.difficultyLabel})`);
+        } else {
+            // Reset count for normal mode too
+            this.sarpAttemptCount = 0;
+            if (typeof hideLoadingProgress === 'function') {
+                hideLoadingProgress();
+            }
+            // Normal mode still runs solver for hints/grading but with relaxed thresholds
+            const grade = this.sarpSolver.solve(this.grid);
+            this.currentPuzzleGrade = grade;
+            console.log(`📊 Puzzle Graded: Elegance: ${grade.eleganceScore}, Solved Logically: ${grade.solved}`);
+        }
+
         console.log(`✅ Success: Generated ${count} clues.`);
-        this.hideLoadingAnimation();
         this.updateDisplay();
         this.updateProgress();
         this.startTimer();
@@ -2318,7 +2443,7 @@ class SudokuGame {
                 }
                 removedCount += pair.length;
             }
-            if (removedCount >= cluesToRemove) break;
+        if (removedCount >= cluesToRemove) break;
         }
     }
     
@@ -3426,8 +3551,40 @@ class SudokuGame {
     }
 
     getSmartHint() {
+        // --- Sarp Path Hinting ---
+        if (this.currentPuzzleGrade && this.currentPuzzleGrade.solved) {
+            // Find the first step that is not yet applied to the grid
+            const nextStep = this.currentPuzzleGrade.solveSteps.find(step => {
+                if (step.type === 'placement') {
+                    return this.grid[step.row][step.col] === 0;
+                } else {
+                    // Elimination step: check if any target candidates still exist
+                    return step.candidatesRemoved.some(elim => {
+                        return this.grid[elim.row][elim.col] === 0 && 
+                               this.notes[elim.row][elim.col].has(elim.number);
+                    });
+                }
+            });
+
+            if (nextStep) {
+                console.log(`💡 Hint from Sarp Path: ${nextStep.technique}`);
+                if (nextStep.type === 'placement') {
+                    return {
+                        row: nextStep.row,
+                        col: nextStep.col,
+                        number: nextStep.number,
+                        type: nextStep.technique.toLowerCase().includes('hidden') ? 'hidden' : 'naked',
+                        reason: nextStep.reason
+                    };
+                } else {
+                    // For elimination hints, we might need a way to show them.
+                    // For now, let's look for the next placement step after eliminations
+                    // OR return the elimination info if we decide to support it in UI.
+                }
+            }
+        }
+
         // Priority 1: Full House (Missing only 1 number in a unit)
-        // This is the easiest logic for a user to follow.
         const fullHouse = this.findFullHouse();
         if (fullHouse) return fullHouse;
 
@@ -3798,20 +3955,35 @@ class SudokuGame {
         this.updateDisplay();
     }
     
-    // AUTO Mode Logic
     loadAutoModeState() {
         const saved = localStorage.getItem('zudoku-auto-state');
-        const state = saved ? JSON.parse(saved) : {
-            active: true, // Default to true for new users
-            currentClues: 50, // Default to easiest (L50)
-            winsInLevel: 0,
-            totalTries: 0,
-            triesInRank: 0
-        };
+        if (saved) {
+            try {
+                const state = JSON.parse(saved);
+                if (state.triesInRank === undefined) state.triesInRank = state.totalTries || 0;
+                return state;
+            } catch (e) {
+                console.error('Error parsing auto state:', e);
+            }
+        }
+        return { active: false, currentClues: 44, totalTries: 0, triesInRank: 0, winsInLevel: 0 };
+    }
 
-        // Migration for existing users
-        if (state.triesInRank === undefined) state.triesInRank = state.totalTries || 0;
-        return state;
+    loadSarpMode() {
+        return true; // Always ON by default now
+    }
+
+    saveSarpMode() {
+        localStorage.setItem('zudoku-sarp-mode', 'true');
+    }
+
+    toggleSarpMode() {
+        this.sarpMode = true; // Permanently enabled
+        this.saveSarpMode();
+        console.log(`⚡ Sarp Mode ${this.sarpMode ? 'ACTIVATED' : 'DEACTIVATED'}`);
+        
+        // Trigger new game to apply mode
+        this.newGame();
     }
     
     saveAutoModeState() {
@@ -3829,7 +4001,13 @@ class SudokuGame {
         // Unified Level Indicator in Header (Lxx)
         const levelBtn = document.getElementById('level_indicator');
         if (levelBtn) {
-            levelBtn.textContent = `L${this.getTargetGivenNumbers()}`;
+            const value = this.getTargetGivenNumbers();
+            levelBtn.textContent = `L${value}`;
+            
+            // Sync dial rotation
+            const percent = (50 - value) / 45;
+            const angle = percent * (2 * Math.PI);
+            levelBtn.style.setProperty('--dial-angle', `${angle}rad`);
         }
     }
     
@@ -3837,24 +4015,52 @@ class SudokuGame {
         if (!this.autoMode) return;
         
         const overlay = document.getElementById('level-scroller-overlay');
-        const track = document.getElementById('scroller-track');
-        if (!overlay || !track) return;
+        const container = document.querySelector('.radial-scrubber-container');
+        const levelBtn = document.getElementById('level_indicator');
+        if (!overlay || !container || !levelBtn) return;
         
-        // Prevent default browser touch actions and capture the pointer
         e.preventDefault();
         try {
             e.target.setPointerCapture(e.pointerId);
-        } catch (err) {
-            console.log("Pointer capture failed", err);
-        }
+        } catch (err) {}
         
         this.scrubbing = true;
+        this.scrubStartX = e.clientX;
+        this.scrubStartY = e.clientY;
+        this.scrubStartValue = this.autoMode.currentClues;
+        this.tempScrubValue = this.autoMode.currentClues;
+        
+        // Center the scrubber in the screen
+        container.style.position = '';
+        container.style.left = '';
+        container.style.top = '';
+        container.style.transform = '';
+        
         overlay.classList.add('active');
         
-        // Initial position
-        this.handleScrubberMove(e);
+        // Initialize the overlay elements with current values
+        const valEl = document.getElementById('scroller-value');
+        const zoneEl = document.getElementById('scroller-zone');
+        const fill = document.getElementById('radial-progress-fill');
+        if (valEl) valEl.textContent = this.autoMode.currentClues;
+        if (zoneEl) {
+            const value = this.autoMode.currentClues;
+            let zone = "EASY";
+            let hue = 185; 
+            if (value <= 15) { zone = "ULTRA"; hue = 280; }
+            else if (value <= 24) { zone = "EXPERT"; hue = 0; }
+            else if (value <= 34) { zone = "HARD"; hue = 32; }
+            else if (value <= 44) { zone = "MEDIUM"; hue = 50; }
+            zoneEl.textContent = zone;
+            overlay.style.setProperty('--scrub-color', `hsl(${hue}, 80%, 55%)`);
+            overlay.style.setProperty('--scrub-glow', `hsla(${hue}, 80%, 55%, 0.3)`);
+        }
+        if (fill) {
+            const percent = (50 - this.autoMode.currentClues) / 45;
+            const circumference = 660;
+            fill.style.strokeDashoffset = circumference * (1 - percent);
+        }
         
-        // Global listeners
         const onMove = (me) => this.handleScrubberMove(me);
         const onUp = (ue) => {
             document.removeEventListener('pointermove', onMove);
@@ -3875,77 +4081,56 @@ class SudokuGame {
         if (!this.scrubbing) return;
         
         const overlay = document.getElementById('level-scroller-overlay');
-        const track = document.getElementById('scroller-track');
-        const thumb = document.getElementById('scroller-thumb');
+        const container = document.querySelector('.radial-scrubber-container');
+        const fill = document.getElementById('radial-progress-fill');
         const valEl = document.getElementById('scroller-value');
-        if (!overlay || !track || !thumb) return;
+        const zoneEl = document.getElementById('scroller-zone');
         
-        const rect = track.getBoundingClientRect();
-        // Balanced padding for the 500px high professional track
-        const padding = 25; 
-        const availableHeight = rect.height - (padding * 2);
+        if (!overlay || !container || !fill) return;
         
-        let y = e.clientY - rect.top;
-        y = Math.max(padding, Math.min(rect.height - padding, y));
+        // Mechanical Linear-to-Radial mapping: Up or Right increases level
+        // Total delta: dx (right is pos) - dy (up is neg, so -dy is pos)
+        const dx = e.clientX - this.scrubStartX;
+        const dy = e.clientY - this.scrubStartY;
+        const totalDelta = dx - dy;
         
-        const percent = (y - padding) / availableHeight;
-        const value = Math.round(50 - (percent * (50 - 5)));
+        // Sensitivity: 5px per clue step
+        const sensitivity = 5;
+        let value = Math.round(this.scrubStartValue + (totalDelta / sensitivity));
+        value = Math.max(5, Math.min(50, value));
         
-        // Update Thumb visual (centered on track)
-        thumb.style.top = `${y}px`;
+        // Map value (5 to 50) to angle (0 to 360)
+        const percent = (50 - value) / 45;
+        const angle = percent * (2 * Math.PI);
         
-        // Performance-first DOM updates
+        // Update Radial Progress (C=660)
+        const circumference = 660;
+        fill.style.strokeDashoffset = circumference * (1 - percent);
+        
         if (value !== this.tempScrubValue) {
-            if (valEl) {
-                let zone = "EASY";
-                if (value <= 15) zone = "ULTRA";
-                else if (value <= 24) zone = "EXPERT";
-                else if (value <= 34) zone = "HARD";
-                else if (value <= 44) zone = "MEDIUM";
-                
-                valEl.textContent = `${zone} ${value}`;
-            }
             this.tempScrubValue = value;
+            if (valEl) valEl.textContent = value;
             
-            // CSS Variable Pipeline for 60fps color shifts
-            let hue = 185; // Natural Easy (Cyan)
-            if (value <= 15) hue = 280;      // Ultra (Purple)
-            else if (value <= 24) hue = 0;   // Expert (Red)
-            else if (value <= 34) hue = 32;  // Hard (Orange)
-            else if (value <= 44) hue = 50;  // Medium (Yellow)
+            // Update main button label and dial rotation in real-time
+            const levelBtn = document.getElementById('level_indicator');
+            if (levelBtn) {
+                levelBtn.textContent = `L${value}`;
+                levelBtn.style.setProperty('--dial-angle', `${angle}rad`);
+            }
             
-            overlay.style.setProperty('--scrub-color', `hsl(${hue}, 80%, 55%)`);
-            overlay.style.setProperty('--scrub-glow', `hsla(${hue}, 80%, 55%, 0.3)`);
-            
-            // --- Cybernetic Magnifier Engine ---
-            const labels = document.querySelectorAll('.scroller-label');
-            labels.forEach(lbl => {
-                // Get position of label relative to the track
-                const lblY = parseFloat(lbl.style.top) / 100 * rect.height;
-                const dist = Math.abs(y - lblY);
+            if (zoneEl) {
+                let zone = "EASY";
+                let hue = 185; // Cyan
                 
-                // Gaussian falloff for smooth magnification (sigma = spread)
-                const sigma = 50; 
-                const intensity = Math.exp(-(dist * dist) / (2 * (sigma * sigma)));
+                if (value <= 15) { zone = "ULTRA"; hue = 280; }
+                else if (value <= 24) { zone = "EXPERT"; hue = 0; }
+                else if (value <= 34) { zone = "HARD"; hue = 32; }
+                else if (value <= 44) { zone = "MEDIUM"; hue = 50; }
                 
-                // Curve mapping
-                const scale = 0.7 + (0.6 * intensity);   // 0.7x to 1.3x
-                const opacity = 0.05 + (0.95 * intensity); // 0.05 to 1.0
-                
-                lbl.style.transform = `translateY(-50%) scale(${scale})`;
-                lbl.style.opacity = opacity;
-                
-                // Colorize based on intensity
-                if (intensity > 0.3) {
-                    lbl.style.color = 'var(--scrub-color)';
-                    lbl.style.fontWeight = '900';
-                    lbl.style.textShadow = `0 0 ${15 * intensity}px var(--scrub-glow)`;
-                } else {
-                    lbl.style.color = ''; 
-                    lbl.style.fontWeight = '';
-                    lbl.style.textShadow = '';
-                }
-            });
+                zoneEl.textContent = zone;
+                overlay.style.setProperty('--scrub-color', `hsl(${hue}, 80%, 55%)`);
+                overlay.style.setProperty('--scrub-glow', `hsla(${hue}, 80%, 55%, 0.3)`);
+            }
         }
     }
     
@@ -3958,7 +4143,6 @@ class SudokuGame {
         
         const finalValue = this.tempScrubValue;
         if (finalValue && finalValue !== this.autoMode.currentClues) {
-            // Apply new custom level in AUTO mode
             this.setDifficulty('auto');
             this.autoMode.currentClues = finalValue;
             this.saveAutoModeState();
@@ -4491,10 +4675,10 @@ class SudokuGame {
         const index = row * 9 + col;
         const cell = document.querySelector(`[data-index="${index}"]`);
         if (cell) {
-            cell.classList.add('hint-glow');
+            cell.classList.add('celebrate');
             setTimeout(() => {
-                cell.classList.remove('hint-glow');
-            }, 1000);
+                cell.classList.remove('celebrate');
+            }, 1200); // 0.4s * 3 repeats
         }
     }
     
@@ -4530,16 +4714,24 @@ class SudokuGame {
     }
     
     showLoadingAnimation() {
-        const centerPanel = document.querySelector('.center-panel');
-        if (centerPanel) {
-            centerPanel.classList.add('loading-pulse');
+        if (typeof updateLoadingProgress === 'function') {
+            updateLoadingProgress(30, "Preparing puzzle...");
+        } else {
+            const centerPanel = document.querySelector('.center-panel');
+            if (centerPanel) {
+                centerPanel.classList.add('loading-pulse');
+            }
         }
     }
     
     hideLoadingAnimation() {
-        const centerPanel = document.querySelector('.center-panel');
-        if (centerPanel) {
-            centerPanel.classList.remove('loading-pulse');
+        if (typeof hideLoadingProgress === 'function') {
+            hideLoadingProgress();
+        } else {
+            const centerPanel = document.querySelector('.center-panel');
+            if (centerPanel) {
+                centerPanel.classList.remove('loading-pulse');
+            }
         }
     }
 
@@ -5405,6 +5597,49 @@ class SudokuGame {
         }
     }
     
+    getSmartHint() {
+        // If we have a cached grade from SarpSolver, use its first logical step
+        if (this.currentPuzzleGrade && this.currentPuzzleGrade.solveSteps) {
+            // Find the first step that isn't already filled in the grid
+            for (const step of this.currentPuzzleGrade.solveSteps) {
+                if (this.grid[step.row][step.col] === 0) {
+                    return {
+                        row: step.row,
+                        col: step.col,
+                        number: step.number,
+                        type: step.technique,
+                        reason: step.reason
+                    };
+                }
+            }
+        }
+        
+        // Fallback to basic logical search if grade is missing or stale
+        const grade = this.sarpSolver.solve(this.grid);
+        if (grade.solved && grade.solveSteps.length > 0) {
+            const step = grade.solveSteps[0];
+            return {
+                row: step.row,
+                col: step.col,
+                number: step.number,
+                type: step.technique,
+                reason: step.reason
+            };
+        }
+        
+        return null;
+    }
+
+    applySmartMove(row, col, number) {
+        if (this.isPaused) this.resumeTimer();
+        this.setNumber(row, col, number);
+        this.playSound('place');
+        this.animateNumberPlacement(row, col);
+        this.updateDisplay();
+        this.updateProgress();
+        this.checkWin();
+    }
+
     updateProgress() {
         const filledCells = this.countFilledCells();
         const completionPercent = Math.round((filledCells / 81) * 100);
