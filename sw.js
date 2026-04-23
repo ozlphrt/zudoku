@@ -1,9 +1,10 @@
-const CACHE_NAME = 'zudoku-cache-v2.4.2';
+const CACHE_NAME = 'zudoku-cache-v2.4.3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './zudoku-app.html',
   './script.js',
+  './sarp-solver.js',
   './public/192.png',
   './public/512.png',
   './manifest.json'

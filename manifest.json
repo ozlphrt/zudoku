@@ -2,7 +2,7 @@
   "name": "Zudoku",
   "short_name": "Zudoku",
   "description": "A high-fidelity minimalist Sudoku game with a technical blueprint aesthetic.",
-  "start_url": "layout-simplified.html",
+  "start_url": "zudoku-app.html",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
