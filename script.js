@@ -2109,46 +2109,9 @@ class SudokuGame {
     
     hasUniqueSolution() {
         const tempGrid = this.grid.map(row => [...row]);
-        this.solutionCount = 0;
-        
-        // Use a more efficient solution counting approach
-        this.countSolutionsEfficient(tempGrid, 0, 0);
-        
-        // Ensure exactly one solution exists
-        return this.solutionCount === 1;
-    }
-    
-    countSolutionsEfficient(grid, row, col) {
-        // If we've found more than one solution, stop immediately
-        if (this.solutionCount > 1) return;
-        
-        // If we've filled the entire grid
-        if (row === 9) {
-            this.solutionCount++;
-            return;
-        }
-        
-        // Calculate next position
-        const nextRow = col === 8 ? row + 1 : row;
-        const nextCol = col === 8 ? 0 : col + 1;
-        
-        // If current cell is already filled, move to next
-        if (grid[row][col] !== 0) {
-            this.countSolutionsEfficient(grid, nextRow, nextCol);
-            return;
-        }
-        
-        // Try each number 1-9
-        for (let num = 1; num <= 9; num++) {
-            if (this.isValidMoveForGrid(grid, row, col, num)) {
-                grid[row][col] = num;
-                this.countSolutionsEfficient(grid, nextRow, nextCol);
-                grid[row][col] = 0; // Backtrack
-                
-                // Early termination if multiple solutions found
-                if (this.solutionCount > 1) return;
-            }
-        }
+        // Use the iterative, stack-safe countSolutions method
+        const solutions = this.countSolutions(tempGrid, 2);
+        return solutions === 1;
     }
     
     isValidMoveForGrid(grid, row, col, number) {
@@ -2376,28 +2339,59 @@ class SudokuGame {
         this.startAutoSave();
     }
 
+    /**
+     * Iterative grid filler (stack-safe).
+     * Fills the grid with a complete valid Sudoku solution.
+     */
     fillGrid(grid) {
-        const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-        
-        for (let i = 0; i < 81; i++) {
-            const row = Math.floor(i / 9);
-            const col = i % 9;
-            
-            if (grid[row][col] === 0) {
-                // Shuffle numbers for unpredictable boards every time
-                const shuffled = [...numbers].sort(() => Math.random() - 0.5);
-                
-                for (let num of shuffled) {
-                    if (this.isValidMoveForGrid(grid, row, col, num)) {
-                        grid[row][col] = num;
-                        if (this.fillGrid(grid)) return true;
-                        grid[row][col] = 0;
-                    }
-                }
-                return false;
+        const emptyCells = [];
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid[r][c] === 0) emptyCells.push({ r, c });
             }
         }
-        return true;
+
+        if (emptyCells.length === 0) return true;
+
+        const assignments = new Array(emptyCells.length).fill(-1); // index in shuffled numbers
+        const shuffledNumbers = emptyCells.map(() => {
+            const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+            for (let i = nums.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [nums[i], nums[j]] = [nums[j], nums[i]];
+            }
+            return nums;
+        });
+
+        let depth = 0;
+        while (depth >= 0) {
+            const { r, c } = emptyCells[depth];
+            let placed = false;
+
+            const nums = shuffledNumbers[depth];
+            for (let i = assignments[depth] + 1; i < 9; i++) {
+                const num = nums[i];
+                if (this.isValidMoveForGrid(grid, r, c, num)) {
+                    grid[r][c] = num;
+                    assignments[depth] = i;
+                    placed = true;
+                    
+                    if (depth === emptyCells.length - 1) {
+                        return true; // Solved!
+                    } else {
+                        depth++;
+                        break;
+                    }
+                }
+            }
+
+            if (!placed) {
+                grid[r][c] = 0;
+                assignments[depth] = -1;
+                depth--;
+            }
+        }
+        return false;
     }
 
     removeNumbers() {
@@ -2908,62 +2902,9 @@ class SudokuGame {
         return false; // No valid position found
     }
     
-    hasUniqueSolution(grid) {
-        // Count solutions using backtracking
-        const solutions = [];
-        this.countSolutions(grid, solutions, 0);
-        return solutions.length === 1;
-    }
+
     
-    countSolutions(grid, solutions, startIndex) {
-        if (solutions.length > 1) return; // Early exit if multiple solutions found
-        
-        // Find first empty cell
-        for (let i = startIndex; i < 81; i++) {
-            const row = Math.floor(i / 9);
-            const col = i % 9;
-            
-            if (grid[row][col] === 0) {
-                // Try each number 1-9
-                for (let num = 1; num <= 9; num++) {
-                    if (this.isValidMoveForGrid(grid, row, col, num)) {
-                        grid[row][col] = num;
-                        this.countSolutions(grid, solutions, i + 1);
-                        grid[row][col] = 0;
-                        
-                        if (solutions.length > 1) return; // Early exit
-                    }
-                }
-                return; // No valid moves for this cell
-            }
-        }
-        
-        // If we reach here, grid is complete
-        solutions.push(1);
-    }
-    
-    isValidMoveForGrid(grid, row, col, num) {
-        // Check row
-        for (let c = 0; c < 9; c++) {
-            if (grid[row][c] === num) return false;
-        }
-        
-        // Check column
-        for (let r = 0; r < 9; r++) {
-            if (grid[r][col] === num) return false;
-        }
-        
-        // Check 3x3 box
-        const boxRow = Math.floor(row / 3) * 3;
-        const boxCol = Math.floor(col / 3) * 3;
-        for (let r = boxRow; r < boxRow + 3; r++) {
-            for (let c = boxCol; c < boxCol + 3; c++) {
-                if (grid[r][c] === num) return false;
-            }
-        }
-        
-        return true;
-    }
+
     
     useFallbackPuzzle() {
         // Use a pre-validated puzzle as fallback
@@ -3039,29 +2980,7 @@ class SudokuGame {
         return true;
     }
     
-    isPuzzleSolvable() {
-        // Check if every empty cell has at least one valid move
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
-                if (this.grid[row][col] === 0) {
-                    let hasValidMove = false;
-                    for (let num = 1; num <= 9; num++) {
-                        if (this.isValidMoveForGrid(this.grid, row, col, num)) {
-                            hasValidMove = true;
-                            break;
-                        }
-                    }
-                    if (!hasValidMove) {
-                        console.log(`❌ No valid moves for empty cell at (${row}, ${col})`);
-                        return false;
-                    }
-                }
-            }
-        }
-        
-        console.log('✅ Puzzle is solvable - all empty cells have valid moves');
-        return true;
-    }
+
     
     isPuzzleSolvableForGrid(grid) {
         // Check if every empty cell has at least one valid move
@@ -3413,50 +3332,7 @@ class SudokuGame {
         return false; // No valid position found
     }
     
-    // Enhanced unique solution check with better performance
-    hasUniqueSolution() {
-        const tempGrid = this.grid.map(row => [...row]);
-        this.solutionCount = 0;
-        
-        // Count solutions with early termination
-        this.countSolutions(tempGrid, 0, 0, 2); // Stop after finding 2 solutions
-        
-        return this.solutionCount === 1;
-    }
 
-    // Enhanced solution counting with early termination
-    countSolutions(grid, row, col, maxSolutions = 2) {
-        if (this.solutionCount >= maxSolutions) {
-            return; // Early termination
-        }
-        
-        if (row === 9) {
-            this.solutionCount++;
-            return;
-        }
-        
-        if (col === 9) {
-            this.countSolutions(grid, row + 1, 0, maxSolutions);
-            return;
-        }
-        
-        if (grid[row][col] !== 0) {
-            this.countSolutions(grid, row, col + 1, maxSolutions);
-            return;
-        }
-        
-        for (let num = 1; num <= 9; num++) {
-            if (this.isValidMoveForGrid(grid, row, col, num)) {
-                grid[row][col] = num;
-                this.countSolutions(grid, row, col + 1, maxSolutions);
-                grid[row][col] = 0;
-                
-                if (this.solutionCount >= maxSolutions) {
-                    return; // Early termination
-                }
-            }
-        }
-    }
 
 
     loadPuzzleFromLibrary(puzzleString, solutionString) {
