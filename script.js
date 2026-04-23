@@ -2541,29 +2541,83 @@ class SudokuGame {
     }
 
     /**
-     * Bounded backtracking solution counter.
+     * Bounded iterative solution counter (stack-safe).
      * Returns the number of solutions found, up to 'limit'.
-     * Used ONLY during generation to verify puzzle uniqueness.
+     * Uses an explicit stack instead of recursion to avoid call stack overflow.
+     * Node budget prevents browser freezes on complex grids.
      */
     countSolutions(grid, limit = 2) {
-        // Find first empty cell (row-major scan)
+        const NODE_BUDGET = 50000;
+        let nodeCount = 0;
+        let solutionCount = 0;
+
+        // Find all empty cells upfront
+        const emptyCells = [];
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
-                if (grid[r][c] === 0) {
-                    let count = 0;
-                    for (let num = 1; num <= 9; num++) {
-                        if (this.isValidMoveForGrid(grid, r, c, num)) {
-                            grid[r][c] = num;
-                            count += this.countSolutions(grid, limit - count);
-                            grid[r][c] = 0;
-                            if (count >= limit) return count;
-                        }
-                    }
-                    return count;
-                }
+                if (grid[r][c] === 0) emptyCells.push({ r, c });
             }
         }
-        return 1; // Grid is full — one solution found
+
+        if (emptyCells.length === 0) return 1;
+
+        // Iterative backtracking using an index pointer
+        const assignments = new Array(emptyCells.length).fill(0); // last tried number at each depth
+        let depth = 0;
+
+        while (depth >= 0) {
+            if (++nodeCount > NODE_BUDGET) {
+                // Budget exhausted — conservatively assume unique
+                // Restore grid and bail
+                for (let d = depth; d >= 0; d--) {
+                    if (assignments[d] > 0) {
+                        grid[emptyCells[d].r][emptyCells[d].c] = 0;
+                    }
+                }
+                return 1;
+            }
+
+            const { r, c } = emptyCells[depth];
+            let placed = false;
+
+            // Try numbers starting from where we left off + 1
+            for (let num = assignments[depth] + 1; num <= 9; num++) {
+                if (this.isValidMoveForGrid(grid, r, c, num)) {
+                    grid[r][c] = num;
+                    assignments[depth] = num;
+                    placed = true;
+
+                    if (depth === emptyCells.length - 1) {
+                        // Reached the end — found a solution
+                        solutionCount++;
+                        if (solutionCount >= limit) {
+                            // Restore grid before returning
+                            for (let d = depth; d >= 0; d--) {
+                                grid[emptyCells[d].r][emptyCells[d].c] = 0;
+                                assignments[d] = 0;
+                            }
+                            return solutionCount;
+                        }
+                        // Continue searching for more solutions (backtrack)
+                        grid[r][c] = 0;
+                        placed = false;
+                    } else {
+                        // Go deeper
+                        depth++;
+                        break;
+                    }
+                }
+            }
+
+            if (!placed) {
+                // No valid number found — backtrack
+                grid[r][c] = 0;
+                assignments[depth] = 0;
+                depth--;
+            }
+        }
+
+        return solutionCount;
     }
     
     /**
