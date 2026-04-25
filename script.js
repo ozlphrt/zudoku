@@ -4181,6 +4181,8 @@ class SudokuGame {
             try {
                 const state = JSON.parse(saved);
                 if (state.triesInRank === undefined) state.triesInRank = state.totalTries || 0;
+                // Ensure minimum clue limit
+                if (state.currentClues < 17) state.currentClues = 17;
                 return state;
             } catch (e) {
                 console.error('Error parsing auto state:', e);
@@ -4224,8 +4226,8 @@ class SudokuGame {
             const value = this.getTargetGivenNumbers();
             levelBtn.textContent = `L${value}`;
             
-            // Sync dial rotation
-            const percent = (50 - value) / 45;
+            // Sync dial rotation (Range: 17 to 50, Delta: 33)
+            const percent = (50 - value) / 33;
             const angle = percent * (2 * Math.PI);
             levelBtn.style.setProperty('--dial-angle', `${angle}rad`);
         }
@@ -4267,16 +4269,16 @@ class SudokuGame {
             const value = this.autoMode.currentClues;
             let zone = "EASY";
             let hue = 185; 
-            if (value <= 15) { zone = "ULTRA"; hue = 280; }
-            else if (value <= 24) { zone = "EXPERT"; hue = 0; }
-            else if (value <= 34) { zone = "HARD"; hue = 32; }
-            else if (value <= 44) { zone = "MEDIUM"; hue = 50; }
+            if (value <= 21) { zone = "ULTRA"; hue = 280; }
+            else if (value <= 28) { zone = "EXPERT"; hue = 0; }
+            else if (value <= 35) { zone = "HARD"; hue = 32; }
+            else if (value <= 43) { zone = "MEDIUM"; hue = 50; }
             zoneEl.textContent = zone;
             overlay.style.setProperty('--scrub-color', `hsl(${hue}, 80%, 55%)`);
             overlay.style.setProperty('--scrub-glow', `hsla(${hue}, 80%, 55%, 0.3)`);
         }
         if (fill) {
-            const percent = (50 - this.autoMode.currentClues) / 45;
+            const percent = (50 - this.autoMode.currentClues) / 33;
             const circumference = 660;
             fill.style.strokeDashoffset = circumference * (1 - percent);
         }
@@ -4317,10 +4319,10 @@ class SudokuGame {
         // Sensitivity: 5px per clue step
         const sensitivity = 5;
         let value = Math.round(this.scrubStartValue + (totalDelta / sensitivity));
-        value = Math.max(5, Math.min(50, value));
+        value = Math.max(17, Math.min(50, value));
         
-        // Map value (5 to 50) to angle (0 to 360)
-        const percent = (50 - value) / 45;
+        // Map value (17 to 50) to angle (0 to 360)
+        const percent = (50 - value) / 33;
         const angle = percent * (2 * Math.PI);
         
         // Update Radial Progress (C=660)
@@ -4342,10 +4344,10 @@ class SudokuGame {
                 let zone = "EASY";
                 let hue = 185; // Cyan
                 
-                if (value <= 15) { zone = "ULTRA"; hue = 280; }
-                else if (value <= 24) { zone = "EXPERT"; hue = 0; }
-                else if (value <= 34) { zone = "HARD"; hue = 32; }
-                else if (value <= 44) { zone = "MEDIUM"; hue = 50; }
+                if (value <= 21) { zone = "ULTRA"; hue = 280; }
+                else if (value <= 28) { zone = "EXPERT"; hue = 0; }
+                else if (value <= 35) { zone = "HARD"; hue = 32; }
+                else if (value <= 43) { zone = "MEDIUM"; hue = 50; }
                 
                 zoneEl.textContent = zone;
                 overlay.style.setProperty('--scrub-color', `hsl(${hue}, 80%, 55%)`);
