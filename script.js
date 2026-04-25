@@ -3634,7 +3634,7 @@ class SudokuGame {
 
             bannerText.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 16px; text-align: left;">
-                    <div style="font-size: 56px; font-weight: 800; color: var(--highlight); line-height: 1; text-shadow: 0 0 20px rgba(var(--highlight-rgb), 0.4);">${hint.number}</div>
+                    <div class="hint-candidate-number">${hint.number}</div>
                     <div>
                         <strong style="color: var(--highlight); font-size: 16px; margin-bottom: 6px; display: inline-block; letter-spacing: 0.5px;">${title}</strong><br>
                         <span class="hint-banner-desc" style="font-size: 13px; line-height: 1.4; display: inline-block;">${fullReason}</span>
