@@ -2247,9 +2247,21 @@ class SudokuGame {
             // NEW: Enforce logic difficulty for ULTRA/EXPERT levels
             // If L17-L28 (Ultra/Expert), we want to see at least one advanced technique (Pair, Triple, etc.)
             const clueTarget = this.getTargetGivenNumbers();
-            if (grade.solved && clueTarget <= 28 && grade.maxStepDifficulty < 2.0 && this.sarpAttemptCount < 50) {
+            
+            // ULTRA (17-19): Must require at least weight 2.5 (Pointing Pair / Box-Line Reduction or better)
+            if (grade.solved && clueTarget <= 19 && grade.maxStepDifficulty < 2.5 && this.sarpAttemptCount < 100) {
                 rejected = true;
-                grade.rejectionReason = `Too easy for ${clueTarget <= 21 ? 'ULTRA' : 'EXPERT'} mode (only singles used)`;
+                grade.rejectionReason = `Too easy for ULTRA mode (Requires weight >= 2.5, got ${grade.maxStepDifficulty})`;
+            }
+            // EXPERT (20-23): Must require at least weight 2.0 (Pairs or better)
+            else if (grade.solved && clueTarget <= 23 && grade.maxStepDifficulty < 2.0 && this.sarpAttemptCount < 50) {
+                rejected = true;
+                grade.rejectionReason = `Too easy for EXPERT mode (Requires weight >= 2.0, got ${grade.maxStepDifficulty})`;
+            }
+            // HARD (24-28): Must require at least weight 1.5 (Hidden singles or better)
+            else if (grade.solved && clueTarget <= 28 && grade.maxStepDifficulty < 1.5 && this.sarpAttemptCount < 30) {
+                rejected = true;
+                grade.rejectionReason = `Too easy for HARD mode (Requires weight >= 1.5, got ${grade.maxStepDifficulty})`;
             }
 
             // If we're really stuck (>100 attempts), Sarp Mode relaxes to 'Any valid puzzle' 
