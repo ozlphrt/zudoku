@@ -3612,10 +3612,15 @@ class SudokuGame {
                         hint.type === 'naked' ? 'Naked Single' :
                         hint.type === 'hidden' ? 'Hidden Single' : 'Hint';
             
-            // Fallback: if Sarp solver was used, the title might be 'Hint' but it IS a naked single
-            if (title === 'Hint' && hint.reason && hint.reason.includes('possible candidate')) {
-                title = 'Naked Single';
-                hint.type = 'naked'; // Normalize for shading logic later
+            // Fallback: if Sarp solver was used, the title might be 'Hint' but it IS a naked or hidden single
+            if (title === 'Hint' && hint.reason) {
+                if (hint.reason.includes('possible candidate')) {
+                    title = 'Naked Single';
+                    hint.type = 'naked'; // Normalize for shading logic later
+                } else if (hint.reason.includes('can only be placed in')) {
+                    title = 'Hidden Single';
+                    hint.type = 'hidden'; // Normalize for shading logic later
+                }
             }
             
             let fullReason = hint.reason;
@@ -3688,23 +3693,41 @@ class SudokuGame {
         }
         else if (hint.type === 'hidden') {
             // Target number is hint.number.
-            // Find all other hint.number on the board and shade their rows/cols
+            // 1. Highlight all other instances of this digit as attackers
             for(let r=0; r<9; r++) {
                 for(let c=0; c<9; c++) {
                     if (this.grid[r][c] === hint.number && (r !== hint.row || c !== hint.col)) {
-                        // Highlight the "shooter"
                         const shooter = document.querySelector(`[data-index="${r * 9 + c}"]`);
                         if (shooter) shooter.classList.add('exp-hint-attacker');
-                        
-                        // Shade the row
+                    }
+                }
+            }
+
+            // 2. Try to parse the target unit from the reason string to shade it
+            if (hint.reason) {
+                const match = hint.reason.match(/In (row|column|box) (\d+)/i);
+                if (match) {
+                    const unitType = match[1].toLowerCase();
+                    const unitIndex = parseInt(match[2]) - 1;
+
+                    if (unitType === 'row') {
                         for(let i=0; i<9; i++) {
-                            const sr = document.querySelector(`[data-index="${r * 9 + i}"]`);
-                            if (sr) sr.classList.add('exp-hint-shadow');
+                            const s = document.querySelector(`[data-index="${unitIndex * 9 + i}"]`);
+                            if (s) s.classList.add('exp-hint-shadow');
                         }
-                        // Shade the col
+                    } else if (unitType === 'column') {
                         for(let i=0; i<9; i++) {
-                            const sc = document.querySelector(`[data-index="${i * 9 + c}"]`);
-                            if (sc) sc.classList.add('exp-hint-shadow');
+                            const s = document.querySelector(`[data-index="${i * 9 + unitIndex}"]`);
+                            if (s) s.classList.add('exp-hint-shadow');
+                        }
+                    } else if (unitType === 'box') {
+                        const rs = Math.floor(unitIndex / 3) * 3;
+                        const cs = (unitIndex % 3) * 3;
+                        for(let i=rs; i<rs+3; i++) {
+                            for(let j=cs; j<cs+3; j++) {
+                                const s = document.querySelector(`[data-index="${i * 9 + j}"]`);
+                                if (s) s.classList.add('exp-hint-shadow');
+                            }
                         }
                     }
                 }
