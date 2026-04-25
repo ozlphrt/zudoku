@@ -2154,38 +2154,13 @@ class SudokuGame {
     restartLevel() {
         if (this.isGameWon) return; 
         
-        // Reset grid to starting values
-        for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
-                if (!this.givenCells[r][c]) {
-                    this.grid[r][c] = 0;
-                }
-            }
-        }
+        console.log("🔄 Refreshing level: Generating a NEW puzzle at the same difficulty...");
         
-        // Clear all notes
-        this.notes = Array(9).fill().map(() => Array(9).fill().map(() => new Set()));
+        // Clear the current saved game so newGame() doesn't resume it
+        localStorage.removeItem('zudoku-save');
         
-        // Reset move history
-        this.moveHistory = [];
-        this.historyIndex = -1;
-        
-        // Update stats
-        this.moveCount = 0;
-        this.errorCount = 0;
-        this.hintCount = 0;
-        this.startTime = Date.now();
-        this.pausedTime = 0;
-        this.isPaused = false;
-        
-        // Update UI
-        this.updateDisplay();
-        this.updateProgress();
-        this.updateAutoDashboard();
-        this.saveGameState();
-        this.playSound('click');
-        
-        console.log('🔄 Level restarted (Progress preserved).');
+        // Start a fresh new game at the current difficulty/clue count
+        this.newGame();
     }
 
     newGame() {
