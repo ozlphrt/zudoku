@@ -509,38 +509,96 @@
             z-index: 100;
         }
 
-        .hint-region-highlight {
-            background: rgba(218, 81, 0, 0.2) !important;
-            box-shadow: inset 0 0 25px rgba(218, 81, 0, 0.3);
-            transition: background 0.4s ease;
-            position: relative;
+        .exp-hint-target {
+            background-color: transparent !important;
+            box-shadow: inset 0 0 0 3px #57C7FF, 0 0 25px rgba(87, 199, 255, 0.8) !important;
+            animation: pulseHintTarget 1.5s infinite alternate ease-in-out;
+            z-index: 10 !important;
+        }
+
+        .exp-hint-attacker {
+            background-color: rgba(218, 81, 0, 0.25) !important;
+            transition: background-color 0.4s ease;
             z-index: 5;
         }
 
-        /* Border glow for reason reasoning */
-        .hint-region-highlight::after {
-            content: '';
+        .exp-hint-shadow {
+            background-color: rgba(218, 81, 0, 0.1) !important;
+            transition: background-color 0.4s ease;
+            z-index: 2;
+        }
+
+        @keyframes pulseHintTarget {
+            from { box-shadow: inset 0 0 0 3px rgba(87, 199, 255, 0.5), 0 0 15px rgba(87, 199, 255, 0.4) !important; }
+            to { box-shadow: inset 0 0 0 3px #57C7FF, 0 0 30px rgba(87, 199, 255, 1) !important; }
+        }
+
+        /* Hint Banner UI */
+        .hint-banner-container {
             position: absolute;
-            inset: 0;
-            border: 1px solid rgba(218, 81, 0, 0.4);
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(87, 199, 255, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(87, 199, 255, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
             pointer-events: none;
         }
-        
-        #hintBtn:hover {
-            background: rgba(218, 81, 0, 0.3) !important;
-            transform: translateY(-2px);
+        .hint-banner-container.visible {
+            opacity: 1;
+            pointer-events: auto;
         }
+        .hint-banner-text {
+            color: #ffffff;
+            font-size: 14px;
+            line-height: 1.4;
+            text-align: center;
+        }
+        .hint-banner-actions {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+        .hint-btn-cancel, .hint-btn-apply {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .hint-btn-cancel {
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+        }
+        .hint-btn-cancel:active { background: rgba(255,255,255,0.2); }
+        .hint-btn-apply {
+            background: #57C7FF;
+            color: #000;
+        }
+        .hint-btn-apply:active { transform: scale(0.96); }
 
-        .hint-highlight {
-            background: rgba(218, 81, 0, 0.4) !important;
-            z-index: 10;
-            animation: pulseHintGlow 1.5s infinite alternate ease-in-out;
+        [data-theme="light"] .hint-banner-container {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(87, 199, 255, 0.5);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2), 0 0 20px rgba(87, 199, 255, 0.2);
         }
-
-        @keyframes pulseHintGlow {
-            from { mask-image: radial-gradient(circle, white 0%, transparent 100%); opacity: 0.5; background: #DA5100; }
-            to { mask-image: radial-gradient(circle, white 100%, transparent 100%); opacity: 1; background: #FF7043; box-shadow: 0 0 30px #DA5100; }
-        }
+        [data-theme="light"] .hint-banner-text { color: #000000; }
+        [data-theme="light"] .hint-btn-cancel { background: rgba(0,0,0,0.1); color: #000; }
+        [data-theme="light"] .hint-btn-cancel:active { background: rgba(0,0,0,0.15); }
 
         /* LIGHT MODE OVERHAUL (MATCHING DARK MODE FIDELITY) */
         [data-theme="light"] body {
@@ -1409,15 +1467,24 @@
     </div>
 </div>
 
-<div id="confirmOverlay" class="modal-overlay" onclick="if(event.target === this) closeModal('confirmOverlay')">
-    <div class="victory-content" style="max-width: 380px;">
-        <p class="victory-reaction">Restart Level?</p>
-        <div style="display: flex; gap: 12px; width: 100%; margin-top: 24px;">
-            <button class="primary-btn" style="background: rgba(255,255,255,0.1);" onclick="closeModal('confirmOverlay')">BACK</button>
-            <button class="primary-btn" onclick="proceedWithRestart()">CLEAR</button>
+    <div id="confirmOverlay" class="modal-overlay" onclick="if(event.target === this) closeModal('confirmOverlay')">
+        <div class="victory-content" style="max-width: 380px;">
+            <p class="victory-reaction">Restart Level?</p>
+            <div style="display: flex; gap: 12px; width: 100%; margin-top: 24px;">
+                <button class="primary-btn" style="background: rgba(255,255,255,0.1);" onclick="closeModal('confirmOverlay')">BACK</button>
+                <button class="primary-btn" onclick="proceedWithRestart()">CLEAR</button>
+            </div>
         </div>
     </div>
-</div>
+
+    <!-- Explainable Hint Banner -->
+    <div id="hintBanner" class="hint-banner-container">
+        <div id="hintBannerText" class="hint-banner-text">Loading hint...</div>
+        <div class="hint-banner-actions">
+            <button class="hint-btn-cancel" onclick="if(window.game) window.game.cancelExplainableHint()">Cancel</button>
+            <button class="hint-btn-apply" onclick="if(window.game) window.game.applyCurrentHint()">Apply</button>
+        </div>
+    </div>
 
 <!-- Hint Tooltip Removed in favor of direct flash-and-place -->
 
@@ -1548,19 +1615,13 @@
     function showSmartHint() {
         if (!window.game) return;
         const hint = window.game.getSmartHint();
-        if (!hint) return;
-
-        const cell = document.querySelector(`[data-index="${hint.row * 9 + hint.col}"]`);
-        if (cell) {
-            // High-fidelity flash reward
-            cell.classList.add('celebrate');
-            if (window.game.playSound) window.game.playSound('hint');
-            
-            setTimeout(() => {
-                window.game.applySmartMove(hint.row, hint.col, hint.number);
-                cell.classList.remove('celebrate');
-            }, 300);
+        if (!hint) {
+            console.log("No smart hint available.");
+            return;
         }
+        
+        // Start the step-by-step visual explanation instead of auto-applying
+        window.game.startExplainableHint(hint);
     }
 
     function showConfirmRestart() { showModal('confirmOverlay'); }

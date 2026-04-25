@@ -3582,6 +3582,142 @@ class SudokuGame {
         return hint;
     }
 
+    startExplainableHint(hint) {
+        if (this.isPaused) this.resumeTimer();
+        if (this.isGameWon) return;
+
+        this.currentHint = hint;
+        this.isExplainingHint = true;
+
+        // Step 1: Clear and Target
+        this.clearHighlights();
+        this.selectedCell = null;
+        if (this.isPaintMode) {
+            this.isPaintMode = false;
+            this.paintNumber = null;
+            this.clearNumberCursor();
+            document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
+        }
+        this.updateDisplay(); // Apply clear
+
+        // Highlight Target
+        const targetCell = document.querySelector(`[data-index="${hint.row * 9 + hint.col}"]`);
+        if (targetCell) targetCell.classList.add('exp-hint-target');
+
+        // Show UI Banner with text
+        const bannerText = document.getElementById('hintBannerText');
+        const banner = document.getElementById('hintBanner');
+        if (bannerText && banner) {
+            let title = hint.type === 'fullhouse' ? 'Full House' :
+                        hint.type === 'naked' ? 'Naked Single' :
+                        hint.type === 'hidden' ? 'Hidden Single' : 'Hint';
+            bannerText.innerHTML = `<strong style="color: #57C7FF; font-size: 16px; margin-bottom: 4px; display: inline-block;">${title}</strong><br>${hint.reason}`;
+            banner.classList.add('visible');
+        }
+
+        // Step 2: The Logic (Shading) after a short delay
+        setTimeout(() => {
+            if (!this.isExplainingHint) return; // Aborted
+            this.shadeExplainableHint(hint);
+        }, 600);
+    }
+
+    shadeExplainableHint(hint) {
+        if (hint.type === 'fullhouse') {
+            // Shade the other 8 cells in the unit
+            let cellsToShade = [];
+            if (hint.unitType === 'row') {
+                for(let c=0; c<9; c++) if (c !== hint.col) cellsToShade.push({r: hint.row, c: c});
+            } else if (hint.unitType === 'column') {
+                for(let r=0; r<9; r++) if (r !== hint.row) cellsToShade.push({r: r, c: hint.col});
+            } else if (hint.unitType === '3x3 box') {
+                const rs = Math.floor(hint.unitIndex / 3) * 3;
+                const cs = (hint.unitIndex % 3) * 3;
+                for(let r=rs; r<rs+3; r++) {
+                    for(let c=cs; c<cs+3; c++) {
+                        if (r !== hint.row || c !== hint.col) cellsToShade.push({r, c});
+                    }
+                }
+            }
+            cellsToShade.forEach(pos => {
+                const cell = document.querySelector(`[data-index="${pos.r * 9 + pos.c}"]`);
+                if (cell) cell.classList.add('exp-hint-attacker');
+            });
+        } 
+        else if (hint.type === 'naked') {
+            // Shade all non-empty peers
+            const peers = this.getPeers(hint.row, hint.col);
+            peers.forEach(pos => {
+                if (this.grid[pos.r][pos.c] !== 0) {
+                    const cell = document.querySelector(`[data-index="${pos.r * 9 + pos.c}"]`);
+                    if (cell) cell.classList.add('exp-hint-attacker');
+                }
+            });
+        }
+        else if (hint.type === 'hidden') {
+            // Target number is hint.number.
+            // Find all other hint.number on the board and shade their rows/cols
+            for(let r=0; r<9; r++) {
+                for(let c=0; c<9; c++) {
+                    if (this.grid[r][c] === hint.number && (r !== hint.row || c !== hint.col)) {
+                        // Highlight the "shooter"
+                        const shooter = document.querySelector(`[data-index="${r * 9 + c}"]`);
+                        if (shooter) shooter.classList.add('exp-hint-attacker');
+                        
+                        // Shade the row
+                        for(let i=0; i<9; i++) {
+                            const sr = document.querySelector(`[data-index="${r * 9 + i}"]`);
+                            if (sr) sr.classList.add('exp-hint-shadow');
+                        }
+                        // Shade the col
+                        for(let i=0; i<9; i++) {
+                            const sc = document.querySelector(`[data-index="${i * 9 + c}"]`);
+                            if (sc) sc.classList.add('exp-hint-shadow');
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    cancelExplainableHint() {
+        this.isExplainingHint = false;
+        this.currentHint = null;
+        this.clearExplainableVisuals();
+    }
+
+    applyCurrentHint() {
+        if (!this.currentHint) return;
+        const hint = this.currentHint;
+        this.cancelExplainableHint();
+        this.applySmartMove(hint.row, hint.col, hint.number);
+    }
+
+    clearExplainableVisuals() {
+        const banner = document.getElementById('hintBanner');
+        if (banner) banner.classList.remove('visible');
+
+        document.querySelectorAll('.exp-hint-target, .exp-hint-attacker, .exp-hint-shadow').forEach(el => {
+            el.classList.remove('exp-hint-target', 'exp-hint-attacker', 'exp-hint-shadow');
+        });
+    }
+
+    getPeers(row, col) {
+        const peers = [];
+        for (let i = 0; i < 9; i++) {
+            if (i !== col) peers.push({r: row, c: i});
+            if (i !== row) peers.push({r: i, c: col});
+        }
+        const boxRow = Math.floor(row / 3) * 3;
+        const boxCol = Math.floor(col / 3) * 3;
+        for (let r = boxRow; r < boxRow + 3; r++) {
+            for (let c = boxCol; c < boxCol + 3; c++) {
+                if (r !== row && c !== col) peers.push({r, c});
+            }
+        }
+        return peers;
+    }
+
     applySmartMove(row, col, number) {
         if (this.grid[row][col] === 0) {
             this.grid[row][col] = number;
