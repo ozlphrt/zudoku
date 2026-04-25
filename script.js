@@ -3628,6 +3628,14 @@ class SudokuGame {
             }
 
             bannerText.innerHTML = `<strong style="color: var(--highlight); font-size: 16px; margin-bottom: 4px; display: inline-block;">${title}</strong><br><span style="color: #cccccc;">${fullReason}</span>`;
+            
+            // Avoid blocking the logic shading! If the target cell is in the bottom half, move banner to the top.
+            if (hint.row > 4) {
+                banner.classList.add('banner-top');
+            } else {
+                banner.classList.remove('banner-top');
+            }
+            
             banner.classList.add('visible');
         }
 
@@ -3711,7 +3719,10 @@ class SudokuGame {
 
     clearExplainableVisuals() {
         const banner = document.getElementById('hintBanner');
-        if (banner) banner.classList.remove('visible');
+        if (banner) {
+            banner.classList.remove('visible');
+            banner.classList.remove('banner-top');
+        }
 
         document.querySelectorAll('.exp-hint-target, .exp-hint-attacker, .exp-hint-shadow').forEach(el => {
             el.classList.remove('exp-hint-target', 'exp-hint-attacker', 'exp-hint-shadow');
