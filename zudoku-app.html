@@ -509,128 +509,7 @@
             z-index: 100;
         }
 
-        .exp-hint-target {
-            background-color: transparent !important;
-            box-shadow: inset 0 0 0 3px var(--highlight), 0 0 25px rgba(var(--highlight-rgb), 0.8) !important;
-            animation: pulseHintTarget 1.5s infinite alternate ease-in-out;
-            z-index: 10 !important;
-        }
 
-        .exp-hint-attacker {
-            background-color: rgba(var(--highlight-rgb), 0.15) !important;
-            color: var(--highlight) !important;
-            text-shadow: 0 0 15px rgba(var(--highlight-rgb), 0.8) !important;
-            transform: scale(1.1) !important;
-            border-radius: 8px !important;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 5;
-        }
-
-        [data-theme="light"] .exp-hint-attacker,
-        [data-theme="light"] .cell.exp-hint-attacker {
-            background-color: rgba(var(--highlight-rgb), 0.25) !important;
-            color: var(--highlight) !important;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2), 0 0 10px rgba(var(--highlight-rgb), 0.4) !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15), inset 0 0 0 2px rgba(var(--highlight-rgb), 0.3) !important;
-        }
-
-        .hint-candidate-number {
-            font-size: 56px; 
-            font-weight: 800; 
-            color: var(--highlight); 
-            line-height: 1; 
-            text-shadow: 0 0 20px rgba(var(--highlight-rgb), 0.4);
-        }
-
-        [data-theme="light"] .hint-candidate-number {
-            text-shadow: 0 4px 10px rgba(var(--highlight-rgb), 0.3), 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        .exp-hint-shadow {
-            background-color: rgba(218, 81, 0, 0.1) !important;
-            transition: background-color 0.4s ease;
-            z-index: 2;
-        }
-
-        @keyframes pulseHintTarget {
-            from { box-shadow: inset 0 0 0 3px rgba(var(--highlight-rgb), 0.5), 0 0 15px rgba(var(--highlight-rgb), 0.4) !important; }
-            to { box-shadow: inset 0 0 0 3px var(--highlight), 0 0 30px rgba(var(--highlight-rgb), 1) !important; }
-        }
-
-        /* Hint Banner UI */
-        .hint-banner-container {
-            position: absolute;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 400px;
-            background: rgba(20, 20, 20, 0.95);
-            border: 1px solid rgba(var(--highlight-rgb), 0.3);
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(var(--highlight-rgb), 0.1);
-            backdrop-filter: blur(10px);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-        .hint-banner-container.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .hint-banner-container.banner-top {
-            bottom: auto;
-            top: 24px;
-        }
-        .hint-banner-text {
-            color: #ffffff;
-            font-size: 14px;
-            line-height: 1.4;
-            text-align: center;
-        }
-        .hint-banner-desc {
-            color: #cccccc;
-        }
-        .hint-banner-actions {
-            display: flex;
-            gap: 8px;
-            width: 100%;
-        }
-        .hint-btn-cancel, .hint-btn-apply {
-            flex: 1;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s ease;
-        }
-        .hint-btn-cancel {
-            background: rgba(255,255,255,0.1);
-            color: #ffffff;
-        }
-        .hint-btn-cancel:active { background: rgba(255,255,255,0.2); }
-        .hint-btn-apply {
-            background: var(--highlight);
-            color: #000;
-        }
-        .hint-btn-apply:active { transform: scale(0.96); }
-
-        [data-theme="light"] .hint-banner-container {
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(var(--highlight-rgb), 0.5);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2), 0 0 20px rgba(var(--highlight-rgb), 0.2);
-        }
-        [data-theme="light"] .hint-banner-text { color: #000000; }
-        [data-theme="light"] .hint-banner-desc { color: #444444; }
-        [data-theme="light"] .hint-btn-cancel { background: rgba(0,0,0,0.1); color: #000; }
-        [data-theme="light"] .hint-btn-cancel:active { background: rgba(0,0,0,0.15); }
 
         /* LIGHT MODE OVERHAUL (MATCHING DARK MODE FIDELITY) */
         [data-theme="light"] body {
@@ -1366,6 +1245,99 @@
         }
         input:checked + .toggle-slider { background-color: var(--highlight); }
         input:checked + .toggle-slider:before { transform: translateX(20px); }
+        /* -------------------------------------------------------------------------- */
+        /*                          EXPLAINABLE HINT SYSTEM CSS                        */
+        /* -------------------------------------------------------------------------- */
+        .exp-hint-target {
+            background-color: transparent !important;
+            box-shadow: inset 0 0 0 3px var(--highlight), 0 0 25px rgba(var(--highlight-rgb), 0.8) !important;
+            animation: pulseHintTarget 1.5s infinite alternate ease-in-out;
+            z-index: 10 !important;
+        }
+
+        .exp-hint-attacker {
+            background-color: rgba(var(--highlight-rgb), 0.15) !important;
+            color: var(--highlight) !important;
+            text-shadow: 0 0 15px rgba(var(--highlight-rgb), 0.8) !important;
+            transform: scale(1.1) !important;
+            border-radius: 8px !important;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 5;
+        }
+
+        /* LIGHT MODE OVERRIDES - High Specificity to beat theme defaults */
+        html[data-theme="light"] .exp-hint-attacker,
+        [data-theme="light"] .cell.exp-hint-attacker {
+            background-color: rgba(var(--highlight-rgb), 0.35) !important;
+            color: var(--highlight) !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2), 0 0 10px rgba(var(--highlight-rgb), 0.4) !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15), inset 0 0 0 2px rgba(var(--highlight-rgb), 0.4) !important;
+        }
+
+        .hint-candidate-number {
+            font-size: 56px; 
+            font-weight: 800; 
+            color: var(--highlight); 
+            line-height: 1; 
+            text-shadow: 0 0 20px rgba(var(--highlight-rgb), 0.4);
+        }
+
+        [data-theme="light"] .hint-candidate-number {
+            text-shadow: 0 4px 10px rgba(var(--highlight-rgb), 0.3), 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .exp-hint-shadow {
+            background-color: rgba(var(--highlight-rgb), 0.1) !important;
+            transition: background-color 0.4s ease;
+            z-index: 2;
+        }
+
+        @keyframes pulseHintTarget {
+            from { box-shadow: inset 0 0 0 3px rgba(var(--highlight-rgb), 0.5), 0 0 15px rgba(var(--highlight-rgb), 0.4) !important; }
+            to { box-shadow: inset 0 0 0 3px var(--highlight), 0 0 30px rgba(var(--highlight-rgb), 1) !important; }
+        }
+
+        .hint-banner-container {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(var(--highlight-rgb), 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(var(--highlight-rgb), 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .hint-banner-container.visible { opacity: 1; pointer-events: auto; }
+        .hint-banner-container.banner-top { bottom: auto; top: 24px; }
+        .hint-banner-text { color: #ffffff; font-size: 14px; line-height: 1.4; text-align: center; }
+        .hint-banner-desc { color: #cccccc; }
+        .hint-banner-actions { display: flex; gap: 8px; width: 100%; }
+        .hint-btn-cancel, .hint-btn-apply { flex: 1; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s ease; }
+        .hint-btn-cancel { background: rgba(255,255,255,0.1); color: #ffffff; }
+        .hint-btn-cancel:active { background: rgba(255,255,255,0.2); }
+        .hint-btn-apply { background: var(--highlight); color: #000; }
+        .hint-btn-apply:active { transform: scale(0.96); }
+
+        [data-theme="light"] .hint-banner-container {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(var(--highlight-rgb), 0.5);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2), 0 0 20px rgba(var(--highlight-rgb), 0.2);
+        }
+        [data-theme="light"] .hint-banner-text { color: #000000; }
+        [data-theme="light"] .hint-banner-desc { color: #444444; }
+        [data-theme="light"] .hint-btn-cancel { background: rgba(0,0,0,0.1); color: #000; }
+        [data-theme="light"] .hint-btn-cancel:active { background: rgba(0,0,0,0.15); }
     </style>
 </head>
 
