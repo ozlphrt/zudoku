@@ -1989,15 +1989,11 @@ class SudokuGame {
         const targetCellsToRemove = 81 - this.getTargetGivenNumbers();
         let removedCount = 0;
         let attempts = 0;
-        const maxAttempts = 500; // Increased from 1000
+        const maxAttempts = 500;
         
-        // Create positions array and shuffle
         const positions = [];
-        for (let i = 0; i < 81; i++) {
-            positions.push(i);
-        }
+        for (let i = 0; i < 81; i++) positions.push(i);
         
-        // Try multiple rounds of removal
         while (removedCount < targetCellsToRemove && attempts < maxAttempts) {
             attempts++;
             this.shuffleArray(positions);
@@ -2008,47 +2004,31 @@ class SudokuGame {
                 const row = Math.floor(pos / 9);
                 const col = pos % 9;
                 
-                // Skip if already removed
                 if (this.grid[row][col] === 0) continue;
                 
-                // Store original value
                 const originalValue = this.grid[row][col];
-                
-                // Try removing this cell
                 this.grid[row][col] = 0;
                 
-                // Strict uniqueness for standard difficulty; Absolute precision for AUTO/Custom
                 const isAuto = this.autoMode && this.autoMode.active;
-                const canRemove = (isAuto || this.hasUniqueSolution()) && this.validateGameState();
-
+                const canRemove = (isAuto || this.hasUniqueSolution());
+ 
                 if (canRemove) {
                     this.givenCells[row][col] = false;
                     removedCount++;
                     foundRemovable = true;
-                    
                     if (removedCount >= targetCellsToRemove) break;
                 } else {
-                    // Restore value if removal breaks uniqueness (for standard modes)
                     this.grid[row][col] = originalValue;
                 }
             }
             
-            // If no progress made, try a different approach
-            if (!foundRemovable) {
-                // Try removing from less constrained areas
-                if (!this.removeFromLessConstrainedAreas()) {
-                    break; // Can't remove any more
-                }
-            }
+            if (!foundRemovable) break;
         }
         
-        // Final validation
-        if (!this.hasUniqueSolution()) {
-            console.warn('Generated puzzle is not uniquely solvable');
+        if (removedCount < targetCellsToRemove || !this.hasUniqueSolution()) {
             return false;
         }
         
-        // Mark remaining cells as given
         for (let row = 0; row < 9; row++) {
             for (let col = 0; col < 9; col++) {
                 if (this.grid[row][col] !== 0) {
