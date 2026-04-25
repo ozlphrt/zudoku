@@ -4194,7 +4194,7 @@ class SudokuGame {
                 console.error('Error parsing auto state:', e);
             }
         }
-        return { active: false, currentClues: 44, totalTries: 0, triesInRank: 0, winsInLevel: 0 };
+        return { active: false, currentClues: 28, totalTries: 0, triesInRank: 0, winsInLevel: 0 };
     }
 
     loadSarpMode() {
@@ -4219,10 +4219,11 @@ class SudokuGame {
     }
     
     getAutoDifficultyLabel(clues) {
-        if (clues >= 37) return "EASY";
-        if (clues >= 30) return "MEDIUM";
-        if (clues >= 23) return "HARD";
-        return "EXPERT";
+        if (clues >= 32) return "EASY";
+        if (clues >= 28) return "MEDIUM";
+        if (clues >= 24) return "HARD";
+        if (clues >= 20) return "EXPERT";
+        return "ULTRA";
     }
     
     updateAutoDashboard() {
@@ -4232,8 +4233,8 @@ class SudokuGame {
             const value = this.getTargetGivenNumbers();
             levelBtn.textContent = `L${value}`;
             
-            // Sync dial rotation (Range: 17 to 50, Delta: 33)
-            const percent = (50 - value) / 33;
+            // Sync dial rotation (Range: 17 to 35, Delta: 18)
+            const percent = (35 - value) / 18;
             const angle = percent * (2 * Math.PI);
             levelBtn.style.setProperty('--dial-angle', `${angle}rad`);
         }
@@ -4275,16 +4276,16 @@ class SudokuGame {
             const value = this.autoMode.currentClues;
             let zone = "EASY";
             let hue = 185; 
-            if (value <= 21) { zone = "ULTRA"; hue = 280; }
-            else if (value <= 28) { zone = "EXPERT"; hue = 0; }
-            else if (value <= 35) { zone = "HARD"; hue = 32; }
-            else if (value <= 43) { zone = "MEDIUM"; hue = 50; }
+            if (value <= 19) { zone = "ULTRA"; hue = 280; }
+            else if (value <= 23) { zone = "EXPERT"; hue = 0; }
+            else if (value <= 27) { zone = "HARD"; hue = 32; }
+            else if (value <= 31) { zone = "MEDIUM"; hue = 50; }
             zoneEl.textContent = zone;
             overlay.style.setProperty('--scrub-color', `hsl(${hue}, 80%, 55%)`);
             overlay.style.setProperty('--scrub-glow', `hsla(${hue}, 80%, 55%, 0.3)`);
         }
         if (fill) {
-            const percent = (50 - this.autoMode.currentClues) / 33;
+            const percent = (35 - this.autoMode.currentClues) / 18;
             const circumference = 660;
             fill.style.strokeDashoffset = circumference * (1 - percent);
         }
@@ -4313,52 +4314,49 @@ class SudokuGame {
         const fill = document.getElementById('radial-progress-fill');
         const valEl = document.getElementById('scroller-value');
         const zoneEl = document.getElementById('scroller-zone');
+        const levelBtn = document.getElementById('level_indicator');
         
         if (!overlay || !container || !fill) return;
         
         // Mechanical Linear-to-Radial mapping: Up or Right increases level
-        // Total delta: dx (right is pos) - dy (up is neg, so -dy is pos)
         const dx = e.clientX - this.scrubStartX;
         const dy = e.clientY - this.scrubStartY;
         const totalDelta = dx - dy;
         
-        // Sensitivity: 5px per clue step
-        const sensitivity = 5;
-        let value = Math.round(this.scrubStartValue + (totalDelta / sensitivity));
-        value = Math.max(17, Math.min(50, value));
+        // Sensitivity: 15px per clue step
+        const sensitivity = 15;
+        let newValue = Math.round(this.scrubStartValue + (totalDelta / sensitivity));
+        newValue = Math.max(17, Math.min(35, newValue));
         
-        // Map value (17 to 50) to angle (0 to 360)
-        const percent = (50 - value) / 33;
-        const angle = percent * (2 * Math.PI);
-        
-        // Update Radial Progress (C=660)
-        const circumference = 660;
-        fill.style.strokeDashoffset = circumference * (1 - percent);
-        
-        if (value !== this.tempScrubValue) {
-            this.tempScrubValue = value;
-            if (valEl) valEl.textContent = value;
+        if (newValue !== this.tempScrubValue) {
+            this.tempScrubValue = newValue;
             
-            // Update main button label and dial rotation in real-time
-            const levelBtn = document.getElementById('level_indicator');
+            // Map value (17 to 35) to percentage (Range: 18)
+            const percent = (35 - newValue) / 18;
+            const angle = percent * (2 * Math.PI);
+            
+            // Update UI Elements
+            if (valEl) valEl.textContent = newValue;
             if (levelBtn) {
-                levelBtn.textContent = `L${value}`;
+                levelBtn.textContent = `L${newValue}`;
                 levelBtn.style.setProperty('--dial-angle', `${angle}rad`);
             }
             
             if (zoneEl) {
                 let zone = "EASY";
-                let hue = 185; // Cyan
-                
-                if (value <= 21) { zone = "ULTRA"; hue = 280; }
-                else if (value <= 28) { zone = "EXPERT"; hue = 0; }
-                else if (value <= 35) { zone = "HARD"; hue = 32; }
-                else if (value <= 43) { zone = "MEDIUM"; hue = 50; }
-                
+                let hue = 185; 
+                if (newValue <= 19) { zone = "ULTRA"; hue = 280; }
+                else if (newValue <= 23) { zone = "EXPERT"; hue = 0; }
+                else if (newValue <= 27) { zone = "HARD"; hue = 32; }
+                else if (newValue <= 31) { zone = "MEDIUM"; hue = 50; }
                 zoneEl.textContent = zone;
                 overlay.style.setProperty('--scrub-color', `hsl(${hue}, 80%, 55%)`);
                 overlay.style.setProperty('--scrub-glow', `hsla(${hue}, 80%, 55%, 0.3)`);
             }
+            
+            // Update Radial Progress (C=660)
+            const circumference = 660;
+            fill.style.strokeDashoffset = circumference * (1 - percent);
         }
     }
     
