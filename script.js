@@ -2248,10 +2248,10 @@ class SudokuGame {
             // If L17-L28 (Ultra/Expert), we want to see at least one advanced technique (Pair, Triple, etc.)
             const clueTarget = this.getTargetGivenNumbers();
             
-            // ULTRA (17-19): Must require at least weight 2.5 (Pointing Pair / Box-Line Reduction or better)
-            if (grade.solved && clueTarget <= 19 && grade.maxStepDifficulty < 2.5 && this.sarpAttemptCount < 100) {
+            // ULTRA (17-19): Must require at least weight 3.0 (Naked Triple / Hidden Pair or better)
+            if (grade.solved && clueTarget <= 19 && grade.maxStepDifficulty < 3.0 && this.sarpAttemptCount < 150) {
                 rejected = true;
-                grade.rejectionReason = `Too easy for ULTRA mode (Requires weight >= 2.5, got ${grade.maxStepDifficulty})`;
+                grade.rejectionReason = `Too easy for ULTRA mode (Requires weight >= 3.0, got ${grade.maxStepDifficulty})`;
             }
             // EXPERT (20-23): Must require at least weight 2.0 (Pairs or better)
             else if (grade.solved && clueTarget <= 23 && grade.maxStepDifficulty < 2.0 && this.sarpAttemptCount < 50) {
