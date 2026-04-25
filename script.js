@@ -3620,11 +3620,11 @@ class SudokuGame {
             
             let fullReason = hint.reason;
             if (hint.type === 'hidden') {
-                fullReason += ` Notice how other ${hint.number}s on the board cross out the remaining empty cells.`;
+                fullReason = `Other ${hint.number}s cross out all other empty cells in this unit.`;
             } else if (hint.type === 'naked') {
-                fullReason += ' Notice how the intersecting row, column, and block contain every other number.';
+                fullReason = `Row, column, and block already contain every other number.`;
             } else if (hint.type === 'fullhouse') {
-                fullReason += ' There is only one empty spot left to fill.';
+                fullReason = `Only one empty spot remains.`;
             }
 
             bannerText.innerHTML = `
@@ -3632,7 +3632,7 @@ class SudokuGame {
                     <div style="font-size: 56px; font-weight: 800; color: var(--highlight); line-height: 1; text-shadow: 0 0 20px rgba(var(--highlight-rgb), 0.4);">${hint.number}</div>
                     <div>
                         <strong style="color: var(--highlight); font-size: 16px; margin-bottom: 6px; display: inline-block; letter-spacing: 0.5px;">${title}</strong><br>
-                        <span style="color: #cccccc; font-size: 13px; line-height: 1.4; display: inline-block;">${fullReason}</span>
+                        <span class="hint-banner-desc" style="font-size: 13px; line-height: 1.4; display: inline-block;">${fullReason}</span>
                     </div>
                 </div>
             `;
