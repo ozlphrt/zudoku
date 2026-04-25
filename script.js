@@ -3611,7 +3611,17 @@ class SudokuGame {
             let title = hint.type === 'fullhouse' ? 'Full House' :
                         hint.type === 'naked' ? 'Naked Single' :
                         hint.type === 'hidden' ? 'Hidden Single' : 'Hint';
-            bannerText.innerHTML = `<strong style="color: #57C7FF; font-size: 16px; margin-bottom: 4px; display: inline-block;">${title}</strong><br>${hint.reason}`;
+            
+            let fullReason = hint.reason;
+            if (hint.type === 'hidden') {
+                fullReason += ` Notice how other ${hint.number}s on the board cross out the remaining empty cells.`;
+            } else if (hint.type === 'naked') {
+                fullReason += ' Notice how the intersecting row, column, and block contain every other number.';
+            } else if (hint.type === 'fullhouse') {
+                fullReason += ' There is only one empty spot left to fill.';
+            }
+
+            bannerText.innerHTML = `<strong style="color: #57C7FF; font-size: 16px; margin-bottom: 4px; display: inline-block;">${title}</strong><br><span style="color: #cccccc;">${fullReason}</span>`;
             banner.classList.add('visible');
         }
 
