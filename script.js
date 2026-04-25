@@ -3627,7 +3627,15 @@ class SudokuGame {
                 fullReason += ' There is only one empty spot left to fill.';
             }
 
-            bannerText.innerHTML = `<strong style="color: var(--highlight); font-size: 16px; margin-bottom: 4px; display: inline-block;">${title}</strong><br><span style="color: #cccccc;">${fullReason}</span>`;
+            bannerText.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 16px; text-align: left;">
+                    <div style="font-size: 56px; font-weight: 800; color: var(--highlight); line-height: 1; text-shadow: 0 0 20px rgba(var(--highlight-rgb), 0.4);">${hint.number}</div>
+                    <div>
+                        <strong style="color: var(--highlight); font-size: 16px; margin-bottom: 6px; display: inline-block; letter-spacing: 0.5px;">${title}</strong><br>
+                        <span style="color: #cccccc; font-size: 13px; line-height: 1.4; display: inline-block;">${fullReason}</span>
+                    </div>
+                </div>
+            `;
             
             // Avoid blocking the logic shading! If the target cell is in the bottom half, move banner to the top.
             if (hint.row > 4) {
