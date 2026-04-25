@@ -4221,7 +4221,10 @@ class SudokuGame {
     }
     
     initScrubber(e) {
-        if (!this.autoMode) return;
+        // If not in auto mode, switch to it automatically
+        if (this.difficulty !== 'auto') {
+            this.setDifficulty('auto');
+        }
         
         const overlay = document.getElementById('level-scroller-overlay');
         const container = document.querySelector('.radial-scrubber-container');
@@ -6192,20 +6195,8 @@ function togglePause() {
 }
 
 function cycleDifficulty() {
-    const levels = ['easy', 'medium', 'hard', 'expert', 'auto'];
-    let currentIndex = levels.indexOf(game.difficulty.toLowerCase());
-    if (currentIndex === -1) currentIndex = 0;
-    const nextIndex = (currentIndex + 1) % levels.length;
-    const nextDifficulty = levels[nextIndex];
-    
-    // Set and start new game
-    setDifficulty(nextDifficulty);
-    
-    // Update the button text immediately
-    const btn = document.getElementById('difficulty_toggle_label');
-    if (btn) {
-        btn.textContent = nextDifficulty === 'auto' ? "AUTO LEVEL" : nextDifficulty.toUpperCase();
-    }
+    // Legacy function - difficulty is now handled via the Level Dial scrubber
+    console.log("Cycle difficulty is deprecated - use the Level Dial.");
 }
 
 function setDifficulty(difficulty) {
