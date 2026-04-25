@@ -2264,9 +2264,17 @@ class SudokuGame {
             // After 50 attempts, if still not solved, we might need a fallback or just accept it
             let rejected = !grade.solved || grade.eleganceScore < eleganceThreshold;
             
+            // NEW: Enforce logic difficulty for ULTRA/EXPERT levels
+            // If L17-L28 (Ultra/Expert), we want to see at least one advanced technique (Pair, Triple, etc.)
+            const clueTarget = this.getTargetGivenNumbers();
+            if (grade.solved && clueTarget <= 28 && grade.maxStepDifficulty < 2.0 && this.sarpAttemptCount < 50) {
+                rejected = true;
+                grade.rejectionReason = `Too easy for ${clueTarget <= 21 ? 'ULTRA' : 'EXPERT'} mode (only singles used)`;
+            }
+
             // If we're really stuck (>100 attempts), Sarp Mode relaxes to 'Any valid puzzle' 
             // to prevent freezing the browser/device
-            if (this.sarpAttemptCount > 60) rejected = false;
+            if (this.sarpAttemptCount > 100) rejected = false;
 
             // Check for spikes (only in early attempts for maximum polish)
             if (grade.solved && !rejected && this.sarpAttemptCount < 15) {
