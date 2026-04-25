@@ -1,6 +1,6 @@
 {
   "name": "zudoku",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "A beautiful glassmorphism Sudoku game - completely standalone, no dependencies required",
   "main": "index.html",
   "scripts": {
