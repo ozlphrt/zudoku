@@ -3612,6 +3612,12 @@ class SudokuGame {
                         hint.type === 'naked' ? 'Naked Single' :
                         hint.type === 'hidden' ? 'Hidden Single' : 'Hint';
             
+            // Fallback: if Sarp solver was used, the title might be 'Hint' but it IS a naked single
+            if (title === 'Hint' && hint.reason && hint.reason.includes('possible candidate')) {
+                title = 'Naked Single';
+                hint.type = 'naked'; // Normalize for shading logic later
+            }
+            
             let fullReason = hint.reason;
             if (hint.type === 'hidden') {
                 fullReason += ` Notice how other ${hint.number}s on the board cross out the remaining empty cells.`;
@@ -3621,7 +3627,7 @@ class SudokuGame {
                 fullReason += ' There is only one empty spot left to fill.';
             }
 
-            bannerText.innerHTML = `<strong style="color: #57C7FF; font-size: 16px; margin-bottom: 4px; display: inline-block;">${title}</strong><br><span style="color: #cccccc;">${fullReason}</span>`;
+            bannerText.innerHTML = `<strong style="color: var(--highlight); font-size: 16px; margin-bottom: 4px; display: inline-block;">${title}</strong><br><span style="color: #cccccc;">${fullReason}</span>`;
             banner.classList.add('visible');
         }
 
