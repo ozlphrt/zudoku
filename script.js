@@ -4211,7 +4211,7 @@ class SudokuGame {
         const levelBtn = document.getElementById('level_indicator');
         if (levelBtn) {
             const value = this.getTargetGivenNumbers();
-            levelBtn.textContent = `L${value}`;
+            levelBtn.textContent = value;
             
             // Sync dial rotation (Range: 17 to 35, Delta: 18)
             const percent = (35 - value) / 18;
@@ -4321,7 +4321,7 @@ class SudokuGame {
             // Update UI Elements
             if (valEl) valEl.textContent = newValue;
             if (levelBtn) {
-                levelBtn.textContent = `L${newValue}`;
+                levelBtn.textContent = newValue;
                 levelBtn.style.setProperty('--dial-angle', `${angle}rad`);
             }
             

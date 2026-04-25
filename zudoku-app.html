@@ -1453,7 +1453,7 @@
         <div class="main-controls-split">
             <!-- Left: Dial Section -->
             <div class="dial-section">
-                <button id="level_indicator" onpointerdown="game.initScrubber(event)">L31</button>
+                <button id="level_indicator" onpointerdown="game.initScrubber(event)">31</button>
                 <div class="dial-label">Level</div>
             </div>
 
@@ -1727,12 +1727,13 @@
 
         game.updateAutoDashboard = function() {
             // Unified Level Indicator in Header (Lxx)
+            // Unified Level Indicator in Header
             const levelBtn = document.getElementById('level_indicator');
             const footerLabel = document.getElementById('difficulty_toggle_label');
             
             if (levelBtn) {
                 const value = this.getTargetGivenNumbers();
-                levelBtn.textContent = `L${value}`;
+                levelBtn.textContent = value;
                 
                 // Sync dial rotation
                 const percent = (50 - value) / 45;
