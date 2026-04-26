@@ -31,6 +31,7 @@ class SudokuGame {
         this.activeTouchCellIndex = null;
         this.selectedKeypadValue = null;
         this.touchKeypadTimer = null;
+        this.hintPulseTimer = null;
         
         // Move history for undo/redo
         this.moveHistory = [];
@@ -1209,6 +1210,7 @@ class SudokuGame {
     }
     
     setNumber(row, col, number) {
+        this.resetHintPulseTimer();
         if (this.isPaused) this.resumeTimer();
         const oldValue = this.grid[row][col];
         this.grid[row][col] = number;
@@ -2151,6 +2153,7 @@ class SudokuGame {
             console.log('💾 Found saved game, attempting to resume...');
             if (this.loadGameState()) {
                 console.log('✅ Resumed saved game');
+                this.resetHintPulseTimer();
                 return;
             }
         }
@@ -2170,6 +2173,7 @@ class SudokuGame {
         
         // Load puzzle from database
         this.loadPuzzleFromDatabase();
+        this.resetHintPulseTimer();
     }
     
     generateNewPuzzle() {
@@ -3546,6 +3550,7 @@ class SudokuGame {
     }
     
     solveHint() {
+        this.resetHintPulseTimer();
         if (this.isPaused) this.resumeTimer();
         if (this.isGameWon) return;
         
@@ -4231,6 +4236,27 @@ class SudokuGame {
             levelBtn.style.setProperty('--dial-angle', `${angle}rad`);
         }
     }
+
+    resetHintPulseTimer() {
+        if (this.hintPulseTimer) {
+            clearTimeout(this.hintPulseTimer);
+        }
+        
+        const hintBtn = document.getElementById('hintBtn');
+        if (hintBtn) {
+            hintBtn.classList.remove('pulse-hint');
+        }
+        
+        // If game is won or paused, don't start timer
+        if (this.isGameWon || this.isPaused) return;
+        
+        // Start a new 5-second timer
+        this.hintPulseTimer = setTimeout(() => {
+            if (!this.isPaused && !this.isGameWon && hintBtn) {
+                hintBtn.classList.add('pulse-hint');
+            }
+        }, 5000);
+    }
     
     initScrubber(e) {
         // If not in auto mode, switch to it automatically
@@ -4443,6 +4469,7 @@ class SudokuGame {
                 this.updateTimer();
             }, 100);
             this.updateTimerControls();
+            this.resetHintPulseTimer();
         }
     }
     
@@ -6412,12 +6439,14 @@ function loadSavedTheme() {
 function undoMove() {
     if (game) {
         game.undoMove();
+        game.resetHintPulseTimer();
     }
 }
 
 function redoMove() {
     if (game) {
         game.redoMove();
+        game.resetHintPulseTimer();
     }
 }
 

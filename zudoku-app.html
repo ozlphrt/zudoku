@@ -1357,6 +1357,29 @@
             to { box-shadow: inset 0 0 0 3px var(--highlight), 0 0 30px rgba(var(--highlight-rgb), 1) !important; }
         }
 
+        @keyframes hintButtonPulse {
+            0% { transform: scale(1); box-shadow: 0 6px 15px rgba(0,0,0,0.5), 0 0 10px var(--glow); border-color: rgba(255,255,255,0.12); }
+            50% { transform: scale(1.04); box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 25px var(--glow); border-color: var(--highlight); }
+            100% { transform: scale(1); box-shadow: 0 6px 15px rgba(0,0,0,0.5), 0 0 10px var(--glow); border-color: rgba(255,255,255,0.12); }
+        }
+
+        .pulse-hint {
+            animation: hintButtonPulse 2s ease-in-out infinite !important;
+            border-color: var(--highlight) !important;
+            z-index: 100;
+        }
+
+        .engraved-icon {
+            filter: drop-shadow(0 0 3px var(--glow));
+            stroke: var(--highlight);
+            transition: all 0.2s ease;
+        }
+
+        [data-theme="light"] .engraved-icon {
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+            stroke: #333;
+        }
+
         .hint-banner-container {
             position: absolute;
             bottom: 24px;
@@ -1480,9 +1503,15 @@
                     </svg>
                 </button>
                 <button id="hintBtn" class="restart-level-btn" onclick="showSmartHint()">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" class="engraved-icon">
+                        <!-- Bulb Outline -->
                         <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.1.7.7 1.3 1.5 1.5 2.5"></path>
-                        <path d="M9 18h6"></path><path d="M10 22h4"></path>
+                        <path d="M9 18h6"></path>
+                        <path d="M10 22h4"></path>
+                        <!-- Filaments/Rays -->
+                        <path d="M12 5v2" opacity="0.6"></path>
+                        <path d="M12 11v2" opacity="0.6"></path>
+                        <path d="M9 8h6" opacity="0.6"></path>
                     </svg>
                 </button>
                 <button id="settings_btn" class="restart-level-btn" onclick="toggleSettings()">
@@ -1494,7 +1523,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V2.8.1</div>
+    <div class="version-tag">V2.8.2</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
