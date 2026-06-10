@@ -1239,6 +1239,57 @@
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* Update Notification Toast */
+        #update-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(150px);
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        #update-toast.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .update-toast-btn {
+            background: var(--highlight);
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+        .update-toast-btn:hover {
+            filter: brightness(1.1);
+        }
+        .update-toast-btn:active {
+            transform: scale(0.95);
+        }
+
         /* SARP Generation Progress */
         #generation-overlay {
             display: none;
@@ -1563,6 +1614,12 @@
     </div>
 </div>
 
+<!-- Update Toast Notification -->
+<div id="update-toast">
+    <span>✨ A fresh update is ready for Zudoku!</span>
+    <button class="update-toast-btn" onclick="window.location.reload(true)">Update</button>
+</div>
+
 <div id="victoryOverlay" class="modal-overlay">
     <div class="victory-content">
         <p class="victory-reaction">Solved</p>
@@ -1843,26 +1900,43 @@
         });
     }
 
-    // Register Service Worker
+    // Register Service Worker with update notifications
     if ('serviceWorker' in navigator) {
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=2.8.6')
+            navigator.serviceWorker.register('sw.js?v=2.8.7')
                 .then(registration => {
                     console.log('SW registered: ', registration);
+                    
+                    // Periodically check for updates every 5 minutes
+                    setInterval(() => {
+                        registration.update();
+                    }, 5 * 60 * 1000);
+
+                    // Track updates
+                    registration.addEventListener('updatefound', () => {
+                        const installingWorker = registration.installing;
+                        installingWorker.addEventListener('statechange', () => {
+                            if (installingWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    // A new worker is installed and waiting
+                                    console.log('SW: New version found, showing notification.');
+                                    const toast = document.getElementById('update-toast');
+                                    if (toast) toast.classList.add('visible');
+                                }
+                            }
+                        });
+                    });
                 })
                 .catch(registrationError => {
                     console.log('SW registration failed: ', registrationError);
                 });
         };
 
-        // Reload the page once when a new service worker takes over
-        let refreshing = false;
+        // Show update notification toast when a new worker takes control
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-                refreshing = true;
-                console.log('SW: Controller changed, reloading...');
-                window.location.reload();
-            }
+            console.log('SW: Controller changed, prompting update.');
+            const toast = document.getElementById('update-toast');
+            if (toast) toast.classList.add('visible');
         });
 
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
