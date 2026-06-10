@@ -1,22 +1,24 @@
-const CACHE_NAME = 'zudoku-cache-v2.8.2';
+const CACHE_NAME = 'zudoku-cache-v2.8.6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './zudoku-app.html',
   './script.js',
   './sarp-solver.js',
+  './favicon.svg',
   './public/192.png',
   './public/512.png',
   './manifest.json'
 ];
 
-// Install Event - Caching the app shell
+// Install Event - Caching the app shell with cache-busting requests
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Opened cache');
-        return cache.addAll(ASSETS_TO_CACHE);
+        const requests = ASSETS_TO_CACHE.map(url => new Request(url, { cache: 'reload' }));
+        return cache.addAll(requests);
       })
       .then(() => self.skipWaiting())
   );
@@ -40,25 +42,33 @@ self.addEventListener('activate', (event) => {
 
 // Fetch Event - Cache-first strategy
 self.addEventListener('fetch', (event) => {
+  // Skip cross-origin requests that are not fonts
+  const isFontRequest = event.request.url.includes('fonts.googleapis.com') || 
+                       event.request.url.includes('fonts.gstatic.com');
+  const isLocalRequest = event.request.url.startsWith(self.location.origin);
+
+  if (!isLocalRequest && !isFontRequest) return;
+
   event.respondWith(
-    caches.match(event.request)
+    caches.match(event.request, { ignoreSearch: true })
       .then((response) => {
-        // Cache hit - return response
         if (response) {
           return response;
         }
 
-        // Clone the request because it's a stream and can only be consumed once
         const fetchRequest = event.request.clone();
 
         return fetch(fetchRequest).then(
           (response) => {
             // Check if we received a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
+            // Allow 'opaque' responses for fonts from Google CDNs
+            const isOpaque = response.type === 'opaque' || response.type === 'cors';
+            const isValid = response && response.status === 200;
+            
+            if (!isValid && !isOpaque) {
               return response;
             }
 
-            // Clone the response because it's a stream and can only be consumed once
             const responseToCache = response.clone();
 
             caches.open(CACHE_NAME)
@@ -68,7 +78,9 @@ self.addEventListener('fetch', (event) => {
 
             return response;
           }
-        );
+        ).catch(() => {
+          // If fetch fails (offline) and no cache, we just fail gracefully
+        });
       })
   );
 });

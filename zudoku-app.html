@@ -1731,7 +1731,10 @@
 
     function showConfirmRestart() { showModal('confirmOverlay'); }
     function proceedWithRestart() { if (window.game) window.game.restartLevel(); closeModal('confirmOverlay'); }
-    function advanceToNextLevel() { location.reload(); }
+    function advanceToNextLevel() { 
+        closeModal('victoryOverlay');
+        if (window.game) window.game.newGame(); 
+    }
 
     function showModal(id) { const el = document.getElementById(id); el.style.display = 'flex'; setTimeout(() => el.classList.add('visible'), 10); }
     function closeModal(id) { const el = document.getElementById(id); el.classList.remove('visible'); setTimeout(() => el.style.display = 'none', 300); }
@@ -1838,6 +1841,35 @@
             cursor.style.left = e.clientX + 'px';
             cursor.style.top = e.clientY + 'px';
         });
+    }
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        const registerSW = () => {
+            navigator.serviceWorker.register('sw.js?v=2.8.6')
+                .then(registration => {
+                    console.log('SW registered: ', registration);
+                })
+                .catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        };
+
+        // Reload the page once when a new service worker takes over
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                refreshing = true;
+                console.log('SW: Controller changed, reloading...');
+                window.location.reload();
+            }
+        });
+
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            registerSW();
+        } else {
+            window.addEventListener('load', registerSW);
+        }
     }
 </script>
 </body>

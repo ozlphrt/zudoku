@@ -16,6 +16,21 @@
             }
         } catch (e) {}
     })();
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        const registerSW = () => {
+            navigator.serviceWorker.register('sw.js?v=2.8.6')
+                .then(reg => console.log('SW registered from index'))
+                .catch(err => console.log('SW failed from index', err));
+        };
+
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            registerSW();
+        } else {
+            window.addEventListener('load', registerSW);
+        }
+    }
     </script>
     <style>
         * {
