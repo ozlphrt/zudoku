@@ -639,109 +639,163 @@ class SudokuGame {
             cell.className = 'cell';
             cell.dataset.index = i;
             
-            // Click to select
-            cell.addEventListener('click', () => this.selectCell(i));
+            // Clean short-tap / long-press handler with progressing dial animation
+            let touchTimer = null;
+            let dialAnimId = null;
+            let isLongPress = false;
+            let startPos = { x: 0, y: 0 };
             
-            // Right-click to toggle note mode
+            let dialDelayTimer = null;
+
+            const startDial = (x, y) => {
+                const container = document.getElementById('hold-dial-container');
+                const circle = document.getElementById('hold-dial-progress');
+                if (!container || !circle) return;
+                
+                if (dialDelayTimer) clearTimeout(dialDelayTimer);
+                if (dialAnimId) cancelAnimationFrame(dialAnimId);
+                
+                // Grace period: only show dial if user holds longer than 45ms
+                dialDelayTimer = setTimeout(() => {
+                    container.style.left = `${x}px`;
+                    container.style.top = `${y}px`;
+                    container.classList.remove('completed');
+                    circle.style.strokeDashoffset = '364.42'; // Start completely empty
+                    container.classList.add('active');
+                    
+                    const startTime = performance.now();
+                    const duration = 125; // Fills over 125ms (from 45ms to 170ms total)
+                    const totalLen = 364.42;
+                    
+                    const animateArc = (now) => {
+                        const elapsed = now - startTime;
+                        const progress = Math.min(1, elapsed / duration);
+                        // Progress arc grows smoothly from 0 to full circle
+                        circle.style.strokeDashoffset = (totalLen * (1 - progress)).toString();
+                        
+                        if (progress < 1) {
+                            dialAnimId = requestAnimationFrame(animateArc);
+                        }
+                    };
+                    
+                    dialAnimId = requestAnimationFrame(animateArc);
+                }, 45);
+            };
+            
+            const stopDial = (completed = false) => {
+                if (dialDelayTimer) {
+                    clearTimeout(dialDelayTimer);
+                    dialDelayTimer = null;
+                }
+                if (dialAnimId) {
+                    cancelAnimationFrame(dialAnimId);
+                    dialAnimId = null;
+                }
+                const container = document.getElementById('hold-dial-container');
+                const circle = document.getElementById('hold-dial-progress');
+                if (!container || !circle) return;
+                
+                if (completed) {
+                    circle.style.strokeDashoffset = '0';
+                    container.classList.add('completed');
+                    setTimeout(() => {
+                        container.classList.remove('active', 'completed');
+                        circle.style.strokeDashoffset = '364.42';
+                    }, 250);
+                } else {
+                    container.classList.remove('active', 'completed');
+                    circle.style.strokeDashoffset = '364.42';
+                }
+            };
+            
             cell.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
-                this.toggleNoteMode(i);
+                e.stopPropagation();
             });
-            
-            // Touch support - let browser handle pointer events naturally
-            // --- Universal Interaction (Pointer Events) ---
-            let ptrStartX = 0;
-            let ptrStartY = 0;
-            let ptrStartTime = 0;
-            let longPressTriggered = false;
             
             cell.addEventListener('pointerdown', (e) => {
                 if (this.isGameWon) return;
+                // Ignore right-click button (button 2) to prevent duplicate triggering with contextmenu
+                if (e.button === 2) return;
                 
-                ptrStartX = e.clientX;
-                ptrStartY = e.clientY;
-                ptrStartTime = Date.now();
-                longPressTriggered = false;
+                isLongPress = false;
+                startPos = { x: e.clientX, y: e.clientY };
                 
-                // Set capture to track movements even if they leave the cell
-                cell.setPointerCapture(e.pointerId);
-                
-                // Clear any existing timer
+                if (touchTimer) clearTimeout(touchTimer);
                 if (this.touchKeypadTimer) clearTimeout(this.touchKeypadTimer);
                 
-                // Start long press timer for the keypad
-                this.touchKeypadTimer = setTimeout(() => {
-                    this.showTouchKeypad(ptrStartX, ptrStartY, i);
-                    longPressTriggered = true;
+                startDial(e.clientX, e.clientY);
+                
+                // Exact 170ms long-press timer
+                touchTimer = setTimeout(() => {
+                    isLongPress = true;
+                    stopDial(true); // Turn green on completion!
                     this.vibrate(15);
-                }, 350);
-            });
-            
-            cell.addEventListener('pointerup', (e) => {
-                const ptrEndTime = Date.now();
-                const ptrDuration = ptrEndTime - ptrStartTime;
-                
-                if (this.touchKeypadTimer) {
-                    clearTimeout(this.touchKeypadTimer);
-                    this.touchKeypadTimer = null;
-                }
-                
-                // If keypad is active, confirm the selection
-                if (this.touchKeypadActive) {
-                    this.confirmTouchKeypad();
-                    return;
-                }
-                
-                // If long press was already handled, just return
-                if (longPressTriggered) return;
-                
-                // Check for flick gestures (quick swipe up/down)
-                const ptrEndX = e.clientX;
-                const ptrEndY = e.clientY;
-                const deltaX = ptrEndX - ptrStartX;
-                const deltaY = ptrEndY - ptrStartY;
-                
-                if (ptrDuration < 300) {
-                    // Flick up: deltaY < -20 and |deltaX| < 60 (note mode)
-                    if (deltaY < -20 && Math.abs(deltaX) < 60) {
-                        this.handleFlickUp(i);
-                        return;
-                    }
                     
-                    // Flick down: deltaY > 20 and |deltaX| < 60 (undo)
-                    if (deltaY > 20 && Math.abs(deltaX) < 60) {
-                        this.handleFlickDown();
-                        return;
+                    const row = Math.floor(i / 9);
+                    const col = i % 9;
+                    
+                    if (this.isPaintMode && this.paintNumber && !this.givenCells[row][col] && this.grid[row][col] === 0) {
+                        this.toggleNote(row, col, this.paintNumber);
+                    } else {
+                        this.showTouchKeypad(startPos.x, startPos.y, i);
                     }
-                }
+                }, 170);
             });
             
             cell.addEventListener('pointermove', (e) => {
-                const x = e.clientX;
-                const y = e.clientY;
-                
-                // If they move significantly before long-press, cancel it
-                if (!this.touchKeypadActive && this.touchKeypadTimer) {
-                    const dist = Math.sqrt(Math.pow(x - ptrStartX, 2) + Math.pow(y - ptrStartY, 2));
-                    if (dist > 15) {
-                        clearTimeout(this.touchKeypadTimer);
-                        this.touchKeypadTimer = null;
+                if (touchTimer) {
+                    const dist = Math.hypot(e.clientX - startPos.x, e.clientY - startPos.y);
+                    if (dist > 10) {
+                        clearTimeout(touchTimer);
+                        touchTimer = null;
+                        stopDial(false);
                     }
                 }
-                
-                // If keypad is active, update selection
                 if (this.touchKeypadActive) {
-                    this.updateTouchKeypad(x, y);
+                    this.updateTouchKeypad(e.clientX, e.clientY);
                 }
             });
             
-            cell.addEventListener('pointercancel', (e) => {
-                if (this.touchKeypadTimer) {
-                    clearTimeout(this.touchKeypadTimer);
-                    this.touchKeypadTimer = null;
+            cell.addEventListener('pointerup', (e) => {
+                if (touchTimer) {
+                    clearTimeout(touchTimer);
+                    touchTimer = null;
+                }
+                
+                if (!isLongPress) {
+                    stopDial(false);
+                }
+                
+                if (this.touchKeypadActive) {
+                    this.confirmTouchKeypad();
+                    e.preventDefault();
+                    return;
+                }
+                
+                if (!isLongPress) {
+                    const dist = Math.hypot(e.clientX - startPos.x, e.clientY - startPos.y);
+                    if (dist <= 10) {
+                        this.selectCell(i);
+                    }
+                } else {
+                    e.preventDefault();
                 }
             });
             
+            cell.addEventListener('pointercancel', () => {
+                if (touchTimer) {
+                    clearTimeout(touchTimer);
+                    touchTimer = null;
+                }
+                stopDial(false);
+            });
+            
+            // Prevent synthetic click from interfering with long-press
+            cell.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, true);
             
             gridElement.appendChild(cell);
         }
@@ -6322,17 +6376,15 @@ SudokuGame.prototype.updateTouchKeypad = function(x, y) {
     const keypadBtn = element ? element.closest('.keypad-btn') : null;
     
     const keypad = document.getElementById('touchKeypad');
-    keypad.querySelectorAll('.keypad-btn').forEach(btn => btn.classList.remove('active'));
     
     if (keypadBtn) {
+        keypad.querySelectorAll('.keypad-btn').forEach(btn => btn.classList.remove('active'));
         keypadBtn.classList.add('active');
         const newValue = keypadBtn.getAttribute('data-value');
         if (this.selectedKeypadValue !== newValue) {
             this.selectedKeypadValue = newValue;
             if (navigator.vibrate) try { navigator.vibrate(5); } catch(e) {}
         }
-    } else {
-        this.selectedKeypadValue = null;
     }
 };
 

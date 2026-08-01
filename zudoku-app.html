@@ -216,6 +216,59 @@
 
 
         /* ========================================
+           LONG-PRESS PROGRESSING DIAL (HUGE, THICK & MATTE)
+           ======================================== */
+        #hold-dial-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 150px;
+            height: 150px;
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            display: none;
+            opacity: 0;
+            transition: opacity 0.08s ease;
+        }
+
+        #hold-dial-container.active {
+            display: block;
+            opacity: 1;
+        }
+
+        #hold-dial-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg); /* Start progress arc at top 12 o'clock */
+            overflow: visible;
+        }
+
+        #hold-dial-bg {
+            fill: none;
+            stroke: rgba(0, 0, 0, 0.45);
+            stroke-width: 20;
+        }
+
+        #hold-dial-progress {
+            fill: none;
+            stroke: #d4a017; /* Muted Warm Amber / Gold progress arc */
+            stroke-width: 20;
+            stroke-linecap: round;
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
+            /* Radius r=58 -> Circumference = 2 * PI * 58 = 364.42 */
+            stroke-dasharray: 364.42;
+            stroke-dashoffset: 364.42;
+            transition: stroke 0.15s ease, filter 0.15s ease;
+            will-change: stroke-dashoffset;
+        }
+
+        #hold-dial-container.completed #hold-dial-progress {
+            stroke: #2eaf67 !important; /* Muted Soft Emerald Green on completion */
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)) !important;
+        }
+
+        /* ========================================
            SUDOKU GRID AREA
         ======================================== */
         .restart-level-container {
@@ -335,7 +388,7 @@
             position: relative;
             transition: background 0.1s, color 0.1s;
         }
-        .cell:hover { background: #080808; }
+        .cell:hover { background: inherit; }
         
         .cell.given {
             font-weight: 800;
@@ -1036,21 +1089,21 @@
             transition: transform 0.05s ease;
         }
 
-        /* Precision Needle for the dial */
+        /* Circular Knob on the outer track of the dial */
         #level_indicator::after {
             content: '';
             position: absolute;
-            top: 2px;
+            top: -4px;
             left: 50%;
-            width: 5px;
-            height: 22px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
             background: var(--highlight);
-            /* Sharp Tapered Needle Shape */
-            clip-path: polygon(50% 0%, 100% 100%, 50% 80%, 0% 100%);
-            transform: translateX(-50%) rotate(var(--dial-angle, 0deg));
-            transform-origin: 50% 50px;
-            box-shadow: 0 0 12px var(--glow);
-            filter: drop-shadow(0 0 4px var(--glow));
+            box-shadow: 
+                0 0 12px var(--glow),
+                0 2px 6px rgba(0, 0, 0, 0.7);
+            transform: translate(-50%, 0) rotate(var(--dial-angle, 0deg));
+            transform-origin: 50% 53px;
             z-index: 5;
         }
 
@@ -1513,6 +1566,14 @@
         </div>
     </header>
 
+    <!-- PROGRESSING HOLD DIAL OVERLAY -->
+    <div id="hold-dial-container">
+        <svg id="hold-dial-svg" viewBox="0 0 150 150">
+            <circle id="hold-dial-bg" cx="75" cy="75" r="58"></circle>
+            <circle id="hold-dial-progress" cx="75" cy="75" r="58"></circle>
+        </svg>
+    </div>
+
     <!-- MAIN GRID AREA -->
     <main class="grid-area">
         <div class="sudoku-grid" id="sudokuGrid"></div>
@@ -1521,15 +1582,15 @@
     <footer class="footer-bar">
         <!-- NUMBER INPUT BAR -->
         <div class="input-number-bar">
-            <button class="num-btn" data-number="1" onclick="selectNumber(1, event)">1</button>
-            <button class="num-btn" data-number="2" onclick="selectNumber(2, event)">2</button>
-            <button class="num-btn" data-number="3" onclick="selectNumber(3, event)">3</button>
-            <button class="num-btn" data-number="4" onclick="selectNumber(4, event)">4</button>
-            <button class="num-btn" data-number="5" onclick="selectNumber(5, event)">5</button>
-            <button class="num-btn" data-number="6" onclick="selectNumber(6, event)">6</button>
-            <button class="num-btn" data-number="7" onclick="selectNumber(7, event)">7</button>
-            <button class="num-btn" data-number="8" onclick="selectNumber(8, event)">8</button>
-            <button class="num-btn" data-number="9" onclick="selectNumber(9, event)">9</button>
+            <button class="num-btn" data-number="1">1</button>
+            <button class="num-btn" data-number="2">2</button>
+            <button class="num-btn" data-number="3">3</button>
+            <button class="num-btn" data-number="4">4</button>
+            <button class="num-btn" data-number="5">5</button>
+            <button class="num-btn" data-number="6">6</button>
+            <button class="num-btn" data-number="7">7</button>
+            <button class="num-btn" data-number="8">8</button>
+            <button class="num-btn" data-number="9">9</button>
         </div>
 
         <div class="main-controls-split">
@@ -1754,6 +1815,20 @@
         if (event) event.stopPropagation();
         if (!window.game) return;
         
+        // If a cell is currently selected, place number immediately on short tap
+        if (window.game.selectedCell !== null) {
+            const row = Math.floor(window.game.selectedCell / 9);
+            const col = window.game.selectedCell % 9;
+            if (!window.game.givenCells[row][col]) {
+                if (window.game.grid[row][col] === n) {
+                    window.game.setNumber(row, col, 0);
+                } else {
+                    window.game.setNumber(row, col, n);
+                }
+                return;
+            }
+        }
+        
         const isDeselect = (selectedPadNumber === n);
         
         document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
@@ -1773,6 +1848,137 @@
             window.game.setNumberCursor(n);
         }
     }
+
+    // Rewritten num-btn tap & long-press handler with progressing dial animation
+    document.addEventListener('DOMContentLoaded', () => {
+        let dialDelayTimer = null;
+
+        let dialAnimId = null;
+
+        const startDial = (x, y) => {
+            const container = document.getElementById('hold-dial-container');
+            const circle = document.getElementById('hold-dial-progress');
+            if (!container || !circle) return;
+            if (dialDelayTimer) clearTimeout(dialDelayTimer);
+            if (dialAnimId) cancelAnimationFrame(dialAnimId);
+            
+            // Grace period: only show dial if user holds longer than 45ms
+            dialDelayTimer = setTimeout(() => {
+                container.style.left = `${x}px`;
+                container.style.top = `${y}px`;
+                container.classList.remove('completed');
+                circle.style.strokeDashoffset = '364.42'; // Start completely empty
+                container.classList.add('active');
+                
+                const startTime = performance.now();
+                const duration = 125; // Fills over 125ms (from 45ms to 170ms total)
+                const totalLen = 364.42;
+                
+                const animateArc = (now) => {
+                    const elapsed = now - startTime;
+                    const progress = Math.min(1, elapsed / duration);
+                    // Progress arc grows smoothly from 0 to full circle
+                    circle.style.strokeDashoffset = (totalLen * (1 - progress)).toString();
+                    
+                    if (progress < 1) {
+                        dialAnimId = requestAnimationFrame(animateArc);
+                    }
+                };
+                
+                dialAnimId = requestAnimationFrame(animateArc);
+            }, 45);
+        };
+
+        const stopDial = (completed = false) => {
+            if (dialDelayTimer) {
+                clearTimeout(dialDelayTimer);
+                dialDelayTimer = null;
+            }
+            if (dialAnimId) {
+                cancelAnimationFrame(dialAnimId);
+                dialAnimId = null;
+            }
+            const container = document.getElementById('hold-dial-container');
+            const circle = document.getElementById('hold-dial-progress');
+            if (!container || !circle) return;
+            if (completed) {
+                circle.style.strokeDashoffset = '0';
+                container.classList.add('completed');
+                setTimeout(() => {
+                    container.classList.remove('active', 'completed');
+                    circle.style.strokeDashoffset = '364.42';
+                }, 250);
+            } else {
+                container.classList.remove('active', 'completed');
+                circle.style.strokeDashoffset = '364.42';
+            }
+        };
+
+        document.querySelectorAll('.num-btn').forEach(btn => {
+            let timer = null;
+            let isLongPress = false;
+            let startPos = { x: 0, y: 0 };
+            const n = parseInt(btn.getAttribute('data-number'));
+
+            btn.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            btn.addEventListener('pointerdown', (e) => {
+                if (e.button === 2) return; // Ignore right-click
+                isLongPress = false;
+                startPos = { x: e.clientX, y: e.clientY };
+                if (timer) clearTimeout(timer);
+
+                startDial(e.clientX, e.clientY);
+
+                // Exact 170ms long-press timer
+                timer = setTimeout(() => {
+                    isLongPress = true;
+                    stopDial(true); // Turn green on completion!
+                    if (window.game) window.game.vibrate(15);
+                    
+                    // Long press action: Take note
+                    if (window.game && window.game.selectedCell !== null) {
+                        const row = Math.floor(window.game.selectedCell / 9);
+                        const col = window.game.selectedCell % 9;
+                        if (!window.game.givenCells[row][col] && window.game.grid[row][col] === 0) {
+                            window.game.toggleNote(row, col, n);
+                        }
+                    } else if (window.game) {
+                        selectedPadNumber = n;
+                        document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
+                        document.querySelectorAll('.num-btn')[n-1].classList.add('selected');
+                        window.game.isPaintMode = true;
+                        window.game.paintNumber = n;
+                        window.game.highlightAllInstances(n);
+                    }
+                }, 170);
+            });
+
+            btn.addEventListener('pointerup', (e) => {
+                if (timer) { clearTimeout(timer); timer = null; }
+                if (!isLongPress) {
+                    stopDial(false);
+                    const dist = Math.hypot(e.clientX - startPos.x, e.clientY - startPos.y);
+                    if (dist <= 10) {
+                        selectNumber(n, e);
+                    }
+                }
+            });
+
+            btn.addEventListener('pointercancel', () => {
+                if (timer) { clearTimeout(timer); timer = null; }
+                stopDial(false);
+            });
+
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, true);
+        });
+    });
 
     function showSmartHint() {
         if (!window.game) return;
