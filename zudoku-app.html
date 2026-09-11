@@ -88,8 +88,8 @@
             gap: 12px;
         }
 
-        /* DESKTOP PILLAR - Constrain width to mobile-like vertical stack on large screens */
-        @media (min-width: 600px) {
+        /* DESKTOP PILLAR - Constrain width to mobile-like vertical stack on portrait tablets */
+        @media (min-width: 600px) and (orientation: portrait), (min-width: 600px) and (max-width: 859px) {
             .shell {
                 max-width: 540px;
                 border-left: 1px solid rgba(255, 255, 255, 0.05);
@@ -105,6 +105,234 @@
             .sudoku-grid {
                 width: 500px !important;
                 height: 500px !important;
+            }
+        }
+
+        /* IPAD PRO & TABLET LANDSCAPE TWO-COLUMN LAYOUT */
+        @media (min-width: 860px) and (orientation: landscape) {
+            .shell {
+                display: grid !important;
+                grid-template-columns: auto minmax(340px, 390px) !important;
+                grid-template-rows: auto auto 1fr !important;
+                grid-column-gap: clamp(18px, 2.5vw, 36px) !important;
+                grid-row-gap: 14px !important;
+                max-width: 1600px !important;
+                width: 100% !important;
+                height: 100vh !important;
+                height: 100dvh !important;
+                padding: clamp(8px, 1.2vh, 16px) clamp(16px, 2vw, 36px) !important;
+                border-left: none !important;
+                border-right: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                align-content: center !important;
+                justify-content: center !important;
+                align-items: start !important;
+                box-sizing: border-box !important;
+            }
+
+            /* LEFT COLUMN: Board maximized */
+            .grid-area {
+                grid-column: 1 !important;
+                grid-row: 1 / -1 !important;
+                width: 100% !important;
+                height: auto !important;
+                max-width: none !important;
+                display: flex !important;
+                align-items: flex-start !important;
+                justify-content: center !important;
+                align-self: start !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .sudoku-grid {
+                width: min(calc(100vh - clamp(16px, 2.5vh, 32px)), calc(100vw - clamp(370px, 30vw, 440px)), 940px) !important;
+                height: min(calc(100vh - clamp(16px, 2.5vh, 32px)), calc(100vw - clamp(370px, 30vw, 440px)), 940px) !important;
+                max-width: 940px !important;
+                max-height: 940px !important;
+                aspect-ratio: 1 / 1 !important;
+                border-width: 4px !important;
+                border-radius: 22px !important;
+                margin: 0 !important;
+            }
+
+            .cell {
+                font-size: clamp(40px, 7.5vmin, 74px) !important;
+                font-weight: 800 !important;
+            }
+
+            .cell.given {
+                font-size: clamp(40px, 7.5vmin, 74px) !important;
+                font-weight: 900 !important;
+            }
+
+            .cell.notes .note-number {
+                font-size: clamp(14px, 2vmin, 24px) !important;
+                font-weight: 800 !important;
+            }
+
+            .hint-candidate-number {
+                font-size: clamp(48px, 8vmin, 74px) !important;
+            }
+
+            /* RIGHT COLUMN: Top Header (flush with board top) */
+            .header-bar {
+                grid-column: 2 !important;
+                grid-row: 1 !important;
+                align-self: start !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                height: auto !important;
+                padding: clamp(10px, 1.5vh, 14px) clamp(14px, 1.8vw, 20px) !important;
+                border-radius: 18px !important;
+                box-shadow: 0 10px 35px rgba(0,0,0,0.35) !important;
+            }
+
+            .header-bar .timer-display {
+                font-size: 32px !important;
+            }
+
+            .header-bar .record-container {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                padding: 4px 10px !important;
+                background: rgba(255, 255, 255, 0.04) !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                border-radius: 10px !important;
+            }
+
+            .header-bar .record-label {
+                font-size: 11px !important;
+            }
+
+            .header-bar .record-value {
+                font-size: 16px !important;
+            }
+
+            .header-bar button {
+                width: 44px !important;
+                height: 44px !important;
+                border-radius: 12px !important;
+            }
+
+            /* RIGHT COLUMN: Natural compact control deck (top-aligned, NOT artificially stretched) */
+            .footer-bar {
+                grid-column: 2 !important;
+                grid-row: 2 !important;
+                align-self: start !important;
+                height: auto !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: clamp(14px, 2vh, 18px) clamp(14px, 1.8vw, 18px) !important;
+                gap: 16px !important;
+                border-radius: 22px !important;
+                box-shadow: 0 15px 40px rgba(0,0,0,0.4) !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important;
+            }
+
+            .input-number-bar {
+                max-width: 100% !important;
+                padding: 0 !important;
+                gap: 6px !important;
+            }
+
+            .num-btn {
+                height: clamp(48px, 6.2vh, 56px) !important;
+                font-size: clamp(22px, 3vh, 28px) !important;
+                border-radius: 13px !important;
+                background: rgba(255, 255, 255, 0.04) !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+                transition: all 0.15s ease !important;
+            }
+
+            .num-btn:hover {
+                background: rgba(var(--highlight-rgb), 0.15) !important;
+                border-color: rgba(var(--highlight-rgb), 0.4) !important;
+                transform: translateY(-2px) !important;
+            }
+
+            .num-btn:active {
+                transform: translateY(1px) scale(0.96) !important;
+            }
+
+            .main-controls-split {
+                padding: 0 !important;
+                gap: 16px !important;
+                width: 100% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+            }
+
+            .dial-section {
+                gap: 6px !important;
+            }
+
+            #level_indicator {
+                width: clamp(100px, 13vh, 116px) !important;
+                height: clamp(100px, 13vh, 116px) !important;
+                font-size: clamp(44px, 5.8vh, 50px) !important;
+            }
+
+            .dial-label {
+                font-size: 11px !important;
+                letter-spacing: 2px !important;
+            }
+
+            .buttons-grid {
+                gap: 10px !important;
+            }
+
+            .restart-level-btn {
+                height: clamp(46px, 6vh, 52px) !important;
+                border-radius: 14px !important;
+                background: rgba(255, 255, 255, 0.04) !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+                transition: all 0.15s ease !important;
+            }
+
+            .restart-level-btn:hover {
+                transform: translateY(-2px) !important;
+                box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
+            }
+
+            .restart-level-btn:active {
+                transform: translateY(1px) scale(0.96) !important;
+            }
+
+            .restart-level-btn svg {
+                width: 22px !important;
+                height: 22px !important;
+            }
+
+            .version-tag {
+                position: fixed !important;
+                bottom: 12px !important;
+                right: 16px !important;
+                margin: 0 !important;
+            }
+
+            /* Light mode overrides for right panels */
+            [data-theme="light"] .num-btn,
+            [data-theme="light"] .restart-level-btn {
+                background: #ffffff !important;
+                border: 1px solid #d4d4d4 !important;
+                border-bottom: 2px solid #b8b8b8 !important;
+                box-shadow: 0 3px 8px rgba(0,0,0,0.06) !important;
+                color: #1a1a1a !important;
+            }
+
+            [data-theme="light"] .header-bar .record-container {
+                background: rgba(0, 0, 0, 0.03) !important;
+                border-color: rgba(0, 0, 0, 0.08) !important;
             }
         }
 
@@ -478,11 +706,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(10px, 1.5vw, 20px);
+            font-size: clamp(9px, 1.2vw, 13px);
             color: var(--highlight);
             font-weight: 900;
             background: transparent;
-            aspect-ratio: 1 / 1;
             transition: all 0.2s ease;
             line-height: 1;
         }
@@ -522,13 +749,8 @@
             0%, 33%, 66%, 100% { background: transparent; }
             16%, 50%, 83% { background: var(--highlight); }
         }
-        @keyframes zoneFlash {
-            0% { background: var(--highlight); box-shadow: inset 0 0 50px #fff, 0 0 30px var(--highlight); z-index: 100; }
-            100% { background: transparent; }
-        }
         /* COMPLETED ZONES: Permanent 'Done' State (Thematic Tint) */
         .cell.zone-completed {
-            animation: zoneFlash 1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
             color: rgba(var(--highlight-rgb), 0.35) !important;
             opacity: 1 !important;
             filter: none !important;
@@ -546,28 +768,43 @@
             box-shadow: none !important;
         }
 
-        /* Prevent any highlights from appearing on completed cells */
-        .cell.zone-completed.same-number-highlight,
-        .cell.zone-completed.selected {
-            background: transparent !important;
-            color: rgba(var(--highlight-rgb), 0.35) !important;
-            box-shadow: none !important;
-            border: none !important;
-            font-weight: normal !important;
+        /* Allow highlights to appear on completed cells when active */
+        .cell.zone-completed.same-number-highlight {
+            background: var(--highlight) !important;
+            color: #fff !important;
+            font-weight: 900 !important;
+            box-shadow: 0 0 15px var(--glow) !important;
+            border-radius: 4px;
+            z-index: 10 !important;
+            opacity: 1 !important;
         }
 
-        [data-theme="light"] .cell.zone-completed.same-number-highlight,
-        [data-theme="light"] .cell.zone-completed.selected {
-            background: rgba(var(--highlight-rgb), 0.06) !important;
-            color: rgba(var(--highlight-rgb), 0.85) !important;
-            box-shadow: none !important;
-            border: none !important;
-            font-weight: 800 !important;
+        [data-theme="light"] .cell.zone-completed.same-number-highlight {
+            color: #fff !important;
+            background: var(--highlight) !important;
+            box-shadow: 0 4px 10px var(--glow) !important;
+        }
+
+        .cell.zone-completed.selected {
+            background: rgba(var(--highlight-rgb), 0.35) !important;
+            box-shadow: inset 0 0 0 2px var(--highlight), 0 0 25px var(--glow) !important;
+            border-radius: 6px;
+            z-index: 10 !important;
         }
 
         .cell.celebrate { 
             animation: pulseSuccess 0.4s steps(1) 3; 
             z-index: 100;
+        }
+
+        @keyframes numberPulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 0 transparent); }
+            50% { transform: scale(1.15); filter: drop-shadow(0 0 12px var(--highlight)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 0 transparent); }
+        }
+        .cell.number-completed-pulse {
+            animation: numberPulse 0.15s ease-in-out 3;
+            z-index: 100 !important;
         }
 
 
@@ -1040,16 +1277,16 @@
             border-radius: 50%;
             background: 
                 /* Mask out the center to make ticks shorter */
-                radial-gradient(circle at 50% 52px, var(--bg) 46px, transparent 47px),
+                radial-gradient(circle at center, var(--bg) 76%, transparent calc(76% + 0.8px)),
                 /* Needle Track */
-                radial-gradient(circle at 50% 50px, transparent 46px, rgba(255,255,255,0.08) 47px, transparent 48px),
+                radial-gradient(circle at center, transparent 75%, rgba(255,255,255,0.08) 76%, transparent 78%),
                 /* Major Ticks (30 deg) */
                 repeating-conic-gradient(from -1deg, rgba(255,255,255,0.15) 0deg, rgba(255,255,255,0.15) 2deg, transparent 2deg, transparent 30deg),
                 /* Minor Ticks (6 deg) - Even shorter */
-                radial-gradient(circle at 50% 52px, var(--bg) 48px, transparent 49px),
+                radial-gradient(circle at center, var(--bg) 82%, transparent calc(82% + 0.8px)),
                 repeating-conic-gradient(from -0.5deg, rgba(255,255,255,0.08) 0deg, rgba(255,255,255,0.08) 1deg, transparent 1deg, transparent 6deg),
                 /* Surface Depth */
-                radial-gradient(circle at 50% 30%, rgba(255,255,255,0.15) 0%, transparent 60%),
+                radial-gradient(circle at 50% 35%, rgba(255,255,255,0.15) 0%, transparent 60%),
                 linear-gradient(145deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5));
             border: 3px solid rgba(255,255,255,0.12);
             display: flex;
@@ -1093,17 +1330,16 @@
         #level_indicator::after {
             content: '';
             position: absolute;
-            top: -4px;
-            left: 50%;
-            width: 12px;
-            height: 12px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
-            background: var(--highlight);
-            box-shadow: 
-                0 0 12px var(--glow),
-                0 2px 6px rgba(0, 0, 0, 0.7);
-            transform: translate(-50%, 0) rotate(var(--dial-angle, 0deg));
-            transform-origin: 50% 53px;
+            pointer-events: none;
+            transform: rotate(var(--dial-angle, 0deg));
+            transform-origin: center center;
+            background: radial-gradient(circle at 50% 5px, var(--highlight) 6px, transparent 6.5px);
+            filter: drop-shadow(0 0 8px var(--glow)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
             z-index: 5;
         }
 
@@ -1137,16 +1373,16 @@
         [data-theme="light"] #level_indicator {
             background: 
                 /* Mask out the center to make ticks shorter */
-                radial-gradient(circle at 50% 52px, #ffffff 46px, transparent 47px),
+                radial-gradient(circle at center, #ffffff 76%, transparent calc(76% + 0.8px)),
                 /* Needle Track */
-                radial-gradient(circle at 50% 50px, transparent 46px, rgba(0,0,0,0.05) 47px, transparent 48px),
+                radial-gradient(circle at center, transparent 75%, rgba(0,0,0,0.05) 76%, transparent 78%),
                 /* Major Ticks (30 deg) */
                 repeating-conic-gradient(from -1deg, rgba(0,0,0,0.12) 0deg, rgba(0,0,0,0.12) 2deg, transparent 2deg, transparent 30deg),
                 /* Minor Ticks (66 deg) */
-                radial-gradient(circle at 50% 52px, #ffffff 48px, transparent 49px),
+                radial-gradient(circle at center, #ffffff 82%, transparent calc(82% + 0.8px)),
                 repeating-conic-gradient(from -0.5deg, rgba(0,0,0,0.06) 0deg, rgba(0,0,0,0.06) 1deg, transparent 1deg, transparent 6deg),
                 /* Surface Depth */
-                radial-gradient(circle at 50% 30%, rgba(255,255,255,1) 0%, rgba(245,245,245,1) 60%),
+                radial-gradient(circle at 50% 35%, rgba(255,255,255,1) 0%, rgba(245,245,245,1) 60%),
                 linear-gradient(145deg, #ffffff, #f0f0f0);
             border-color: rgba(0,0,0,0.1);
             box-shadow: 
@@ -1725,7 +1961,7 @@
 </div>
 
 <script src="sarp-solver.js?v=1"></script>
-<script src="script.js?v=162"></script>
+<script src="script.js?v=174"></script>
 <script>
     let isInitialized = false;
     // selectedPadNumber is declared in script.js
@@ -2022,7 +2258,7 @@
                     // Slight delay for visual satisfaction of the flash
                     setTimeout(() => {
                         selectNumber(nextNum);
-                    }, 300);
+                    }, 450);
                     break;
                 }
             }
@@ -2109,7 +2345,7 @@
     // Register Service Worker with update notifications
     if ('serviceWorker' in navigator) {
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=2.8.8')
+            navigator.serviceWorker.register('sw.js?v=3.0.6')
                 .then(registration => {
                     console.log('SW registered: ', registration);
                     

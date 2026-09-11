@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zudoku-cache-v2.8.8';
+const CACHE_NAME = 'zudoku-cache-v3.0.6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -16,7 +16,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache');
+        console.log('Opened cache v3.0.0');
         const requests = ASSETS_TO_CACHE.map(url => new Request(url, { cache: 'reload' }));
         return cache.addAll(requests);
       })
@@ -40,14 +40,32 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event - Cache-first strategy
+// Fetch Event - Network-first for HTML, Cache-first for others
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin requests that are not fonts
   const isFontRequest = event.request.url.includes('fonts.googleapis.com') || 
                        event.request.url.includes('fonts.gstatic.com');
   const isLocalRequest = event.request.url.startsWith(self.location.origin);
 
   if (!isLocalRequest && !isFontRequest) return;
+
+  const isHtml = event.request.mode === 'navigate' || 
+                event.request.destination === 'document' ||
+                event.request.url.includes('.html');
+
+  if (isHtml) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request, { ignoreSearch: true }))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request, { ignoreSearch: true })
