@@ -278,7 +278,7 @@
             #level_indicator {
                 width: clamp(100px, 13vh, 116px) !important;
                 height: clamp(100px, 13vh, 116px) !important;
-                font-size: clamp(44px, 5.8vh, 50px) !important;
+                font-size: clamp(16px, 2.3vh, 22px) !important;
             }
 
             .dial-label {
@@ -1292,8 +1292,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
+            font-size: 22px;
             font-weight: 900;
+            letter-spacing: 0.06em;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            padding: 0 10px;
+            box-sizing: border-box;
             color: var(--highlight);
             box-shadow: 
                 inset 0 4px 12px rgba(0,0,0,0.6),
@@ -1306,6 +1312,21 @@
             transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             touch-action: none !important;
             -webkit-tap-highlight-color: transparent !important;
+        }
+
+        .dial-label[data-master-stars] {
+            color: var(--highlight);
+            font-size: 14px !important;
+            letter-spacing: 4px !important;
+            line-height: 1;
+        }
+
+        #level_indicator[data-difficulty="medium"],
+        #level_indicator[data-difficulty="expert"],
+        #level_indicator[data-difficulty="master"] {
+            font-size: 15px !important;
+            letter-spacing: 0.03em;
+            padding-inline: 14px;
         }
 
         #level_indicator:hover {
@@ -1324,23 +1345,6 @@
                 inset 0 -1px 5px rgba(255,255,255,0.05),
                 0 4px 15px rgba(0,0,0,0.6);
             transition: transform 0.05s ease;
-        }
-
-        /* Circular Knob on the outer track of the dial */
-        #level_indicator::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            pointer-events: none;
-            transform: rotate(var(--dial-angle, 0deg));
-            transform-origin: center center;
-            background: radial-gradient(circle at 50% 5px, var(--highlight) 6px, transparent 6.5px);
-            filter: drop-shadow(0 0 8px var(--glow)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
-            z-index: 5;
         }
 
         .header-bar button, .restart-level-btn {
@@ -1510,7 +1514,7 @@
         }
 
         .radial-value {
-            font-size: 64px;
+            font-size: 32px;
             font-weight: 900;
             color: #fff;
             line-height: 1;
@@ -1832,8 +1836,8 @@
         <div class="main-controls-split">
             <!-- Left: Dial Section -->
             <div class="dial-section">
-                <button id="level_indicator" onpointerdown="game.initScrubber(event)">31</button>
-                <div class="dial-label">Level</div>
+                <button id="level_indicator" onclick="game.cycleDifficulty()" aria-label="Medium difficulty. Click to change difficulty">MEDIUM</button>
+                <div class="dial-label" id="difficulty_display_label">Difficulty</div>
             </div>
 
             <!-- Right: 2x2 Grid Section -->
@@ -1871,7 +1875,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V2.8.2</div>
+    <div class="version-tag">V3.3.1</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -1947,21 +1951,9 @@
 
 <!-- Hint Tooltip Removed in favor of direct flash-and-place -->
 
-<div id="level-scroller-overlay">
-    <div class="radial-scrubber-container">
-        <svg class="radial-progress-svg">
-            <circle class="radial-progress-bg" cx="110" cy="110" r="105"></circle>
-            <circle id="radial-progress-fill" class="radial-progress-fill" cx="110" cy="110" r="105"></circle>
-        </svg>
-        <div class="radial-center-content">
-            <div id="scroller-value" class="radial-value">50</div>
-            <div id="scroller-zone" class="radial-label">EASY</div>
-        </div>
-    </div>
-</div>
-
-<script src="sarp-solver.js?v=1"></script>
-<script src="script.js?v=174"></script>
+<script src="sarp-solver.js?v=2"></script>
+<script src="master-puzzles.js?v=1"></script>
+<script src="script.js?v=3.3.1"></script>
 <script>
     let isInitialized = false;
     // selectedPadNumber is declared in script.js
@@ -2265,23 +2257,34 @@
         };
 
         game.updateAutoDashboard = function() {
-            // Unified Level Indicator in Header (Lxx)
-            // Unified Level Indicator in Header
             const levelBtn = document.getElementById('level_indicator');
             const footerLabel = document.getElementById('difficulty_toggle_label');
+            const dialLabel = document.getElementById('difficulty_display_label');
             
             if (levelBtn) {
-                const value = this.getTargetGivenNumbers();
-                levelBtn.textContent = value;
+                const preset = this.getDifficultyPreset();
+                const rating = this.getAutoDifficultyLabel();
+                levelBtn.textContent = rating;
+                levelBtn.dataset.difficulty = preset.key;
+                levelBtn.title = `${rating} difficulty (rated by required logic)`;
+                levelBtn.setAttribute('aria-label', `${rating} difficulty. Click to change difficulty`);
                 
                 // Sync dial rotation
-                const percent = (50 - value) / 45;
+                const index = DIFFICULTY_PRESETS.findIndex(item => item.key === preset.key);
+                const percent = index / (DIFFICULTY_PRESETS.length - 1);
                 const angle = percent * (2 * Math.PI);
                 levelBtn.style.setProperty('--dial-angle', `${angle}rad`);
+                if (dialLabel) {
+                    const isMaster = preset.key === 'master';
+                    dialLabel.textContent = isMaster ? '★'.repeat(this.autoMode.masterStage + 1) : 'Difficulty';
+                    dialLabel.toggleAttribute('data-master-stars', isMaster);
+                    if (isMaster) dialLabel.setAttribute('aria-label', this.getMasterStage().label);
+                    else dialLabel.removeAttribute('aria-label');
+                }
                 
                 // Sync Footer Difficulty Label
                 if (footerLabel) {
-                    footerLabel.textContent = this.getAutoDifficultyLabel(value);
+                    footerLabel.textContent = rating;
                 }
             }
         };
@@ -2345,7 +2348,7 @@
     // Register Service Worker with update notifications
     if ('serviceWorker' in navigator) {
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=3.0.6')
+            navigator.serviceWorker.register('sw.js?v=3.3.1')
                 .then(registration => {
                     console.log('SW registered: ', registration);
                     

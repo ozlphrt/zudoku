@@ -1,10 +1,11 @@
-const CACHE_NAME = 'zudoku-cache-v3.0.6';
+const CACHE_NAME = 'zudoku-cache-v3.3.1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './zudoku-app.html',
   './script.js',
   './sarp-solver.js',
+  './master-puzzles.js',
   './favicon.svg',
   './public/192.png',
   './public/512.png',
@@ -16,7 +17,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache v3.0.0');
+        console.log('Opened cache v3.3.1');
         const requests = ASSETS_TO_CACHE.map(url => new Request(url, { cache: 'reload' }));
         return cache.addAll(requests);
       })
@@ -51,8 +52,10 @@ self.addEventListener('fetch', (event) => {
   const isHtml = event.request.mode === 'navigate' || 
                 event.request.destination === 'document' ||
                 event.request.url.includes('.html');
+  const isAppCode = event.request.destination === 'script' ||
+                    event.request.url.includes('.js');
 
-  if (isHtml) {
+  if (isHtml || isAppCode) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {

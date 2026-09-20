@@ -8,19 +8,21 @@
 class SarpSolver {
     constructor() {
         this.weights = {
-            'Naked Single': 1.0,
-            'Hidden Single': 1.2,
-            'Naked Pair': 2.0,
-            'Naked Triple': 3.0,
-            'Hidden Pair': 2.0,
-            'Hidden Triple': 3.0,
-            'Pointing Pair': 2.5,
-            'Box-Line Reduction': 2.5,
-            'X-Wing': 5.0,
-            'Swordfish': 6.0,
-            'XY-Wing': 5.5,
-            'Simple Coloring': 6.0,
-            'Forcing Chain': 8.0
+            // Sudoku Explainer-compatible technique ratings. Difficulty labels
+            // below group those ratings into product-friendly bands.
+            'Hidden Single': 1.5,
+            'Naked Single': 2.3,
+            'Pointing Pair': 2.6,
+            'Box-Line Reduction': 2.8,
+            'Naked Pair': 3.0,
+            'X-Wing': 3.2,
+            'Hidden Pair': 3.4,
+            'Naked Triple': 3.6,
+            'Swordfish': 3.8,
+            'Hidden Triple': 4.0,
+            'XY-Wing': 4.2,
+            'Simple Coloring': 4.2,
+            'Forcing Chain': 7.0
         };
     }
 
@@ -743,11 +745,11 @@ class SarpSolver {
             }
         }
         
-        // D. Opening Cascade — first 8 steps should be easy Singles
+        // D. Opening Cascade — first 8 steps should be Singles
         const openingSize = Math.min(8, steps.length);
         let openingAllSingles = true;
         for (let i = 0; i < openingSize; i++) {
-            if (steps[i].difficultyWeight > 1.5) {
+            if (!steps[i].technique.includes('Single')) {
                 openingAllSingles = false;
                 break;
             }
@@ -758,11 +760,11 @@ class SarpSolver {
             score -= 15; // Punish jarring starts
         }
         
-        // E. Single Crux — at most 1 contiguous hard section (weight > 3.0)
+        // E. Single Crux — at most 1 contiguous advanced section (SE > 4.0)
         let hardSections = 0;
         let inHardSection = false;
         for (const step of steps) {
-            if (step.difficultyWeight > 3.0) {
+            if (step.difficultyWeight > 4.0) {
                 if (!inHardSection) {
                     hardSections++;
                     inHardSection = true;
@@ -781,7 +783,7 @@ class SarpSolver {
         const tailStart = Math.floor(steps.length * 0.75);
         let tailAllSingles = true;
         for (let i = tailStart; i < steps.length; i++) {
-            if (steps[i].difficultyWeight > 1.5) {
+            if (!steps[i].technique.includes('Single')) {
                 tailAllSingles = false;
                 break;
             }
@@ -809,13 +811,13 @@ class SarpSolver {
         if (steps.length === 0) return 'cascade';
         
         const maxWeight = Math.max(...steps.map(s => s.difficultyWeight));
-        if (maxWeight <= 1.5) return 'cascade'; // All singles — perfect flow
+        if (maxWeight <= 2.3) return 'cascade'; // All singles — perfect flow
         
-        // Find hard sections (weight > 3.0)
+        // Find advanced sections (SE > 4.0)
         let hardSections = 0;
         let inHard = false;
         for (const step of steps) {
-            if (step.difficultyWeight > 3.0) {
+            if (step.difficultyWeight > 4.0) {
                 if (!inHard) { hardSections++; inHard = true; }
             } else {
                 inHard = false;
@@ -828,10 +830,11 @@ class SarpSolver {
     }
 
     getDifficultyLabel(maxWeight) {
-        if (maxWeight <= 1.2) return 'easy';
-        if (maxWeight <= 3.0) return 'medium';
-        if (maxWeight <= 5.5) return 'hard';
-        return 'expert';
+        if (maxWeight <= 2.3) return 'easy';       // Singles
+        if (maxWeight <= 2.8) return 'medium';     // Locked candidates
+        if (maxWeight <= 4.0) return 'hard';       // Subsets and basic fish
+        if (maxWeight <= 6.0) return 'expert';     // Wings and advanced patterns
+        return 'master';                           // Chains and inference nets
     }
 }
 

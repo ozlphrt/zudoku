@@ -6,7 +6,7 @@ A modern, interactive Sudoku game with multiple themes and full touch support. *
 
 ## Features
 
-- 🎮 **Three Difficulty Levels**: Easy, Medium, Hard
+- 🎮 **Logic-Rated Difficulty**: Easy, Medium, Hard, Expert, and Master labels based on required solving techniques
 - 🎨 **Multiple Themes**: Glassmorphism, Minimal, Dark
 - 📱 **Touch Support**: Works on mobile devices with touch controls
 - 🎯 **Smart Hints**: Educational hints that teach solving strategies
@@ -38,6 +38,20 @@ Play the game online: [https://ozlphrt.github.io/zudoku/](https://ozlphrt.github
 3. **Local server**: Run `python -m http.server 8000` and visit `http://localhost:8000`
 
 No dependencies, no build process, no installation needed!
+
+## Difficulty and puzzle validation
+
+The dial selects Easy, Medium, Hard, Expert, or Master. Each tier is validated against the hardest logical technique required by the solver using Sudoku Explainer-compatible technique weights. Starting clue counts remain an internal generation detail. AUTO progression requires three completions before advancing to the next named difficulty and remains on Master after the highest tier is reached.
+
+Master uses a bundled catalog of 100 public-domain puzzles from the [Sudoku Exchange puzzle bank](https://github.com/grantm/sudoku-exchange-puzzle-bank). Every Master puzzle has a Sukaku Explainer rating of 6.2 or higher, where solving requires advanced chains or similarly demanding logic. The bundled solutions are independently checked for consistency and uniqueness by the local validation command.
+
+Master progresses internally after every three completions while the visible dial continues to say `MASTER`: Master I uses SE 6.2–6.9, Master II uses 7.0–7.6, Master III uses 7.7–8.3, and Master IV uses 8.4–9.3. After Master IV, each additional three-puzzle streak remains in the highest band.
+
+The active 17–21 clue master banks are checked for valid givens, a valid stored solution, and exactly one solution. Generated puzzles also pass the same exact uniqueness requirement before play. To repeat the full bank audit, run:
+
+```bash
+npm run validate:puzzles
+```
 
 ## Files
 

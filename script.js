@@ -1,3 +1,18 @@
+const AUTO_WINS_PER_STEP = 3;
+const MASTER_STAGES = Object.freeze([
+    { label: 'MASTER I', minRating: 6.2, maxRating: 6.9 },
+    { label: 'MASTER II', minRating: 7.0, maxRating: 7.6 },
+    { label: 'MASTER III', minRating: 7.7, maxRating: 8.3 },
+    { label: 'MASTER IV', minRating: 8.4, maxRating: 9.3 }
+]);
+const DIFFICULTY_PRESETS = Object.freeze([
+    { key: 'easy', label: 'EASY', clues: 44, minRating: 0, maxRating: 2.3, hue: 185 },
+    { key: 'medium', label: 'MEDIUM', clues: 34, minRating: 2.6, maxRating: 2.8, hue: 50 },
+    { key: 'hard', label: 'HARD', clues: 27, minRating: 3.0, maxRating: 4.0, hue: 32 },
+    { key: 'expert', label: 'EXPERT', clues: 17, minRating: 4.2, maxRating: 6.0, hue: 0 },
+    { key: 'master', label: 'MASTER', clues: 17, minRating: 6.2, maxRating: Infinity, hue: 280 }
+]);
+
 class SudokuGame {
     constructor() {
         this.grid = Array(9).fill().map(() => Array(9).fill(0));
@@ -47,10 +62,11 @@ class SudokuGame {
         // Client-side generation difficulty system
         // Adjusted to match available puzzle database
         this.DIFFICULTY_LEVELS = {
-            easy: { label: 'Easy', givenNumbers: 44 },      // 44 clues (True Easy)
-            medium: { label: 'Medium', givenNumbers: 36 },  // 36 clues (Smoothed Medium)
-            hard: { label: 'Hard', givenNumbers: 29 },      // 29 clues (Smoothed Hard)
-            expert: { label: 'Expert', givenNumbers: 22 }   // 22 clues (New Level)
+            easy: { label: 'Easy', givenNumbers: 44 },
+            medium: { label: 'Medium', givenNumbers: 34 },
+            hard: { label: 'Hard', givenNumbers: 27 },
+            expert: { label: 'Expert', givenNumbers: 17 },
+            master: { label: 'Master', givenNumbers: 17 }
         };
         
         // Puzzle database - initialize immediately
@@ -59,9 +75,9 @@ class SudokuGame {
         // Merge with expanded puzzle database if available
         if (typeof expandedPuzzleDatabase !== 'undefined') {
             console.log('🔄 Merging expanded puzzle database...');
-            for (const difficulty of ['easy', 'medium', 'hard', 'expert']) {
+            for (const difficulty of ['easy', 'medium', 'hard', 'expert', 'master']) {
                 if (expandedPuzzleDatabase[difficulty]) {
-                    this.puzzleDatabase[difficulty] = this.puzzleDatabase[difficulty].concat(expandedPuzzleDatabase[difficulty]);
+                    this.puzzleDatabase[difficulty] = (this.puzzleDatabase[difficulty] || []).concat(expandedPuzzleDatabase[difficulty]);
                     console.log(`📚 Added ${expandedPuzzleDatabase[difficulty].length} ${difficulty} puzzles from expanded database`);
                 }
             }
@@ -137,20 +153,28 @@ class SudokuGame {
     
     getTargetGivenNumbers() {
         if (this.autoMode && this.autoMode.active) {
-            return this.autoMode.currentClues;
+            return this.getDifficultyPreset().clues;
         }
-        const clueCounts = {
-            easy: 44,
-            medium: 36,
-            hard: 29,
-            expert: 22
-        };
-        return clueCounts[this.difficulty] || 42;
+        return this.DIFFICULTY_LEVELS[this.difficulty]?.givenNumbers || 44;
+    }
+
+    getDifficultyPreset(key = this.autoMode?.currentTier) {
+        return DIFFICULTY_PRESETS.find(preset => preset.key === key) || DIFFICULTY_PRESETS[1];
+    }
+
+    getMasterStage() {
+        const index = Math.max(0, Math.min(MASTER_STAGES.length - 1,
+            Number.isInteger(this.autoMode?.masterStage) ? this.autoMode.masterStage : 0));
+        return MASTER_STAGES[index];
+    }
+
+    getSelectedDifficultyKey() {
+        return this.autoMode?.active ? this.getDifficultyPreset().key : this.difficulty.toLowerCase();
     }
     
     getDifficultyLabel() {
         if (this.difficulty === 'auto') {
-            return `AUTO LEVEL (${this.autoMode.currentClues})`;
+            return this.getDifficultyPreset().label;
         }
         return this.DIFFICULTY_LEVELS[this.difficulty]?.label || 'Easy';
     }
@@ -1996,24 +2020,39 @@ class SudokuGame {
             
             let message = "";
             let title = "Great Work!";
-            
-            if (this.autoMode.winsInLevel >= 1) {
-                // Level Up case (1 win is enough)
-                const oldClues = this.autoMode.currentClues;
-                this.autoMode.currentClues--;
+
+            if (this.autoMode.winsInLevel >= AUTO_WINS_PER_STEP) {
+                const currentIndex = DIFFICULTY_PRESETS.findIndex(
+                    preset => preset.key === this.autoMode.currentTier);
                 this.autoMode.winsInLevel = 0;
                 this.autoMode.triesInRank = 0; // Reset tries on level up
-                this.autoMode.levelUpPending = true;
-                
-                title = "Level Up!";
-                const diffLabel = this.getAutoDifficultyLabel(this.autoMode.currentClues);
-                const oldLabel = this.getAutoDifficultyLabel(oldClues);
-                
-                if (diffLabel !== oldLabel) {
-                    message = `Incredible! You've advanced to ${diffLabel} difficulty. Ready for the next tier?`;
+                if (this.autoMode.currentTier === 'master') {
+                    const currentStageIndex = this.autoMode.masterStage;
+                    if (currentStageIndex < MASTER_STAGES.length - 1) {
+                        this.autoMode.masterStage++;
+                        const nextStage = this.getMasterStage();
+                        this.autoMode.levelUpPending = true;
+                        title = "Master Challenge Increased!";
+                        message = `You've advanced to ${nextStage.label}. New puzzles now use SE ratings ${nextStage.minRating}–${nextStage.maxRating}.`;
+                    } else {
+                        this.autoMode.levelUpPending = false;
+                        title = "Mastery Streak!";
+                        message = "You've completed another MASTER IV streak. Your next puzzle stays in the highest rating band.";
+                    }
                 } else {
-                    message = `Masterful! Clue count refined to ${this.autoMode.currentClues}. You're getting sharper.`;
+                    const nextPreset = DIFFICULTY_PRESETS[Math.max(0, currentIndex) + 1];
+                    this.autoMode.currentTier = nextPreset.key;
+                    this.autoMode.currentClues = nextPreset.clues; // Legacy save compatibility
+                    if (nextPreset.key === 'master') this.autoMode.masterStage = 0;
+                    this.autoMode.levelUpPending = true;
+                    title = "Challenge Increased!";
+                    message = `You've advanced to ${nextPreset.label}. Three completed puzzles unlocked the next difficulty.`;
                 }
+            } else {
+                const remaining = AUTO_WINS_PER_STEP - this.autoMode.winsInLevel;
+                const currentLabel = this.autoMode.currentTier === 'master' ?
+                    this.getMasterStage().label : this.getDifficultyPreset().label;
+                message = `${remaining} more completed ${remaining === 1 ? 'puzzle' : 'puzzles'} to advance from ${currentLabel}.`;
             }
             
             this.autoMode.pendedMessage = message;
@@ -2267,7 +2306,7 @@ class SudokuGame {
         console.log("🔄 Refreshing level: Generating a NEW puzzle at the same difficulty...");
         
         // Clear the current saved game so newGame() doesn't resume it
-        localStorage.removeItem('zudoku-save');
+        this.clearGameState();
         
         // Start a fresh new game at the current difficulty/clue count
         this.newGame();
@@ -2305,6 +2344,13 @@ class SudokuGame {
     }
     
     generateNewPuzzle() {
+        const difficultyKey = this.getSelectedDifficultyKey();
+        if (difficultyKey === 'master') {
+            return this.generateFromRatedMasterBank();
+        }
+        if (['medium', 'hard', 'expert'].includes(difficultyKey)) {
+            return this.generateFromMasterBank();
+        }
         const clueTarget = this.getTargetGivenNumbers();
         if (clueTarget <= 21) {
             return this.generateFromMasterBank(clueTarget);
@@ -2334,9 +2380,16 @@ class SudokuGame {
         // 4. Remove numbers based on difficulty (using rotational symmetry)
         this.removeNumbers();
 
+        // Every generated puzzle must have exactly one solution. Clue count is
+        // never used as a substitute for this proof.
+        if (this.countSolutions(this.grid.map(row => [...row]), 2) !== 1) {
+            console.log('🔄 Generated puzzle is not uniquely solvable. Regenerating...');
+            return this.generateNewPuzzle();
+        }
+
         // 5. For 'Easy' mode, verify that the puzzle can be solved using simple logic
         // If not, try again (usually takes 1-3 attempts to hit a naked-single solvable state)
-        if (this.difficulty.toLowerCase() === 'easy') {
+        if (this.getSelectedDifficultyKey() === 'easy') {
             const isEasy = this.isEasySolvable(this.grid);
             if (!isEasy) {
                 console.log('🔄 Puzzle too complex for EASY mode. Regenerating...');
@@ -2380,29 +2433,13 @@ class SudokuGame {
             // After 50 attempts, if still not solved, we might need a fallback or just accept it
             let rejected = !grade.solved || grade.eleganceScore < eleganceThreshold;
             
-            // NEW: Enforce logic difficulty for ULTRA/EXPERT levels
-            // If L17-L28 (Ultra/Expert), we want to see at least one advanced technique (Pair, Triple, etc.)
-            const clueTarget = this.getTargetGivenNumbers();
-            
-            // ULTRA (17-19): Must require at least weight 3.0 (Naked Triple / Hidden Pair or better)
-            if (grade.solved && clueTarget <= 19 && grade.maxStepDifficulty < 3.0 && this.sarpAttemptCount < 150) {
+            const difficultyKey = this.getSelectedDifficultyKey();
+            const preset = DIFFICULTY_PRESETS.find(item => item.key === difficultyKey);
+            if (grade.solved && preset &&
+                (grade.maxStepDifficulty < preset.minRating || grade.maxStepDifficulty > preset.maxRating)) {
                 rejected = true;
-                grade.rejectionReason = `Too easy for ULTRA mode (Requires weight >= 3.0, got ${grade.maxStepDifficulty})`;
+                grade.rejectionReason = `${preset.label} requires an SE rating from ${preset.minRating} to ${preset.maxRating}; got ${grade.maxStepDifficulty}`;
             }
-            // EXPERT (20-23): Must require at least weight 2.0 (Pairs or better)
-            else if (grade.solved && clueTarget <= 23 && grade.maxStepDifficulty < 2.0 && this.sarpAttemptCount < 50) {
-                rejected = true;
-                grade.rejectionReason = `Too easy for EXPERT mode (Requires weight >= 2.0, got ${grade.maxStepDifficulty})`;
-            }
-            // HARD (24-28): Must require at least weight 1.5 (Hidden singles or better)
-            else if (grade.solved && clueTarget <= 28 && grade.maxStepDifficulty < 1.5 && this.sarpAttemptCount < 30) {
-                rejected = true;
-                grade.rejectionReason = `Too easy for HARD mode (Requires weight >= 1.5, got ${grade.maxStepDifficulty})`;
-            }
-
-            // If we're really stuck (>100 attempts), Sarp Mode relaxes to 'Any valid puzzle' 
-            // to prevent freezing the browser/device
-            if (this.sarpAttemptCount > 100) rejected = false;
 
             // Check for spikes (only in early attempts for maximum polish)
             if (grade.solved && !rejected && this.sarpAttemptCount < 15) {
@@ -2444,6 +2481,7 @@ class SudokuGame {
         }
 
         console.log(`✅ Success: Generated ${count} clues.`);
+        this.updateAutoDashboard();
         this.updateDisplay();
         this.updateProgress();
         this.startTimer();
@@ -2675,82 +2713,77 @@ class SudokuGame {
     }
 
     /**
-     * Bounded iterative solution counter (stack-safe).
-     * Returns the number of solutions found, up to 'limit'.
-     * Uses an explicit stack instead of recursion to avoid call stack overflow.
-     * Node budget prevents browser freezes on complex grids.
+     * Exact solution counter using bit masks and minimum-remaining-values search.
+     * Returns the number of solutions found, up to 'limit'. A result of 1 is
+     * therefore proof of uniqueness rather than a timeout fallback.
      */
     countSolutions(grid, limit = 2) {
-        const NODE_BUDGET = 50000;
-        let nodeCount = 0;
+        const rows = Array(9).fill(0);
+        const cols = Array(9).fill(0);
+        const boxes = Array(9).fill(0);
+        const fullMask = 0x3FE;
         let solutionCount = 0;
 
-        // Find all empty cells upfront
-        const emptyCells = [];
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
-                if (grid[r][c] === 0) emptyCells.push({ r, c });
+                const value = grid[r][c];
+                if (value === 0) continue;
+                const bit = 1 << value;
+                const box = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+                if ((rows[r] | cols[c] | boxes[box]) & bit) return 0;
+                rows[r] |= bit;
+                cols[c] |= bit;
+                boxes[box] |= bit;
             }
         }
 
-        if (emptyCells.length === 0) return 1;
+        const search = () => {
+            if (solutionCount >= limit) return;
+            let bestRow = -1;
+            let bestCol = -1;
+            let bestMask = 0;
+            let bestCount = 10;
 
-        // Iterative backtracking using an index pointer
-        const assignments = new Array(emptyCells.length).fill(0); // last tried number at each depth
-        let depth = 0;
-
-        while (depth >= 0) {
-            if (++nodeCount > NODE_BUDGET) {
-                // Budget exhausted — conservatively assume unique
-                // Restore grid and bail
-                for (let d = depth; d >= 0; d--) {
-                    if (assignments[d] > 0) {
-                        grid[emptyCells[d].r][emptyCells[d].c] = 0;
-                    }
-                }
-                return 1;
-            }
-
-            const { r, c } = emptyCells[depth];
-            let placed = false;
-
-            // Try numbers starting from where we left off + 1
-            for (let num = assignments[depth] + 1; num <= 9; num++) {
-                if (this.isValidMoveForGrid(grid, r, c, num)) {
-                    grid[r][c] = num;
-                    assignments[depth] = num;
-                    placed = true;
-
-                    if (depth === emptyCells.length - 1) {
-                        // Reached the end — found a solution
-                        solutionCount++;
-                        if (solutionCount >= limit) {
-                            // Restore grid before returning
-                            for (let d = depth; d >= 0; d--) {
-                                grid[emptyCells[d].r][emptyCells[d].c] = 0;
-                                assignments[d] = 0;
-                            }
-                            return solutionCount;
-                        }
-                        // Continue searching for more solutions (backtrack)
-                        grid[r][c] = 0;
-                        placed = false;
-                    } else {
-                        // Go deeper
-                        depth++;
-                        break;
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (grid[r][c] !== 0) continue;
+                    const box = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+                    const mask = fullMask & ~(rows[r] | cols[c] | boxes[box]);
+                    let count = 0;
+                    for (let bits = mask; bits; bits &= bits - 1) count++;
+                    if (count === 0) return;
+                    if (count < bestCount) {
+                        bestRow = r;
+                        bestCol = c;
+                        bestMask = mask;
+                        bestCount = count;
                     }
                 }
             }
 
-            if (!placed) {
-                // No valid number found — backtrack
-                grid[r][c] = 0;
-                assignments[depth] = 0;
-                depth--;
+            if (bestRow === -1) {
+                solutionCount++;
+                return;
             }
-        }
 
+            const box = Math.floor(bestRow / 3) * 3 + Math.floor(bestCol / 3);
+            for (let choices = bestMask; choices; choices &= choices - 1) {
+                const bit = choices & -choices;
+                const value = 31 - Math.clz32(bit);
+                grid[bestRow][bestCol] = value;
+                rows[bestRow] |= bit;
+                cols[bestCol] |= bit;
+                boxes[box] |= bit;
+                search();
+                rows[bestRow] ^= bit;
+                cols[bestCol] ^= bit;
+                boxes[box] ^= bit;
+                grid[bestRow][bestCol] = 0;
+                if (solutionCount >= limit) return;
+            }
+        };
+
+        search();
         return solutionCount;
     }
     
@@ -2863,10 +2896,71 @@ class SudokuGame {
     }
 
     
+    generateFromRatedMasterBank() {
+        if (typeof RATED_MASTER_PUZZLES === 'undefined' || !RATED_MASTER_PUZZLES.length) {
+            throw new Error('The rated Master puzzle catalog is unavailable.');
+        }
+
+        const stage = this.getMasterStage();
+        const stagePuzzles = RATED_MASTER_PUZZLES.filter(pair =>
+            pair.r >= stage.minRating && pair.r <= stage.maxRating);
+        if (!stagePuzzles.length) {
+            throw new Error(`No rated puzzle is available for ${stage.label}.`);
+        }
+        const pair = stagePuzzles[Math.floor(Math.random() * stagePuzzles.length)];
+        const toGrid = value => Array.from({ length: 9 }, (_, row) =>
+            value.slice(row * 9, row * 9 + 9).split('').map(Number));
+        const transformed = this.applyIsomorphism(toGrid(pair.p), toGrid(pair.s));
+
+        this.grid = transformed.grid;
+        this.solution = transformed.solution;
+        this.givenCells = this.grid.map(row => row.map(value => value !== 0));
+        this.currentPuzzleGrade = {
+            solved: true,
+            difficultyLabel: 'master',
+            maxStepDifficulty: pair.r,
+            difficultyScore: pair.r,
+            solveSteps: [],
+            externallyRated: true,
+            ratingSystem: 'Sukaku Explainer',
+            masterStage: stage.label
+        };
+        this.sarpAttemptCount = 0;
+
+        if (typeof hideLoadingProgress === 'function') hideLoadingProgress();
+
+        const clueCount = this.grid.flat().filter(Boolean).length;
+        console.log(`✅ ${stage.label} puzzle loaded (${clueCount} clues, SE ${pair.r})`);
+        this.updateAutoDashboard();
+        this.updateDisplay();
+        this.updateProgress();
+        this.startTimer();
+        this.startAutoSave();
+    }
+
     generateFromMasterBank(clueTarget) {
         const banks = this.getMasterPuzzleBanks();
-        const bank = banks[clueTarget] || banks[17];
-        const pair = bank[Math.floor(Math.random() * bank.length)];
+        const bank = clueTarget ? banks[clueTarget] : Object.values(banks).flat();
+        if (!bank || bank.length === 0) {
+            throw new Error(`No verified puzzle bank exists for ${clueTarget} clues.`);
+        }
+
+        const difficultyKey = this.getSelectedDifficultyKey();
+        const preset = DIFFICULTY_PRESETS.find(item => item.key === difficultyKey) ||
+            this.getDifficultyPreset();
+        // Select only entries whose logical rating belongs to the chosen tier.
+        const gradedBank = bank.map(pair => {
+            const grid = Array.from({ length: 9 }, (_, r) =>
+                pair.p.slice(r * 9, (r + 1) * 9).split('').map(Number));
+            return { pair, grade: this.sarpSolver.solve(grid) };
+        }).filter(entry => entry.grade.solved &&
+            entry.grade.maxStepDifficulty >= preset.minRating &&
+            entry.grade.maxStepDifficulty <= preset.maxRating);
+
+        if (gradedBank.length === 0) {
+            throw new Error(`No verified ${preset.label} puzzle exists in the curated bank.`);
+        }
+        const pair = gradedBank[Math.floor(Math.random() * gradedBank.length)].pair;
         
         const pGrid = [];
         const sGrid = [];
@@ -2898,8 +2992,9 @@ class SudokuGame {
             hideLoadingProgress();
         }
         
-        console.log(`✅ Master Curated Level ${clueTarget} loaded (${count} clues, MaxTech: ${grade.maxStepDifficulty} ${grade.difficultyLabel}, Elegance: ${grade.eleganceScore})`);
+        console.log(`✅ Curated ${preset.label} puzzle loaded (${count} clues, MaxTech: ${grade.maxStepDifficulty} ${grade.difficultyLabel}, Elegance: ${grade.eleganceScore})`);
         
+        this.updateAutoDashboard();
         this.updateDisplay();
         this.updateProgress();
         this.startTimer();
@@ -3806,6 +3901,7 @@ class SudokuGame {
     
     resetGame() {
         this.grid = Array(9).fill().map(() => Array(9).fill(0));
+        this.currentPuzzleGrade = null;
         this.givenCells = Array(9).fill().map(() => Array(9).fill(false));
         this.notes = Array(9).fill().map(() => Array(9).fill().map(() => new Set()));
         this.clearSelection();
@@ -4482,14 +4578,22 @@ class SudokuGame {
             try {
                 const state = JSON.parse(saved);
                 if (state.triesInRank === undefined) state.triesInRank = state.totalTries || 0;
-                // Ensure minimum clue limit
-                if (state.currentClues < 17) state.currentClues = 17;
+                if (!DIFFICULTY_PRESETS.some(preset => preset.key === state.currentTier)) {
+                    const legacyClues = Number.isFinite(state.currentClues) ? state.currentClues : 34;
+                    state.currentTier = legacyClues >= 38 ? 'easy' :
+                        legacyClues >= 30 ? 'medium' : legacyClues >= 22 ? 'hard' : 'expert';
+                }
+                state.currentClues = this.getDifficultyPreset(state.currentTier).clues;
+                state.masterStage = Math.max(0, Math.min(MASTER_STAGES.length - 1,
+                    Number.isInteger(state.masterStage) ? state.masterStage : 0));
+                state.winsInLevel = Math.max(0, Math.min(AUTO_WINS_PER_STEP - 1,
+                    Number.isFinite(state.winsInLevel) ? state.winsInLevel : 0));
                 return state;
             } catch (e) {
                 console.error('Error parsing auto state:', e);
             }
         }
-        return { active: false, currentClues: 28, totalTries: 0, triesInRank: 0, winsInLevel: 0 };
+        return { active: false, currentTier: 'medium', currentClues: 34, totalTries: 0, triesInRank: 0, winsInLevel: 0, masterStage: 0 };
     }
 
     loadSarpMode() {
@@ -4513,26 +4617,57 @@ class SudokuGame {
         localStorage.setItem('zudoku-auto-state', JSON.stringify(this.autoMode));
     }
     
-    getAutoDifficultyLabel(clues) {
-        if (clues >= 32) return "EASY";
-        if (clues >= 28) return "MEDIUM";
-        if (clues >= 24) return "HARD";
-        if (clues >= 20) return "EXPERT";
-        return "ULTRA";
+    getAutoDifficultyLabel(_clues, useCurrentGrade = true) {
+        if (useCurrentGrade && this.currentPuzzleGrade?.solved && this.currentPuzzleGrade.difficultyLabel) {
+            return this.currentPuzzleGrade.difficultyLabel.toUpperCase();
+        }
+        if (!this.autoMode?.active && this.DIFFICULTY_LEVELS[this.difficulty]) {
+            return this.DIFFICULTY_LEVELS[this.difficulty].label.toUpperCase();
+        }
+        return this.getDifficultyPreset().label;
     }
     
     updateAutoDashboard() {
         // Unified Level Indicator in Header (Lxx)
         const levelBtn = document.getElementById('level_indicator');
         if (levelBtn) {
-            const value = this.getTargetGivenNumbers();
-            levelBtn.textContent = value;
-            
-            // Sync dial rotation (Range: 17 to 35, Delta: 18)
-            const percent = (35 - value) / 18;
+            const preset = this.getDifficultyPreset();
+            const rating = this.getAutoDifficultyLabel();
+            levelBtn.textContent = rating;
+            levelBtn.dataset.difficulty = preset.key;
+            levelBtn.title = `${rating} difficulty (rated by required logic)`;
+            levelBtn.setAttribute('aria-label', `${rating} difficulty. Click to change difficulty`);
+            const label = document.getElementById('difficulty_display_label');
+            if (label) {
+                const isMaster = preset.key === 'master';
+                label.textContent = isMaster ? '★'.repeat(this.autoMode.masterStage + 1) : 'Difficulty';
+                label.toggleAttribute('data-master-stars', isMaster);
+                if (isMaster) label.setAttribute('aria-label', this.getMasterStage().label);
+                else label.removeAttribute('aria-label');
+            }
+
+            const index = DIFFICULTY_PRESETS.findIndex(item => item.key === preset.key);
+            const percent = index / (DIFFICULTY_PRESETS.length - 1);
             const angle = percent * (2 * Math.PI);
             levelBtn.style.setProperty('--dial-angle', `${angle}rad`);
         }
+    }
+
+    cycleDifficulty() {
+        const currentIndex = Math.max(0, DIFFICULTY_PRESETS.findIndex(
+            preset => preset.key === this.autoMode.currentTier));
+        const nextPreset = DIFFICULTY_PRESETS[(currentIndex + 1) % DIFFICULTY_PRESETS.length];
+
+        this.autoMode.active = true;
+        this.difficulty = 'auto';
+        this.autoMode.currentTier = nextPreset.key;
+        this.autoMode.currentClues = nextPreset.clues; // Legacy save compatibility
+        this.autoMode.masterStage = nextPreset.key === 'master' ? 0 : this.autoMode.masterStage;
+        this.autoMode.winsInLevel = 0;
+        this.autoMode.triesInRank = 0;
+        this.saveAutoModeState();
+        this.clearGameState();
+        this.newGame();
     }
 
     resetHintPulseTimer() {
@@ -4557,9 +4692,10 @@ class SudokuGame {
     }
     
     initScrubber(e) {
-        // If not in auto mode, switch to it automatically
+        // Switching the dial changes the named difficulty, never a raw clue count.
         if (this.difficulty !== 'auto') {
-            this.setDifficulty('auto');
+            this.autoMode.active = true;
+            this.difficulty = 'auto';
         }
         
         const overlay = document.getElementById('level-scroller-overlay');
@@ -4575,8 +4711,9 @@ class SudokuGame {
         this.scrubbing = true;
         this.scrubStartX = e.clientX;
         this.scrubStartY = e.clientY;
-        this.scrubStartValue = this.autoMode.currentClues;
-        this.tempScrubValue = this.autoMode.currentClues;
+        this.scrubStartValue = Math.max(0, DIFFICULTY_PRESETS.findIndex(
+            preset => preset.key === this.autoMode.currentTier));
+        this.tempScrubValue = this.scrubStartValue;
         
         // Center the scrubber in the screen
         container.style.position = '';
@@ -4586,25 +4723,17 @@ class SudokuGame {
         
         overlay.classList.add('active');
         
-        // Initialize the overlay elements with current values
+        // Initialize the overlay with the selected named tier.
         const valEl = document.getElementById('scroller-value');
         const zoneEl = document.getElementById('scroller-zone');
         const fill = document.getElementById('radial-progress-fill');
-        if (valEl) valEl.textContent = this.autoMode.currentClues;
-        if (zoneEl) {
-            const value = this.autoMode.currentClues;
-            let zone = "EASY";
-            let hue = 185; 
-            if (value <= 19) { zone = "ULTRA"; hue = 280; }
-            else if (value <= 23) { zone = "EXPERT"; hue = 0; }
-            else if (value <= 27) { zone = "HARD"; hue = 32; }
-            else if (value <= 31) { zone = "MEDIUM"; hue = 50; }
-            zoneEl.textContent = zone;
-            overlay.style.setProperty('--scrub-color', `hsl(${hue}, 80%, 55%)`);
-            overlay.style.setProperty('--scrub-glow', `hsla(${hue}, 80%, 55%, 0.3)`);
-        }
+        const preset = DIFFICULTY_PRESETS[this.scrubStartValue];
+        if (valEl) valEl.textContent = preset.label;
+        if (zoneEl) zoneEl.textContent = 'DIFFICULTY';
+        overlay.style.setProperty('--scrub-color', `hsl(${preset.hue}, 80%, 55%)`);
+        overlay.style.setProperty('--scrub-glow', `hsla(${preset.hue}, 80%, 55%, 0.3)`);
         if (fill) {
-            const percent = (35 - this.autoMode.currentClues) / 18;
+            const percent = this.scrubStartValue / (DIFFICULTY_PRESETS.length - 1);
             const circumference = 660;
             fill.style.strokeDashoffset = circumference * (1 - percent);
         }
@@ -4637,41 +4766,32 @@ class SudokuGame {
         
         if (!overlay || !container || !fill) return;
         
-        // Mechanical Linear-to-Radial mapping: Up or Right increases level
+        // Up or right increases the named difficulty by one tier.
         const dx = e.clientX - this.scrubStartX;
         const dy = e.clientY - this.scrubStartY;
         const totalDelta = dx - dy;
-        
-        // Sensitivity: 15px per clue step
-        const sensitivity = 15;
+
+        const sensitivity = 45;
         let newValue = Math.round(this.scrubStartValue + (totalDelta / sensitivity));
-        newValue = Math.max(17, Math.min(35, newValue));
-        
+        newValue = Math.max(0, Math.min(DIFFICULTY_PRESETS.length - 1, newValue));
+
         if (newValue !== this.tempScrubValue) {
             this.tempScrubValue = newValue;
-            
-            // Map value (17 to 35) to percentage (Range: 18)
-            const percent = (35 - newValue) / 18;
+            const preset = DIFFICULTY_PRESETS[newValue];
+
+            const percent = newValue / (DIFFICULTY_PRESETS.length - 1);
             const angle = percent * (2 * Math.PI);
-            
+
             // Update UI Elements
-            if (valEl) valEl.textContent = newValue;
+            if (valEl) valEl.textContent = preset.label;
             if (levelBtn) {
-                levelBtn.textContent = newValue;
+                levelBtn.textContent = preset.label;
                 levelBtn.style.setProperty('--dial-angle', `${angle}rad`);
             }
-            
-            if (zoneEl) {
-                let zone = "EASY";
-                let hue = 185; 
-                if (newValue <= 19) { zone = "ULTRA"; hue = 280; }
-                else if (newValue <= 23) { zone = "EXPERT"; hue = 0; }
-                else if (newValue <= 27) { zone = "HARD"; hue = 32; }
-                else if (newValue <= 31) { zone = "MEDIUM"; hue = 50; }
-                zoneEl.textContent = zone;
-                overlay.style.setProperty('--scrub-color', `hsl(${hue}, 80%, 55%)`);
-                overlay.style.setProperty('--scrub-glow', `hsla(${hue}, 80%, 55%, 0.3)`);
-            }
+
+            if (zoneEl) zoneEl.textContent = 'DIFFICULTY';
+            overlay.style.setProperty('--scrub-color', `hsl(${preset.hue}, 80%, 55%)`);
+            overlay.style.setProperty('--scrub-glow', `hsla(${preset.hue}, 80%, 55%, 0.3)`);
             
             // Update Radial Progress (C=660)
             const circumference = 660;
@@ -4686,13 +4806,18 @@ class SudokuGame {
         const overlay = document.getElementById('level-scroller-overlay');
         if (overlay) overlay.classList.remove('active');
         
-        const finalValue = this.tempScrubValue;
-        if (finalValue && finalValue !== this.autoMode.currentClues) {
-            this.setDifficulty('auto');
-            this.autoMode.currentClues = finalValue;
+        const finalIndex = this.tempScrubValue;
+        const preset = DIFFICULTY_PRESETS[finalIndex];
+        if (preset && preset.key !== this.autoMode.currentTier) {
+            this.autoMode.active = true;
+            this.difficulty = 'auto';
+            this.autoMode.currentTier = preset.key;
+            this.autoMode.currentClues = preset.clues; // Legacy save compatibility
+            if (preset.key === 'master') this.autoMode.masterStage = 0;
+            this.autoMode.winsInLevel = 0;
             this.saveAutoModeState();
-            this.generateNewPuzzle();
-            this.updateAutoDashboard();
+            this.clearGameState();
+            this.newGame();
         }
     }
     
@@ -5315,6 +5440,8 @@ class SudokuGame {
             errorCount: this.errorCount,
             hintCount: this.hintCount,
             givenCells: this.givenCells.map(row => [...row]),
+            solution: this.solution.map(row => [...row]),
+            currentPuzzleGrade: this.currentPuzzleGrade,
             lastSaved: new Date().toISOString()
         };
         
@@ -5368,6 +5495,14 @@ class SudokuGame {
             this.errorCount = gameState.errorCount;
             this.hintCount = gameState.hintCount;
             this.givenCells = gameState.givenCells.map(row => [...row]);
+            if (Array.isArray(gameState.solution) && gameState.solution.length === 9) {
+                this.solution = gameState.solution.map(row => [...row]);
+            } else {
+                const restoredSolution = this.grid.map(row => [...row]);
+                if (!this.solveSudokuForGrid(restoredSolution)) return false;
+                this.solution = restoredSolution;
+            }
+            this.currentPuzzleGrade = gameState.currentPuzzleGrade || null;
             
             // Restore elapsed time
             this.pausedTime = gameState.elapsedTime;
