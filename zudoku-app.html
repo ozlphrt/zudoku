@@ -168,7 +168,7 @@
             }
 
             .cell.notes .note-number {
-                font-size: clamp(14px, 2vmin, 24px) !important;
+                font-size: clamp(20px, 3.2vmin, 32px) !important;
                 font-weight: 800 !important;
             }
 
@@ -651,9 +651,13 @@
         [data-theme="light"] .cell.same-number-highlight {
             color: #fff !important;
             background: var(--highlight) !important;
-            box-shadow: 0 4px 10px var(--glow) !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
         }
         
+        [data-theme="light"] .cell.selected {
+            box-shadow: inset 0 0 0 2px var(--highlight), 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+        }
+
         .cell.number-selected { 
             background: rgba(var(--highlight-rgb), 0.12) !important; 
         }
@@ -706,7 +710,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(9px, 1.2vw, 13px);
+            font-size: clamp(16px, 2.6vmin, 25px);
             color: var(--highlight);
             font-weight: 900;
             background: transparent;
@@ -715,7 +719,7 @@
         }
         
         [data-theme="light"] .cell.notes .note-number {
-             color: #0056b3; /* Deeper blue for high-contrast on light background */
+             color: var(--highlight);
         }
 
         .cell.notes .note-number:empty { background: transparent; }
@@ -905,6 +909,9 @@
         [data-theme="light"] .settings-row {
             background: rgba(0,0,0,0.03);
             border-color: rgba(0,0,0,0.05);
+        }
+        [data-theme="light"] .toggle-slider {
+            background-color: rgba(0, 0, 0, 0.15);
         }
         [data-theme="light"] .radial-scrubber-container {
             background: rgba(255, 255, 255, 0.95);
@@ -1784,12 +1791,7 @@
     <!-- HEADER BAR -->
     <header class="header-bar">
         <div class="header-left">
-
             <div id="game-timer" class="timer-display">00:00</div>
-            <div class="record-container">
-                <span class="record-label">Best</span>
-                <span id="bestTime" class="record-value">--:--</span>
-            </div>
         </div>
         <div class="header-right">
             <button id="pause_toggle" onclick="togglePause()" style="width: 44px; height: 44px;">
@@ -1875,7 +1877,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.3.1</div>
+    <div class="version-tag">V3.4.0</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -1885,6 +1887,7 @@
     <div id="moveCount">0</div>
     <div id="errorCount">0</div>
     <div id="hintCount">0</div>
+    <div id="bestTime">--:--</div>
     <div id="bestTime_stub">--:--:--</div>
     <div id="cellsFilled">0/81</div>
     <div id="completionPercent">0%</div>
@@ -1907,8 +1910,19 @@
             <span class="settings-label">Primary Palette</span>
             <input type="color" id="palette_picker" class="palette-picker" onchange="applyPalette(this.value)">
         </div>
+        <div class="settings-row">
+            <div>
+                <span class="settings-label">Auto Notes</span>
+                <div style="font-size: 11px; color: var(--text); opacity: 0.5; margin-top: 2px;">Display all candidates in empty cells</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" id="auto_notes_toggle" onchange="toggleAutoNotes(this.checked)">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
         <!-- Sarp Mode (ON by default, removed from UI) -->
         <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 12px;">
+            <button class="primary-btn" style="width: 100%; padding: 13px; background: rgba(var(--highlight-rgb), 0.15); border: 1px solid var(--highlight); font-weight: 700; letter-spacing: 1px; border-radius: 12px; cursor: pointer; color: var(--highlight);" onclick="revealPuzzle()">⚡ REVEAL PUZZLE</button>
             <button class="reset-btn" style="width: 100%;" onclick="resetAllData()">RESET ALL DATA</button>
             <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 2.7.0</div>
         </div>
@@ -1953,7 +1967,7 @@
 
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="script.js?v=3.3.1"></script>
+<script src="script.js?v=3.4.0"></script>
 <script>
     let isInitialized = false;
     // selectedPadNumber is declared in script.js
@@ -1972,12 +1986,31 @@
             if (el.classList.contains('visible')) {
                 const picker = document.getElementById('palette_picker');
                 if (picker) picker.value = getComputedStyle(document.documentElement).getPropertyValue('--highlight').trim();
+                const autoNotesToggle = document.getElementById('auto_notes_toggle');
+                if (autoNotesToggle && window.game) {
+                    autoNotesToggle.checked = !!window.game.autoNotes;
+                }
                 const sarpToggle = document.getElementById('sarp_mode_toggle');
                 if (sarpToggle && window.game) {
                     sarpToggle.checked = window.game.sarpMode;
                     console.log("Settings opened, Sarp Mode state:", window.game.sarpMode);
                 }
             }
+        }
+    }
+
+    function revealPuzzle() {
+        toggleSettings();
+        if (window.game) {
+            window.game.animatedAutoSolve();
+        }
+    }
+
+    function autoSolvePuzzle() { revealPuzzle(); }
+
+    function toggleAutoNotes(enabled) {
+        if (window.game) {
+            window.game.setAutoNotes(enabled);
         }
     }
 
@@ -2348,7 +2381,7 @@
     // Register Service Worker with update notifications
     if ('serviceWorker' in navigator) {
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=3.3.1')
+            navigator.serviceWorker.register('sw.js?v=3.4.0')
                 .then(registration => {
                     console.log('SW registered: ', registration);
                     

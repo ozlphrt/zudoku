@@ -7,7 +7,7 @@
     <title>Zudoku</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg?v=87">
     <script>
-    console.log("Zudoku Boot: V3.3.1");
+    console.log("Zudoku Boot: V3.4.0");
     (function(){
         try {
             var target = 'zudoku-app.html' + location.search + location.hash;
@@ -20,7 +20,7 @@
     // Register Service Worker
     if ('serviceWorker' in navigator) {
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=3.3.1')
+            navigator.serviceWorker.register('sw.js?v=3.4.0')
                 .then(reg => console.log('SW registered from index'))
                 .catch(err => console.log('SW failed from index', err));
         };
@@ -409,14 +409,15 @@
             justify-content: center;
             text-align: center;
             transition: all 0.3s ease;
-            color: var(--text-primary);
+            color: var(--highlight, #DA5100);
+            font-weight: 900;
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 0;
             margin: 0;
             min-width: 0;
             min-height: 0;
-            font-size: clamp(9px, 1.2vw, 13px);
+            font-size: clamp(16px, 2.6vmin, 25px);
         }
 
         .cell.notes .note-number:empty {

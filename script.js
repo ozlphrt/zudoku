@@ -42,6 +42,9 @@ class SudokuGame {
         this.currentPuzzleGrade = null;
         this.sarpAttemptCount = 0;
         
+        // Auto Notes mode
+        this.autoNotes = this.loadAutoNotesSetting();
+        
         // Touch Keypad state
         this.touchKeypadActive = false;
         this.activeTouchCellIndex = null;
@@ -1314,14 +1317,18 @@ class SudokuGame {
             // Animate number placement
             this.animateNumberPlacement(row, col);
             
-            // Clear notes for this cell
-            this.notes[row][col].clear();
-            
-            // Remove this number from notes in the same row, column, and 3x3 block
-            this.removeNotesFromBlock(row, col, number);
-            
-            // Remove invalid notes from entire grid (smart note cleanup)
-            this.removeInvalidNotes();
+            if (this.autoNotes) {
+                this.populateAutoNotes();
+            } else {
+                // Clear notes for this cell
+                this.notes[row][col].clear();
+                
+                // Remove this number from notes in the same row, column, and 3x3 block
+                this.removeNotesFromBlock(row, col, number);
+                
+                // Remove invalid notes from entire grid (smart note cleanup)
+                this.removeInvalidNotes();
+            }
             
             // Update display first
             this.updateDisplay();
@@ -2481,6 +2488,7 @@ class SudokuGame {
         }
 
         console.log(`✅ Success: Generated ${count} clues.`);
+        if (this.autoNotes) this.populateAutoNotes();
         this.updateAutoDashboard();
         this.updateDisplay();
         this.updateProgress();
@@ -2931,6 +2939,7 @@ class SudokuGame {
 
         const clueCount = this.grid.flat().filter(Boolean).length;
         console.log(`✅ ${stage.label} puzzle loaded (${clueCount} clues, SE ${pair.r})`);
+        if (this.autoNotes) this.populateAutoNotes();
         this.updateAutoDashboard();
         this.updateDisplay();
         this.updateProgress();
@@ -2993,6 +3002,8 @@ class SudokuGame {
         }
         
         console.log(`✅ Curated ${preset.label} puzzle loaded (${count} clues, MaxTech: ${grade.maxStepDifficulty} ${grade.difficultyLabel}, Elegance: ${grade.eleganceScore})`);
+        
+        if (this.autoNotes) this.populateAutoNotes();
         
         this.updateAutoDashboard();
         this.updateDisplay();
@@ -3131,6 +3142,7 @@ class SudokuGame {
                 }
             }
             
+            if (this.autoNotes) this.populateAutoNotes();
             this.updateDisplay();
             
             // Update progress immediately
@@ -4156,7 +4168,11 @@ class SudokuGame {
             this.notes[row][col].clear();
             this.hintCount++;
             this.updateHintCount();
-            this.removeInvalidNotes();
+            if (this.autoNotes) {
+                this.populateAutoNotes();
+            } else {
+                this.removeInvalidNotes();
+            }
             this.updateDisplay();
             this.updateProgress();
             this.playSound('hint');
@@ -4287,6 +4303,70 @@ class SudokuGame {
         return null;
     }
     
+
+    animatedAutoSolve(stepMs = 35) {
+        if (this.isGameWon) return;
+        
+        this.wasAutoSolved = true;
+        this.stopTimer();
+        this.clearSelection();
+        this.clearHighlights();
+        this.clearNoteHighlights();
+
+        if (!this.solution || !this.solution.length) {
+            const sol = this.grid.map(row => [...row]);
+            if (this.solveSudokuForGrid(sol)) {
+                this.solution = sol;
+            } else {
+                alert('Could not solve current board state.');
+                return;
+            }
+        }
+
+        const emptyCells = [];
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (!this.givenCells[r][c] && this.grid[r][c] !== this.solution[r][c]) {
+                    emptyCells.push({ r, c, val: this.solution[r][c] });
+                }
+            }
+        }
+
+        if (emptyCells.length === 0) {
+            this.gameWon();
+            return;
+        }
+
+        let index = 0;
+        const fillNext = () => {
+            if (index >= emptyCells.length) {
+                this.updateDisplay();
+                this.updateProgress();
+                setTimeout(() => {
+                    this.gameWon();
+                }, 150);
+                return;
+            }
+
+            const { r, c, val } = emptyCells[index++];
+            this.grid[r][c] = val;
+            this.notes[r][c].clear();
+            if (this.autoNotes) {
+                this.populateAutoNotes();
+            }
+            this.updateDisplay();
+            this.animateNumberPlacement(r, c);
+            
+            if (index % 3 === 0 || index === emptyCells.length) {
+                this.playSound('place');
+            }
+
+            setTimeout(fillNext, stepMs);
+        };
+
+        fillNext();
+    }
+
     solvePuzzle() {
         if (this.isGameWon) {
             console.log('🎉 Puzzle already solved!');
@@ -4611,6 +4691,68 @@ class SudokuGame {
         
         // Trigger new game to apply mode
         this.newGame();
+    }
+    
+    // Auto Notes setting & candidate population
+    loadAutoNotesSetting() {
+        return localStorage.getItem('zudoku-auto-notes') === 'true';
+    }
+
+    setAutoNotes(enabled) {
+        this.autoNotes = !!enabled;
+        localStorage.setItem('zudoku-auto-notes', this.autoNotes ? 'true' : 'false');
+        console.log(`📝 Auto Notes ${this.autoNotes ? 'ENABLED' : 'DISABLED'}`);
+        if (this.autoNotes) {
+            this.populateAutoNotes();
+        } else {
+            this.clearAllNotes();
+        }
+        this.updateDisplay();
+    }
+
+    populateAutoNotes() {
+        // Fast bitmask candidate calculation
+        const rowMask = Array(9).fill(0);
+        const colMask = Array(9).fill(0);
+        const boxMask = Array(9).fill(0);
+
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                const val = this.grid[r][c];
+                if (val) {
+                    const bit = 1 << val;
+                    const b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+                    rowMask[r] |= bit;
+                    colMask[c] |= bit;
+                    boxMask[b] |= bit;
+                }
+            }
+        }
+
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (this.grid[r][c] === 0) {
+                    const b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+                    const used = rowMask[r] | colMask[c] | boxMask[b];
+                    this.notes[r][c].clear();
+                    for (let num = 1; num <= 9; num++) {
+                        if ((used & (1 << num)) === 0) {
+                            this.notes[r][c].add(num);
+                        }
+                    }
+                } else {
+                    this.notes[r][c].clear();
+                }
+            }
+        }
+    }
+
+    clearAllNotes() {
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                this.notes[r][c].clear();
+            }
+        }
     }
     
     saveAutoModeState() {
@@ -5506,6 +5648,8 @@ class SudokuGame {
             
             // Restore elapsed time
             this.pausedTime = gameState.elapsedTime;
+            
+            if (this.autoNotes) this.populateAutoNotes();
             
             // Update display
             this.updateDisplay();
@@ -6437,8 +6581,12 @@ class SudokuGame {
             } else {
                 // Redo: erase again
                 this.grid[row][col] = 0;
-                this.notes[row][col] = [];
+                this.notes[row][col] = new Set();
             }
+        }
+        
+        if (this.autoNotes) {
+            this.populateAutoNotes();
         }
     }
     
