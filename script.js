@@ -34,6 +34,7 @@ class SudokuGame {
         this.hintCount = 0;
         this.isGameWon = false;
         this.wasAutoSolved = false;
+        this.autoSolvedCells = Array(9).fill().map(() => Array(9).fill(false));
         this.celebratingCells = new Set();
         
         // Sarp Mode Engine
@@ -913,7 +914,8 @@ class SudokuGame {
         
         // Toggle selection off if clicking the same cell again
         if (this.selectedCell === index) {
-            this.clearSelection();
+            this.autoSolvedCells = Array(9).fill().map(() => Array(9).fill(false));
+        this.clearSelection();
             this.clearHighlights();
             this.clearNoteHighlights();
             return;
@@ -4399,6 +4401,10 @@ class SudokuGame {
                 const { r, c } = currentGroup.cells[cellIndex];
                 
                 this.grid[r][c] = num;
+                if (!this.autoSolvedCells) {
+                    this.autoSolvedCells = Array(9).fill().map(() => Array(9).fill(false));
+                }
+                this.autoSolvedCells[r][c] = true;
                 this.notes[r][c].clear();
                 if (this.autoNotes) {
                     this.populateAutoNotes();

@@ -624,6 +624,17 @@
             background: #2d2d2d !important; /* Slightly lighter/more distinct in dark mode */
         }
 
+        .cell.auto-solved {
+            font-weight: 800;
+            color: #38bdf8 !important; /* Distinct crisp sky blue for auto-solved numbers */
+            background: rgba(56, 189, 248, 0.08) !important;
+        }
+
+        [data-theme="light"] .cell.auto-solved {
+            color: #0284c7 !important; /* Deep vibrant ocean blue on light mode */
+            background: rgba(2, 132, 199, 0.09) !important;
+        }
+
         .cell.selected {
             background: rgba(var(--highlight-rgb), 0.35) !important;
             box-shadow: inset 0 0 0 2px var(--highlight), 0 0 25px var(--glow) !important;
@@ -1877,7 +1888,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.4.2</div>
+    <div class="version-tag">V3.4.3</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -1967,7 +1978,7 @@
 
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="script.js?v=3.4.2"></script>
+<script src="script.js?v=3.4.3"></script>
 <script>
     let isInitialized = false;
     // selectedPadNumber is declared in script.js
@@ -2385,7 +2396,7 @@
     // Register Service Worker with update notifications
     if ('serviceWorker' in navigator) {
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=3.4.2')
+            navigator.serviceWorker.register('sw.js?v=3.4.3')
                 .then(registration => {
                     console.log('SW registered: ', registration);
                     
