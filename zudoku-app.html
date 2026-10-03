@@ -1010,36 +1010,46 @@
         /* ========================================
            MODAL SYSTEM
         ======================================== */
-        /* Auto-Solve Minimal Translucent Modal - Compact Continue Button Only */
+        /* Auto-Solve Minimal Translucent Modal - Docked at Bottom to NEVER block the tiles */
         .modal-overlay.auto-solve-modal {
-            background: rgba(0, 0, 0, 0.20) !important;
-            backdrop-filter: blur(2px) !important;
-            -webkit-backdrop-filter: blur(2px) !important;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            align-items: flex-end !important;
+            justify-content: center !important;
+            padding: 0 16px clamp(16px, 3.5vh, 36px) !important;
+            pointer-events: none !important; /* Allow unobstructed view of the entire grid */
         }
 
         [data-theme="light"] .modal-overlay.auto-solve-modal {
-            background: rgba(255, 255, 255, 0.25) !important;
-            backdrop-filter: blur(2px) !important;
-            -webkit-backdrop-filter: blur(2px) !important;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
         }
 
         .modal-overlay.auto-solve-modal .victory-content {
-            background: rgba(20, 20, 24, 0.75) !important;
-            backdrop-filter: blur(16px) !important;
-            -webkit-backdrop-filter: blur(16px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.18) !important;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+            background: rgba(18, 18, 22, 0.88) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6) !important;
             padding: 8px !important;
-            width: auto !important;
-            min-width: 160px !important;
-            max-width: 200px !important;
-            border-radius: 16px !important;
+            width: 100% !important;
+            max-width: 280px !important;
+            border-radius: 18px !important;
+            pointer-events: auto !important; /* Button remains clickable */
+            animation: bottomSlideUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+        }
+
+        @keyframes bottomSlideUp {
+            0% { transform: translateY(40px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
         }
 
         [data-theme="light"] .modal-overlay.auto-solve-modal .victory-content {
-            background: rgba(255, 255, 255, 0.85) !important;
-            border: 1px solid rgba(0, 0, 0, 0.1) !important;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+            background: rgba(255, 255, 255, 0.92) !important;
+            border: 1px solid rgba(0, 0, 0, 0.12) !important;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18) !important;
         }
 
         .modal-overlay.auto-solve-modal .victory-reaction,
@@ -1049,14 +1059,14 @@
         }
 
         .modal-overlay.auto-solve-modal .primary-btn {
-            padding: 12px 28px !important;
-            font-size: 14px !important;
+            padding: 14px 28px !important;
+            font-size: 15px !important;
             font-weight: 800 !important;
             border-radius: 12px !important;
-            letter-spacing: 0.1em !important;
+            letter-spacing: 0.12em !important;
             width: 100% !important;
             margin: 0 !important;
-            box-shadow: none !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
         }
 
         .modal-overlay {
@@ -1963,7 +1973,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.4.7</div>
+    <div class="version-tag">V3.4.8</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -2053,7 +2063,7 @@
 
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="script.js?v=3.4.7"></script>
+<script src="script.js?v=3.4.8"></script>
 <script>
     let isInitialized = false;
     // selectedPadNumber is declared in script.js
@@ -2490,7 +2500,7 @@
     // Register Service Worker with update notifications
     if ('serviceWorker' in navigator) {
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=3.4.7')
+            navigator.serviceWorker.register('sw.js?v=3.4.8')
                 .then(registration => {
                     console.log('SW registered: ', registration);
                     
