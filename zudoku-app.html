@@ -618,21 +618,42 @@
         }
         .cell:hover { background: inherit; }
         
-        .cell.given {
-            font-weight: 800;
-            color: #E0E0E0;
-            background: #2d2d2d !important; /* Slightly lighter/more distinct in dark mode */
+        .cell.given,
+        .cell.given.same-number-highlight,
+        .cell.given.number-complete,
+        [data-theme] .cell.given,
+        [data-theme] .cell.given.same-number-highlight,
+        [data-theme] .cell.given.number-complete {
+            font-weight: 800 !important;
+            color: #E0E0E0 !important;
+            background: #2d2d2d !important;
+            opacity: 1 !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
         }
 
-        .cell.auto-solved {
-            font-weight: 800;
+        .cell.auto-solved,
+        .cell.auto-solved.same-number-highlight,
+        .cell.auto-solved.number-complete,
+        [data-theme] .cell.auto-solved,
+        [data-theme] .cell.auto-solved.same-number-highlight,
+        [data-theme] .cell.auto-solved.number-complete {
+            font-weight: 800 !important;
             color: #38bdf8 !important; /* Distinct crisp sky blue for auto-solved numbers */
-            background: rgba(56, 189, 248, 0.08) !important;
+            background: rgba(56, 189, 248, 0.12) !important;
+            opacity: 1 !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
         }
 
-        [data-theme="light"] .cell.auto-solved {
+        [data-theme="light"] .cell.auto-solved,
+        [data-theme="light"] .cell.auto-solved.same-number-highlight,
+        [data-theme="light"] .cell.auto-solved.number-complete {
             color: #0284c7 !important; /* Deep vibrant ocean blue on light mode */
-            background: rgba(2, 132, 199, 0.09) !important;
+            background: rgba(2, 132, 199, 0.12) !important;
+            opacity: 1 !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
         }
 
         .cell.selected {
@@ -854,10 +875,15 @@
             border: 1px solid #bbbbbb;
         }
 
-        [data-theme="light"] .cell.given {
+        [data-theme="light"] .cell.given,
+        [data-theme="light"] .cell.given.same-number-highlight,
+        [data-theme="light"] .cell.given.number-complete {
             background: #e8e8e8 !important;
             color: #000000 !important;
             font-weight: 800 !important;
+            opacity: 1 !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
         }
 
         [data-theme="light"] .header-bar button, 
@@ -1942,7 +1968,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.4.5</div>
+    <div class="version-tag">V3.4.6</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -2032,7 +2058,7 @@
 
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="script.js?v=3.4.5"></script>
+<script src="script.js?v=3.4.6"></script>
 <script>
     let isInitialized = false;
     // selectedPadNumber is declared in script.js
@@ -2466,7 +2492,7 @@
     // Register Service Worker with update notifications
     if ('serviceWorker' in navigator) {
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=3.4.5')
+            navigator.serviceWorker.register('sw.js?v=3.4.6')
                 .then(registration => {
                     console.log('SW registered: ', registration);
                     

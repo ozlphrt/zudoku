@@ -1663,13 +1663,17 @@ class SudokuGame {
             if (isGiven) {
                 newClasses.push('given');
                 newText = val || '';
-                if (val !== 0 && this.isNumberComplete(val)) newClasses.push('number-complete');
+                if (!this.wasAutoSolved && val !== 0 && this.isNumberComplete(val)) {
+                    newClasses.push('number-complete');
+                }
             } else if (val !== 0) {
                 newText = val.toString();
                 if (this.autoSolvedCells && this.autoSolvedCells[row][col]) {
                     newClasses.push('auto-solved');
                 }
-                if (this.isNumberComplete(val)) newClasses.push('number-complete');
+                if (!this.wasAutoSolved && this.isNumberComplete(val)) {
+                    newClasses.push('number-complete');
+                }
             } else if (notes.size > 0) {
                 isNotes = true;
                 newClasses.push('notes');
@@ -4371,7 +4375,6 @@ class SudokuGame {
                 this.clearSelection();
                 this.clearNumberCursor();
                 this.updateDisplay();
-                this.fullCompletionScan();
                 this.updateProgress();
                 if (typeof selectedPadNumber !== 'undefined') selectedPadNumber = null;
                 
@@ -4386,18 +4389,24 @@ class SudokuGame {
             const num = currentGroup.number;
 
             if (phase === 'SELECT_NUMBER') {
-                // Step A: Select the number on keypad & Highlight all instances on the board
+                // Step A: Select the number on keypad
                 this.paintNumber = num;
                 this.isPaintMode = true;
                 if (typeof selectedPadNumber !== 'undefined') selectedPadNumber = num;
                 
-                this.highlightAllInstances(num);
+                // Sync number pad active selection
+                document.querySelectorAll('.num-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                const activeBtn = document.querySelector(`.num-btn[data-number="${num}"]`);
+                if (activeBtn) activeBtn.classList.add('selected');
+                
                 this.setNumberCursor(num);
                 this.playSound('click');
 
                 phase = 'PLACE_CELL';
                 cellIndex = 0;
-                // Human scanning delay
+                // Scanning delay
                 this.autoSolveTimer = setTimeout(stepSolve, 180);
             } else if (phase === 'PLACE_CELL') {
                 // Step B: Fill in the puzzle for this number cell by cell
@@ -4414,7 +4423,6 @@ class SudokuGame {
                 }
                 
                 this.updateDisplay();
-                this.highlightAllInstances(num);
                 this.animateNumberPlacement(r, c);
                 this.playSound('place');
                 this.checkCompletion(r, c, num);
@@ -4429,14 +4437,10 @@ class SudokuGame {
                     this.autoSolveTimer = setTimeout(stepSolve, 140);
                 }
             } else if (phase === 'COMPLETE_NUMBER') {
-                // Step C: Number complete pulse & move to next number
-                this.highlightNumber(num);
-                this.fullCompletionScan();
-                
+                // Step C: Move to next number
                 groupIndex++;
                 phase = 'SELECT_NUMBER';
-                // Transition delay before moving to next number
-                this.autoSolveTimer = setTimeout(stepSolve, 220);
+                this.autoSolveTimer = setTimeout(stepSolve, 200);
             }
         };
 
