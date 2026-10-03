@@ -720,14 +720,13 @@
             z-index: 20;
         }
 
-        @keyframes celebration {
-            0%, 100% { transform: scale(1); }
-            40% { transform: scale(1.08); }
-            70% { transform: scale(0.96); }
+        @keyframes pulseSuccess {
+            0%, 50%, 100% { background: transparent; transform: scale(1); }
+            25%, 75% { background: var(--highlight); transform: scale(1.03); }
         }
         .cell.celebrate {
-            animation: celebration 0.5s ease-in-out;
-            background: rgba(87, 199, 255, 0.2) !important;
+            animation: pulseSuccess 0.4s ease-out forwards;
+            z-index: 100 !important;
         }
 
         /* Notes layout */
@@ -833,8 +832,8 @@
         }
 
         .cell.celebrate { 
-            animation: pulseSuccess 0.4s steps(1) 3; 
-            z-index: 100;
+            animation: pulseSuccess 0.4s ease-out forwards; 
+            z-index: 100 !important;
         }
 
         @keyframes numberPulse {
@@ -1973,7 +1972,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.5.0</div>
+    <div class="version-tag">V3.5.1</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -2063,7 +2062,7 @@
 
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="script.js?v=3.5.0"></script>
+<script src="script.js?v=3.5.1"></script>
 <script>
     let isInitialized = false;
     
@@ -2527,7 +2526,7 @@
     // Register Service Worker with update notifications
     if ('serviceWorker' in navigator) {
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=3.5.0')
+            navigator.serviceWorker.register('sw.js?v=3.5.1')
                 .then(registration => {
                     console.log('SW registered: ', registration);
                     

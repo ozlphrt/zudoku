@@ -1824,7 +1824,7 @@ class SudokuGame {
                 if (cell) cell.classList.remove('celebrate');
             });
             this.fullCompletionScan();
-        }, 1000);
+        }, 400);
     }
     
     highlightColumn(col) {
@@ -1846,7 +1846,7 @@ class SudokuGame {
                 if (cell) cell.classList.remove('celebrate');
             });
             this.fullCompletionScan();
-        }, 1000);
+        }, 400);
     }
     
     clearAllHighlights() {
@@ -1905,7 +1905,7 @@ class SudokuGame {
                 if (cell) cell.classList.remove('celebrate');
             });
             this.fullCompletionScan();
-        }, 1000);
+        }, 400);
     }
     
     isNumberComplete(number) {
