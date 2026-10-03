@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zudoku-cache-v3.4.1';
+const CACHE_NAME = 'zudoku-cache-v3.4.2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -17,7 +17,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache v3.4.1');
+        console.log('Opened cache v3.4.2');
         const requests = ASSETS_TO_CACHE.map(url => new Request(url, { cache: 'reload' }));
         return cache.addAll(requests);
       })

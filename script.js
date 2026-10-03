@@ -4328,9 +4328,15 @@ class SudokuGame {
             }
         }
 
-        // Group unfilled/incorrect cells by their target solution number (1 through 9)
+        // 1. Determine starting number (currently selected number on keypad or 1)
+        let currentNum = (this.paintNumber && this.paintNumber >= 1 && this.paintNumber <= 9)
+            ? this.paintNumber
+            : (typeof selectedPadNumber !== 'undefined' && selectedPadNumber ? selectedPadNumber : 1);
+
+        // 2. Build list of numbers in cyclical order starting from currentNum
         const numberGroups = [];
-        for (let num = 1; num <= 9; num++) {
+        for (let i = 0; i < 9; i++) {
+            const num = ((currentNum - 1 + i) % 9) + 1;
             const cells = [];
             for (let r = 0; r < 9; r++) {
                 for (let c = 0; c < 9; c++) {
@@ -4364,9 +4370,10 @@ class SudokuGame {
                 this.updateProgress();
                 if (typeof selectedPadNumber !== 'undefined') selectedPadNumber = null;
                 
+                // Notify user with victory/continue modal
                 this.autoSolveTimer = setTimeout(() => {
                     this.gameWon();
-                }, 200);
+                }, 250);
                 return;
             }
 
@@ -4374,8 +4381,7 @@ class SudokuGame {
             const num = currentGroup.number;
 
             if (phase === 'SELECT_NUMBER') {
-                // 1. Simulate human player selecting a number on the keypad:
-                // Highlights the number pad button and all existing instances on the board
+                // Step A: Select the number on keypad & Highlight all instances on the board
                 this.paintNumber = num;
                 this.isPaintMode = true;
                 if (typeof selectedPadNumber !== 'undefined') selectedPadNumber = num;
@@ -4386,10 +4392,10 @@ class SudokuGame {
 
                 phase = 'PLACE_CELL';
                 cellIndex = 0;
-                // Brief pause so player sees number selected and board highlighted
+                // Human scanning delay
                 this.autoSolveTimer = setTimeout(stepSolve, 180);
             } else if (phase === 'PLACE_CELL') {
-                // 2. Simulate human tapping each empty cell for that number
+                // Step B: Fill in the puzzle for this number cell by cell
                 const { r, c } = currentGroup.cells[cellIndex];
                 
                 this.grid[r][c] = num;
@@ -4407,14 +4413,14 @@ class SudokuGame {
 
                 cellIndex++;
                 if (cellIndex < currentGroup.cells.length) {
-                    // Tap rhythm between cells for the same number
+                    // Tap rhythm between cells
                     this.autoSolveTimer = setTimeout(stepSolve, 120);
                 } else {
                     phase = 'COMPLETE_NUMBER';
                     this.autoSolveTimer = setTimeout(stepSolve, 140);
                 }
             } else if (phase === 'COMPLETE_NUMBER') {
-                // 3. Number complete: celebration pulse and scan
+                // Step C: Number complete pulse & move to next number
                 this.highlightNumber(num);
                 this.fullCompletionScan();
                 
