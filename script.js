@@ -920,8 +920,7 @@ class SudokuGame {
         
         // Toggle selection off if clicking the same cell again
         if (this.selectedCell === index) {
-            this.autoSolvedCells = Array(9).fill().map(() => Array(9).fill(false));
-        this.clearSelection();
+            this.clearSelection();
             this.clearHighlights();
             this.clearNoteHighlights();
             return;
@@ -1302,6 +1301,9 @@ class SudokuGame {
     setNumber(row, col, number) {
         this.resetHintPulseTimer();
         if (this.isPaused) this.resumeTimer();
+        if (this.autoSolvedCells) {
+            this.autoSolvedCells[row][col] = false;
+        }
         const oldValue = this.grid[row][col];
         this.grid[row][col] = number;
         
@@ -3148,6 +3150,8 @@ class SudokuGame {
             this.solution = null;
             
             // Mark given cells
+            this.wasAutoSolved = false;
+            this.autoSolvedCells = Array(9).fill().map(() => Array(9).fill(false));
             this.givenCells = Array(9).fill().map(() => Array(9).fill(false));
             for (let row = 0; row < 9; row++) {
                 for (let col = 0; col < 9; col++) {
@@ -3938,6 +3942,7 @@ class SudokuGame {
         this.isPaintMode = false;
         this.paintNumber = null;
         this.wasAutoSolved = false;
+        this.autoSolvedCells = Array(9).fill().map(() => Array(9).fill(false));
         document.body.classList.remove('note-mode', 'paint-mode');
         
         // Reset timer
@@ -4463,6 +4468,16 @@ class SudokuGame {
         
         // Mark as auto-solved to prevent best time update
         this.wasAutoSolved = true;
+        if (!this.autoSolvedCells) {
+            this.autoSolvedCells = Array(9).fill().map(() => Array(9).fill(false));
+        }
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (!this.givenCells[r][c]) {
+                    this.autoSolvedCells[r][c] = true;
+                }
+            }
+        }
         
         // Create a copy of the current grid for solving
         const workingGrid = this.grid.map(row => [...row]);
@@ -5730,6 +5745,8 @@ class SudokuGame {
                 if (!this.solveSudokuForGrid(restoredSolution)) return false;
                 this.solution = restoredSolution;
             }
+            this.wasAutoSolved = false;
+            this.autoSolvedCells = Array(9).fill().map(() => Array(9).fill(false));
             this.currentPuzzleGrade = gameState.currentPuzzleGrade || null;
             
             // Restore elapsed time
@@ -6637,6 +6654,9 @@ class SudokuGame {
         const { type, row, col, value, oldValue, noteNumber, action } = move;
         
         if (type === 'number') {
+            if (this.autoSolvedCells) {
+                this.autoSolvedCells[row][col] = false;
+            }
             if (isUndo) {
                 // Undo: restore old value
                 this.grid[row][col] = oldValue;
