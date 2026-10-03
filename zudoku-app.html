@@ -47,7 +47,14 @@
         /* ========================================
            RESET & BASE
         ======================================== */
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        *, *::before, *::after { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
+        }
 
         html, body {
             width: 100%;
@@ -66,9 +73,24 @@
             outline: none;
             color: var(--text);
             font-family: 'JetBrains Mono', 'Satoshi', 'Inter', -apple-system, sans-serif;
-            -webkit-user-select: none;
-            user-select: none;
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
             touch-action: manipulation;
+        }
+
+        .sudoku-grid,
+        .cell,
+        .cell *,
+        .input-number-bar,
+        .num-btn,
+        .num-btn *,
+        .note-number,
+        .note-grid,
+        button {
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
         }
 
         /* ========================================
@@ -1973,7 +1995,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.4.8</div>
+    <div class="version-tag">V3.4.9</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -2063,9 +2085,36 @@
 
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="script.js?v=3.4.8"></script>
+<script src="script.js?v=3.4.9"></script>
 <script>
     let isInitialized = false;
+    
+    // Prevent iOS magnifier / callout / text selection during long press note-taking
+    document.addEventListener('selectstart', (e) => {
+        e.preventDefault();
+        return false;
+    }, { passive: false });
+
+    document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }, { passive: false });
+
+    document.addEventListener('selectionchange', () => {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+            sel.removeAllRanges();
+        }
+    });
+
+    window.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.cell, .num-btn, .sudoku-grid, .input-number-bar, button')) {
+            const sel = window.getSelection();
+            if (sel) sel.removeAllRanges();
+        }
+    }, { passive: true });
+
     // selectedPadNumber is declared in script.js
 
     function updateTimerDisplay(timeStr) {
@@ -2500,7 +2549,7 @@
     // Register Service Worker with update notifications
     if ('serviceWorker' in navigator) {
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=3.4.8')
+            navigator.serviceWorker.register('sw.js?v=3.4.9')
                 .then(registration => {
                     console.log('SW registered: ', registration);
                     

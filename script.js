@@ -747,6 +747,12 @@ class SudokuGame {
                 // Ignore right-click button (button 2) to prevent duplicate triggering with contextmenu
                 if (e.button === 2) return;
                 
+                // Cancel any text selection to avoid iOS magnifier loupe
+                if (window.getSelection) {
+                    const sel = window.getSelection();
+                    if (sel && sel.rangeCount > 0) sel.removeAllRanges();
+                }
+                
                 isLongPress = false;
                 startPos = { x: e.clientX, y: e.clientY };
                 
