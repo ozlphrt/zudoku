@@ -1666,6 +1666,9 @@ class SudokuGame {
                 if (val !== 0 && this.isNumberComplete(val)) newClasses.push('number-complete');
             } else if (val !== 0) {
                 newText = val.toString();
+                if (this.autoSolvedCells && this.autoSolvedCells[row][col]) {
+                    newClasses.push('auto-solved');
+                }
                 if (this.isNumberComplete(val)) newClasses.push('number-complete');
             } else if (notes.size > 0) {
                 isNotes = true;
