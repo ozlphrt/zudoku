@@ -4304,9 +4304,14 @@ class SudokuGame {
     }
     
 
-    animatedAutoSolve(stepMs = 35) {
+    animatedAutoSolve() {
         if (this.isGameWon) return;
         
+        if (this.autoSolveTimer) {
+            clearTimeout(this.autoSolveTimer);
+            this.autoSolveTimer = null;
+        }
+
         this.wasAutoSolved = true;
         this.stopTimer();
         this.clearSelection();
@@ -4323,48 +4328,104 @@ class SudokuGame {
             }
         }
 
-        const emptyCells = [];
-        for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
-                if (!this.givenCells[r][c] && this.grid[r][c] !== this.solution[r][c]) {
-                    emptyCells.push({ r, c, val: this.solution[r][c] });
+        // Group unfilled/incorrect cells by their target solution number (1 through 9)
+        const numberGroups = [];
+        for (let num = 1; num <= 9; num++) {
+            const cells = [];
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (this.solution[r][c] === num && (!this.givenCells[r][c] && this.grid[r][c] !== num)) {
+                        cells.push({ r, c });
+                    }
                 }
+            }
+            if (cells.length > 0) {
+                numberGroups.push({ number: num, cells });
             }
         }
 
-        if (emptyCells.length === 0) {
+        if (numberGroups.length === 0) {
             this.gameWon();
             return;
         }
 
-        let index = 0;
-        const fillNext = () => {
-            if (index >= emptyCells.length) {
+        let groupIndex = 0;
+        let cellIndex = 0;
+        let phase = 'SELECT_NUMBER';
+
+        const stepSolve = () => {
+            if (groupIndex >= numberGroups.length) {
+                // Completed all numbers!
+                this.clearHighlights();
+                this.clearSelection();
+                this.clearNumberCursor();
                 this.updateDisplay();
+                this.fullCompletionScan();
                 this.updateProgress();
-                setTimeout(() => {
+                if (typeof selectedPadNumber !== 'undefined') selectedPadNumber = null;
+                
+                this.autoSolveTimer = setTimeout(() => {
                     this.gameWon();
-                }, 150);
+                }, 200);
                 return;
             }
 
-            const { r, c, val } = emptyCells[index++];
-            this.grid[r][c] = val;
-            this.notes[r][c].clear();
-            if (this.autoNotes) {
-                this.populateAutoNotes();
-            }
-            this.updateDisplay();
-            this.animateNumberPlacement(r, c);
-            
-            if (index % 3 === 0 || index === emptyCells.length) {
-                this.playSound('place');
-            }
+            const currentGroup = numberGroups[groupIndex];
+            const num = currentGroup.number;
 
-            setTimeout(fillNext, stepMs);
+            if (phase === 'SELECT_NUMBER') {
+                // 1. Simulate human player selecting a number on the keypad:
+                // Highlights the number pad button and all existing instances on the board
+                this.paintNumber = num;
+                this.isPaintMode = true;
+                if (typeof selectedPadNumber !== 'undefined') selectedPadNumber = num;
+                
+                this.highlightAllInstances(num);
+                this.setNumberCursor(num);
+                this.playSound('click');
+
+                phase = 'PLACE_CELL';
+                cellIndex = 0;
+                // Brief pause so player sees number selected and board highlighted
+                this.autoSolveTimer = setTimeout(stepSolve, 180);
+            } else if (phase === 'PLACE_CELL') {
+                // 2. Simulate human tapping each empty cell for that number
+                const { r, c } = currentGroup.cells[cellIndex];
+                
+                this.grid[r][c] = num;
+                this.notes[r][c].clear();
+                if (this.autoNotes) {
+                    this.populateAutoNotes();
+                }
+                
+                this.updateDisplay();
+                this.highlightAllInstances(num);
+                this.animateNumberPlacement(r, c);
+                this.playSound('place');
+                this.checkCompletion(r, c, num);
+                this.updateProgress();
+
+                cellIndex++;
+                if (cellIndex < currentGroup.cells.length) {
+                    // Tap rhythm between cells for the same number
+                    this.autoSolveTimer = setTimeout(stepSolve, 120);
+                } else {
+                    phase = 'COMPLETE_NUMBER';
+                    this.autoSolveTimer = setTimeout(stepSolve, 140);
+                }
+            } else if (phase === 'COMPLETE_NUMBER') {
+                // 3. Number complete: celebration pulse and scan
+                this.highlightNumber(num);
+                this.fullCompletionScan();
+                
+                groupIndex++;
+                phase = 'SELECT_NUMBER';
+                // Transition delay before moving to next number
+                this.autoSolveTimer = setTimeout(stepSolve, 220);
+            }
         };
 
-        fillNext();
+        stepSolve();
     }
 
     solvePuzzle() {
