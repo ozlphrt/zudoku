@@ -1,6 +1,6 @@
 {
   "name": "zudoku",
-  "version": "3.4.4",
+  "version": "3.4.5",
   "description": "A beautiful glassmorphism Sudoku game - completely standalone, no dependencies required",
   "main": "index.html",
   "scripts": {
@@ -8,7 +8,13 @@
     "serve": "python -m http.server 8000",
     "validate:puzzles": "node tools/validate-puzzles.js"
   },
-  "keywords": ["sudoku", "game", "puzzle", "glassmorphism", "standalone"],
+  "keywords": [
+    "sudoku",
+    "game",
+    "puzzle",
+    "glassmorphism",
+    "standalone"
+  ],
   "author": "ozlphrt",
   "license": "MIT"
 }

@@ -984,6 +984,60 @@
         /* ========================================
            MODAL SYSTEM
         ======================================== */
+        /* Auto-Solve Minimal Translucent Modal */
+        .modal-overlay.auto-solve-modal {
+            background: rgba(0, 0, 0, 0.25) !important;
+            backdrop-filter: blur(3px) !important;
+            -webkit-backdrop-filter: blur(3px) !important;
+        }
+
+        [data-theme="light"] .modal-overlay.auto-solve-modal {
+            background: rgba(255, 255, 255, 0.35) !important;
+            backdrop-filter: blur(3px) !important;
+            -webkit-backdrop-filter: blur(3px) !important;
+        }
+
+        .modal-overlay.auto-solve-modal .victory-content {
+            background: rgba(20, 20, 24, 0.72) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+            padding: 24px 28px !important;
+            max-width: 300px !important;
+            border-radius: 24px !important;
+        }
+
+        [data-theme="light"] .modal-overlay.auto-solve-modal .victory-content {
+            background: rgba(255, 255, 255, 0.82) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12) !important;
+        }
+
+        .modal-overlay.auto-solve-modal .victory-reaction {
+            font-size: 13px !important;
+            letter-spacing: 0.25em !important;
+            margin-bottom: 18px !important;
+            color: var(--highlight) !important;
+            font-weight: 800 !important;
+        }
+
+        .modal-overlay.auto-solve-modal .hero-time,
+        .modal-overlay.auto-solve-modal .leaderboard-section {
+            display: none !important;
+        }
+
+        .modal-overlay.auto-solve-modal .primary-btn {
+            padding: 14px 28px !important;
+            font-size: 14px !important;
+            font-weight: 800 !important;
+            border-radius: 12px !important;
+            letter-spacing: 0.08em !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
+        }
+
         .modal-overlay {
             display: none;
             position: fixed;
@@ -1888,7 +1942,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.4.4</div>
+    <div class="version-tag">V3.4.5</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -1978,7 +2032,7 @@
 
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="script.js?v=3.4.4"></script>
+<script src="script.js?v=3.4.5"></script>
 <script>
     let isInitialized = false;
     // selectedPadNumber is declared in script.js
@@ -2267,6 +2321,8 @@
     function showConfirmRestart() { showModal('confirmOverlay'); }
     function proceedWithRestart() { if (window.game) window.game.restartLevel(); closeModal('confirmOverlay'); }
     function advanceToNextLevel() { 
+        const victoryOverlay = document.getElementById('victoryOverlay');
+        if (victoryOverlay) victoryOverlay.classList.remove('auto-solve-modal');
         closeModal('victoryOverlay');
         if (window.game) window.game.newGame(); 
     }
@@ -2278,11 +2334,25 @@
         const origWon = game.gameWon?.bind(game);
         game.gameWon = () => {
             origWon();
+            const victoryOverlay = document.getElementById('victoryOverlay');
             const reactionEl = document.querySelector('.victory-reaction');
-            if (reactionEl) {
-                reactionEl.textContent = game.wasAutoSolved ? 'Puzzle Solved' : 'Solved';
+            const victoryTimeEl = document.getElementById('victoryTime');
+            const leaderboardEl = document.getElementById('leaderboardSection');
+            
+            if (game.wasAutoSolved) {
+                if (victoryOverlay) victoryOverlay.classList.add('auto-solve-modal');
+                if (reactionEl) reactionEl.textContent = 'Puzzle Solved';
+                if (victoryTimeEl) victoryTimeEl.style.display = 'none';
+                if (leaderboardEl) leaderboardEl.style.display = 'none';
+            } else {
+                if (victoryOverlay) victoryOverlay.classList.remove('auto-solve-modal');
+                if (reactionEl) reactionEl.textContent = 'Solved';
+                if (victoryTimeEl) {
+                    victoryTimeEl.style.display = 'block';
+                    victoryTimeEl.textContent = document.getElementById('game-timer').textContent;
+                }
+                if (leaderboardEl) leaderboardEl.style.display = 'block';
             }
-            document.getElementById('victoryTime').textContent = document.getElementById('game-timer').textContent;
             showModal('victoryOverlay');
         };
         
@@ -2396,7 +2466,7 @@
     // Register Service Worker with update notifications
     if ('serviceWorker' in navigator) {
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=3.4.4')
+            navigator.serviceWorker.register('sw.js?v=3.4.5')
                 .then(registration => {
                     console.log('SW registered: ', registration);
                     

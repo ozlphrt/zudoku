@@ -7,7 +7,7 @@
     <title>Zudoku</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg?v=87">
     <script>
-    console.log("Zudoku Boot: V3.4.4");
+    console.log("Zudoku Boot: V3.4.5");
     (function(){
         try {
             var target = 'zudoku-app.html' + location.search + location.hash;
@@ -20,7 +20,7 @@
     // Register Service Worker
     if ('serviceWorker' in navigator) {
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=3.4.4')
+            navigator.serviceWorker.register('sw.js?v=3.4.5')
                 .then(reg => console.log('SW registered from index'))
                 .catch(err => console.log('SW failed from index', err));
         };
