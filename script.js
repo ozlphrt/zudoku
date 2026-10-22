@@ -930,11 +930,11 @@ class SudokuGame {
             if (this.isGameWon || this.isPaused) return false;
             if (target && target.closest) {
                 // Ignore touches inside modals or popups
-                if (target.closest('.modal-overlay, #victoryOverlay, #confirmOverlay, #hintBanner, input, select')) {
+                if (target.closest('.modal-overlay, .victory-overlay, #settingsOverlay, #victoryOverlay, #confirmOverlay, #hintBanner, input, select, .settings-content')) {
                     return false;
                 }
-                // Ignore utility buttons like pause, restart, undo, erase, theme
-                if (target.closest('.action-btn, #pauseBtn, #restartBtn, #undoBtn, #eraseBtn, #hintBtn, .header-btn, .theme-toggle')) {
+                // Ignore utility buttons like pause, restart, undo, erase, theme, settings
+                if (target.closest('.action-btn, #pauseBtn, #restartBtn, #undoBtn, #eraseBtn, #hintBtn, #settings_btn, .restart-level-btn, .header-btn, .theme-toggle, button')) {
                     return false;
                 }
             }

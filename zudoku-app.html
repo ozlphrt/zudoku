@@ -334,6 +334,7 @@
             .restart-level-btn svg {
                 width: 22px !important;
                 height: 22px !important;
+                pointer-events: none !important;
             }
 
             .version-tag {
@@ -1405,7 +1406,7 @@
             justify-content: center;
             padding: 24px;
         }
-        .victory-overlay.visible { display: flex; }
+        .victory-overlay.visible { display: flex !important; }
         .settings-content {
             background: rgba(30, 30, 30, 0.8);
             backdrop-filter: blur(40px);
@@ -1601,6 +1602,9 @@
                 inset 0 -1px 5px rgba(255,255,255,0.05),
                 0 6px 15px rgba(0,0,0,0.5),
                 0 0 10px var(--glow);
+        }
+        .header-bar button svg, .restart-level-btn svg {
+            pointer-events: none;
         }
         .header-bar button {
             width: 48px;
@@ -2106,7 +2110,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.5.2</div>
+    <div class="version-tag">V3.6.1</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -2153,7 +2157,7 @@
         <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 12px;">
             <button class="primary-btn" style="width: 100%; padding: 13px; background: rgba(var(--highlight-rgb), 0.15); border: 1px solid var(--highlight); font-weight: 700; letter-spacing: 1px; border-radius: 12px; cursor: pointer; color: var(--highlight);" onclick="revealPuzzle()">⚡ REVEAL PUZZLE</button>
             <button class="reset-btn" style="width: 100%;" onclick="resetAllData()">RESET ALL DATA</button>
-            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 2.7.0</div>
+            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.6.1</div>
         </div>
     </div>
 </div>
@@ -2196,7 +2200,7 @@
 
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="script.js?v=3.6.0"></script>
+<script src="script.js?v=3.6.1"></script>
 <script>
     let isInitialized = false;
     
@@ -2238,6 +2242,7 @@
     function toggleSettings() {
         const el = document.getElementById('settingsOverlay');
         if (el) {
+            el.style.display = '';
             el.classList.toggle('visible');
             if (el.classList.contains('visible')) {
                 const picker = document.getElementById('palette_picker');
@@ -2259,7 +2264,7 @@
         const overlay = document.getElementById('settingsOverlay');
         if (overlay) {
             overlay.classList.remove('visible');
-            overlay.style.display = 'none';
+            overlay.style.display = '';
         }
         if (window.game) {
             window.game.animatedAutoSolve();
@@ -2277,7 +2282,7 @@
     function updateSarpUI() {
         const badge = document.getElementById('sarp_badge');
         const toggleHeader = document.getElementById('sarp_mode_toggle_header');
-        const toggleSettings = document.getElementById('sarp_mode_toggle_settings');
+        const toggleSettingsEl = document.getElementById('sarp_mode_toggle_settings');
         const toggleContainer = document.getElementById('sarp_toggle_header');
         
         if (window.game) {
@@ -2285,7 +2290,7 @@
             if (badge) badge.style.display = isSarp ? 'block' : 'none';
             if (toggleContainer) toggleContainer.style.display = isSarp ? 'none' : 'flex';
             if (toggleHeader) toggleHeader.checked = isSarp;
-            if (toggleSettings) toggleSettings.checked = isSarp;
+            if (toggleSettingsEl) toggleSettingsEl.checked = isSarp;
         }
     }
 
