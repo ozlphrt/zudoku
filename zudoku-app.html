@@ -784,6 +784,65 @@
         }
         .cell.number-place-animation { animation: numberPlace 0.2s ease-out; }
 
+        /* Auto-Solve: Incorrect Cells Focus and 3D Flip */
+        @keyframes incorrectPulse {
+            0%, 100% {
+                box-shadow: inset 0 0 0 2px #ff453a, 0 0 16px rgba(255, 69, 58, 0.7);
+                background: rgba(255, 69, 58, 0.22) !important;
+                color: #ff453a !important;
+                transform: scale(1.04);
+            }
+            50% {
+                box-shadow: inset 0 0 0 2.5px #ff3b30, 0 0 26px rgba(255, 59, 48, 0.95);
+                background: rgba(255, 69, 58, 0.35) !important;
+                color: #ff3b30 !important;
+                transform: scale(1.09);
+            }
+        }
+        .cell.incorrect-focus {
+            animation: incorrectPulse 0.4s ease-in-out infinite alternate !important;
+            z-index: 35 !important;
+            font-weight: 900 !important;
+            border-radius: 4px;
+        }
+
+        @keyframes cellFlip3D {
+            0% {
+                transform: perspective(400px) rotateY(0deg) scale(1);
+            }
+            45% {
+                transform: perspective(400px) rotateY(90deg) scale(1.15);
+                box-shadow: 0 0 20px rgba(var(--highlight-rgb), 0.8);
+            }
+            55% {
+                transform: perspective(400px) rotateY(90deg) scale(1.15);
+                box-shadow: 0 0 20px rgba(var(--highlight-rgb), 0.8);
+            }
+            100% {
+                transform: perspective(400px) rotateY(0deg) scale(1);
+            }
+        }
+        .cell.cell-flip {
+            animation: cellFlip3D 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+            z-index: 40 !important;
+            transform-style: preserve-3d;
+        }
+
+        @keyframes flipCorrectFlash {
+            0% {
+                background: var(--highlight) !important;
+                color: #ffffff !important;
+                box-shadow: 0 0 22px var(--glow) !important;
+                transform: scale(1.12);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        .cell.flip-correct {
+            animation: flipCorrectFlash 0.35s ease-out forwards;
+        }
+
         /* Rapid Strobe Flash - Mechanical Reward */
         @keyframes pulseSuccess {
             0%, 33%, 66%, 100% { background: transparent; }
@@ -2063,7 +2122,7 @@
 
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="script.js?v=3.5.5"></script>
+<script src="script.js?v=3.5.6"></script>
 <script>
     let isInitialized = false;
     

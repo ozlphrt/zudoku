@@ -1846,6 +1846,10 @@ class SudokuGame {
             if (cell.classList.contains('same-number-highlight')) newClasses.push('same-number-highlight');
             if (cell.classList.contains('related-highlight')) newClasses.push('related-highlight');
             if (cell.classList.contains('error')) newClasses.push('error');
+            if (cell.classList.contains('incorrect-focus')) newClasses.push('incorrect-focus');
+            if (cell.classList.contains('cell-flip')) newClasses.push('cell-flip');
+            if (cell.classList.contains('flip-correct')) newClasses.push('flip-correct');
+            if (cell.classList.contains('number-place-animation')) newClasses.push('number-place-animation');
 
             // Only update DOM if changed
             const classString = newClasses.join(' ');
@@ -4492,124 +4496,230 @@ class SudokuGame {
         this.clearHighlights();
         this.clearNoteHighlights();
 
+        if (!this.autoSolvedCells) {
+            this.autoSolvedCells = Array(9).fill().map(() => Array(9).fill(false));
+        }
+
+        // Ensure solution exists based on given cells so user errors don't prevent solution
         if (!this.solution || !this.solution.length) {
-            const sol = this.grid.map(row => [...row]);
+            const sol = Array(9).fill().map((_, r) => 
+                Array(9).fill().map((_, c) => this.givenCells[r][c] ? this.grid[r][c] : 0)
+            );
             if (this.solveSudokuForGrid(sol)) {
                 this.solution = sol;
             } else {
-                alert('Could not solve current board state.');
-                return;
-            }
-        }
-
-        // 1. Determine starting number (currently selected number on keypad or 1)
-        let currentNum = (this.paintNumber && this.paintNumber >= 1 && this.paintNumber <= 9)
-            ? this.paintNumber
-            : (typeof selectedPadNumber !== 'undefined' && selectedPadNumber ? selectedPadNumber : 1);
-
-        // 2. Build list of numbers in cyclical order starting from currentNum
-        const numberGroups = [];
-        for (let i = 0; i < 9; i++) {
-            const num = ((currentNum - 1 + i) % 9) + 1;
-            const cells = [];
-            for (let r = 0; r < 9; r++) {
-                for (let c = 0; c < 9; c++) {
-                    if (this.solution[r][c] === num && (!this.givenCells[r][c] && this.grid[r][c] !== num)) {
-                        cells.push({ r, c });
-                    }
+                const fallback = this.grid.map(row => [...row]);
+                if (this.solveSudokuForGrid(fallback)) {
+                    this.solution = fallback;
+                } else {
+                    alert('Could not solve current board state.');
+                    return;
                 }
             }
-            if (cells.length > 0) {
-                numberGroups.push({ number: num, cells });
+        }
+
+        // 1. Identify all incorrectly placed numbers
+        const incorrectCells = [];
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (!this.givenCells[r][c] && this.grid[r][c] !== 0 && this.grid[r][c] !== this.solution[r][c]) {
+                    incorrectCells.push({
+                        r,
+                        c,
+                        wrongVal: this.grid[r][c],
+                        correctVal: this.solution[r][c],
+                        index: r * 9 + c
+                    });
+                }
             }
         }
 
-        if (numberGroups.length === 0) {
-            this.gameWon();
-            return;
-        }
+        // Helper to solve remaining cells in cyclic order starting from startNum
+        const proceedWithCyclicSolve = (startNum) => {
+            const numberGroups = [];
+            for (let i = 0; i < 9; i++) {
+                const num = ((startNum - 1 + i) % 9) + 1;
+                const cells = [];
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        if (this.solution[r][c] === num && (!this.givenCells[r][c] && this.grid[r][c] !== num)) {
+                            cells.push({ r, c });
+                        }
+                    }
+                }
+                if (cells.length > 0) {
+                    numberGroups.push({ number: num, cells });
+                }
+            }
 
-        let groupIndex = 0;
-        let cellIndex = 0;
-        let phase = 'SELECT_NUMBER';
-
-        const stepSolve = () => {
-            if (groupIndex >= numberGroups.length) {
-                // Completed all numbers!
+            if (numberGroups.length === 0) {
                 this.clearHighlights();
                 this.clearSelection();
                 this.clearNumberCursor();
                 this.updateDisplay();
                 this.updateProgress();
-                if (typeof selectedPadNumber !== 'undefined') selectedPadNumber = null;
-                
-                // Notify user with victory/continue modal
                 this.autoSolveTimer = setTimeout(() => {
                     this.gameWon();
                 }, 250);
                 return;
             }
 
-            const currentGroup = numberGroups[groupIndex];
-            const num = currentGroup.number;
+            let groupIndex = 0;
+            let cellIndex = 0;
+            let phase = 'SELECT_NUMBER';
 
-            if (phase === 'SELECT_NUMBER') {
-                // Step A: Select the number on keypad
-                this.paintNumber = num;
-                this.isPaintMode = true;
-                if (typeof selectedPadNumber !== 'undefined') selectedPadNumber = num;
-                
-                // Sync number pad active selection
-                document.querySelectorAll('.num-btn').forEach(btn => {
-                    btn.classList.remove('selected');
-                });
-                const activeBtn = document.querySelector(`.num-btn[data-number="${num}"]`);
-                if (activeBtn) activeBtn.classList.add('selected');
-                
-                this.setNumberCursor(num);
-                this.playSound('click');
+            const stepSolve = () => {
+                if (groupIndex >= numberGroups.length) {
+                    // Completed all numbers!
+                    this.clearHighlights();
+                    this.clearSelection();
+                    this.clearNumberCursor();
+                    this.updateDisplay();
+                    this.updateProgress();
+                    if (typeof selectedPadNumber !== 'undefined') selectedPadNumber = null;
+                    
+                    // Notify user with victory modal
+                    this.autoSolveTimer = setTimeout(() => {
+                        this.gameWon();
+                    }, 250);
+                    return;
+                }
 
-                phase = 'PLACE_CELL';
-                cellIndex = 0;
-                // Scanning delay
-                this.autoSolveTimer = setTimeout(stepSolve, 180);
-            } else if (phase === 'PLACE_CELL') {
-                // Step B: Fill in the puzzle for this number cell by cell
-                const { r, c } = currentGroup.cells[cellIndex];
-                
-                this.grid[r][c] = num;
-                if (!this.autoSolvedCells) {
-                    this.autoSolvedCells = Array(9).fill().map(() => Array(9).fill(false));
-                }
-                this.autoSolvedCells[r][c] = true;
-                this.notes[r][c].clear();
-                if (this.autoNotes) {
-                    this.populateAutoNotes();
-                }
-                
-                this.updateDisplay();
-                this.animateNumberPlacement(r, c);
-                this.playSound('place');
-                this.checkCompletion(r, c, num);
-                this.updateProgress();
+                const currentGroup = numberGroups[groupIndex];
+                const num = currentGroup.number;
 
-                cellIndex++;
-                if (cellIndex < currentGroup.cells.length) {
-                    // Tap rhythm between cells
-                    this.autoSolveTimer = setTimeout(stepSolve, 120);
-                } else {
-                    phase = 'COMPLETE_NUMBER';
-                    this.autoSolveTimer = setTimeout(stepSolve, 140);
+                if (phase === 'SELECT_NUMBER') {
+                    // Step A: Select the number on keypad & highlight matching cells
+                    this.paintNumber = num;
+                    this.isPaintMode = true;
+                    if (typeof selectedPadNumber !== 'undefined') selectedPadNumber = num;
+                    
+                    // Sync number pad active selection
+                    document.querySelectorAll('.num-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    const activeBtn = document.querySelector(`.num-btn[data-number="${num}"]`);
+                    if (activeBtn) activeBtn.classList.add('selected');
+                    
+                    this.setNumberCursor(num);
+                    this.highlightAllInstances(num);
+                    this.playSound('click');
+
+                    phase = 'PLACE_CELL';
+                    cellIndex = 0;
+                    this.autoSolveTimer = setTimeout(stepSolve, 180);
+                } else if (phase === 'PLACE_CELL') {
+                    // Step B: Fill in the puzzle for this number cell by cell
+                    const { r, c } = currentGroup.cells[cellIndex];
+                    
+                    this.grid[r][c] = num;
+                    this.autoSolvedCells[r][c] = true;
+                    this.notes[r][c].clear();
+                    if (this.autoNotes) {
+                        this.populateAutoNotes();
+                    }
+                    
+                    this.updateDisplay();
+                    this.animateNumberPlacement(r, c);
+                    this.playSound('place');
+                    this.checkCompletion(r, c, num);
+                    this.updateProgress();
+
+                    cellIndex++;
+                    if (cellIndex < currentGroup.cells.length) {
+                        this.autoSolveTimer = setTimeout(stepSolve, 120);
+                    } else {
+                        phase = 'COMPLETE_NUMBER';
+                        this.autoSolveTimer = setTimeout(stepSolve, 150);
+                    }
+                } else if (phase === 'COMPLETE_NUMBER') {
+                    // Step C: Advance to next number in sequence
+                    groupIndex++;
+                    phase = 'SELECT_NUMBER';
+                    this.autoSolveTimer = setTimeout(stepSolve, 200);
                 }
-            } else if (phase === 'COMPLETE_NUMBER') {
-                // Step C: Move to next number
-                groupIndex++;
-                phase = 'SELECT_NUMBER';
-                this.autoSolveTimer = setTimeout(stepSolve, 200);
-            }
+            };
+
+            stepSolve();
         };
 
-        stepSolve();
+        // 2. Handle incorrect cells if present
+        if (incorrectCells.length > 0) {
+            // First focus & highlight them
+            incorrectCells.forEach(cell => {
+                const el = document.querySelector(`[data-index="${cell.index}"]`);
+                if (el) el.classList.add('incorrect-focus');
+            });
+            this.playSound('error');
+            if (typeof this.vibrate === 'function') this.vibrate(60);
+
+            // Determine starting number from the first corrected cell
+            const startNum = incorrectCells[0].correctVal;
+
+            // Wait ~500ms for focus effect, then sequentially flip them
+            this.autoSolveTimer = setTimeout(() => {
+                let flipIdx = 0;
+
+                const stepFlip = () => {
+                    if (flipIdx >= incorrectCells.length) {
+                        // All incorrect numbers flipped! Proceed to cyclic solve starting from startNum
+                        this.autoSolveTimer = setTimeout(() => {
+                            proceedWithCyclicSolve(startNum);
+                        }, 220);
+                        return;
+                    }
+
+                    const cell = incorrectCells[flipIdx];
+                    const el = document.querySelector(`[data-index="${cell.index}"]`);
+                    
+                    if (el) {
+                        el.classList.add('cell-flip');
+                        
+                        // Swap to correct value halfway through the flip
+                        setTimeout(() => {
+                            this.grid[cell.r][cell.c] = cell.correctVal;
+                            this.autoSolvedCells[cell.r][cell.c] = true;
+                            this.notes[cell.r][cell.c].clear();
+                            
+                            el.textContent = cell.correctVal;
+                            el.classList.remove('incorrect-focus', 'error');
+                            el.classList.add('flip-correct', 'auto-solved');
+                            
+                            this.playSound('place');
+                            this.checkCompletion(cell.r, cell.c, cell.correctVal);
+                            this.updateProgress();
+                        }, 190);
+
+                        // Finish flip animation
+                        setTimeout(() => {
+                            el.classList.remove('cell-flip');
+                            setTimeout(() => {
+                                if (el) el.classList.remove('flip-correct');
+                            }, 400);
+                            
+                            flipIdx++;
+                            this.autoSolveTimer = setTimeout(stepFlip, 120);
+                        }, 380);
+                    } else {
+                        // Fallback if element not found
+                        this.grid[cell.r][cell.c] = cell.correctVal;
+                        this.autoSolvedCells[cell.r][cell.c] = true;
+                        flipIdx++;
+                        stepFlip();
+                    }
+                };
+
+                stepFlip();
+            }, 500);
+
+        } else {
+            // No incorrect cells: determine starting number from currently selected keypad number or 1
+            const startNum = (this.paintNumber && this.paintNumber >= 1 && this.paintNumber <= 9)
+                ? this.paintNumber
+                : (typeof selectedPadNumber !== 'undefined' && selectedPadNumber ? selectedPadNumber : 1);
+
+            proceedWithCyclicSolve(startNum);
+        }
     }
 
     solvePuzzle() {
