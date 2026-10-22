@@ -810,26 +810,96 @@
             border-radius: 6px !important;
         }
 
-        @keyframes cellFlip3D {
+        /* ========================================================
+           AIRPORT MECHANICAL SPLIT-FLAP FLIGHT DISPLAY ANIMATION
+        ======================================================== */
+        .cell.split-flap {
+            position: relative !important;
+            transform-style: preserve-3d !important;
+            perspective: 500px !important;
+            z-index: 60 !important;
+            background: #111215 !important;
+            color: #ffffff !important;
+            font-family: 'JetBrains Mono', 'Outfit', monospace !important;
+            font-weight: 900 !important;
+            border-radius: 4px !important;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(255, 255, 255, 0.18) !important;
+        }
+
+        /* Center Split Hinge Line */
+        .cell.split-flap::before {
+            content: '';
+            position: absolute;
+            top: calc(50% - 1px);
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #000000;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.22);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Top Half Mechanical Flap Shading */
+        .cell.split-flap::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+            pointer-events: none;
+            z-index: 8;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+
+        /* Rapid Downward Mechanical Split-Flap Drop */
+        @keyframes splitFlapCycle {
             0% {
-                transform: perspective(400px) rotateY(0deg) scale(1);
+                transform: perspective(500px) rotateX(0deg) scale(1.05);
+                filter: brightness(1.05);
             }
             45% {
-                transform: perspective(400px) rotateY(90deg) scale(1.15);
-                box-shadow: 0 0 20px rgba(var(--highlight-rgb), 0.8);
+                transform: perspective(500px) rotateX(-90deg) scale(1.1);
+                filter: brightness(0.55);
             }
             55% {
-                transform: perspective(400px) rotateY(90deg) scale(1.15);
-                box-shadow: 0 0 20px rgba(var(--highlight-rgb), 0.8);
+                transform: perspective(500px) rotateX(90deg) scale(1.1);
+                filter: brightness(0.55);
+            }
+            82% {
+                transform: perspective(500px) rotateX(-10deg) scale(1.05);
+                filter: brightness(1.2);
             }
             100% {
-                transform: perspective(400px) rotateY(0deg) scale(1);
+                transform: perspective(500px) rotateX(0deg) scale(1.05);
+                filter: brightness(1);
             }
         }
-        .cell.cell-flip {
-            animation: cellFlip3D 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
-            z-index: 40 !important;
-            transform-style: preserve-3d;
+        .cell.split-flap-cycle {
+            animation: splitFlapCycle 0.13s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+        }
+
+        /* Final Mechanical Lock & Settle Snap */
+        @keyframes splitFlapLock {
+            0% {
+                transform: perspective(500px) rotateX(-16deg) scale(1.16);
+                box-shadow: 0 0 30px var(--glow), 0 8px 24px rgba(0, 0, 0, 0.85) !important;
+            }
+            40% {
+                transform: perspective(500px) rotateX(8deg) scale(1.08);
+            }
+            70% {
+                transform: perspective(500px) rotateX(-3deg) scale(1.02);
+            }
+            100% {
+                transform: perspective(500px) rotateX(0deg) scale(1);
+            }
+        }
+        .cell.split-flap-lock {
+            animation: splitFlapLock 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
         }
 
         @keyframes flipCorrectFlash {
@@ -2126,7 +2196,7 @@
 
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="script.js?v=3.5.7"></script>
+<script src="script.js?v=3.5.8"></script>
 <script>
     let isInitialized = false;
     

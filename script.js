@@ -1848,6 +1848,9 @@ class SudokuGame {
             if (cell.classList.contains('error')) newClasses.push('error');
             if (cell.classList.contains('incorrect-focus')) newClasses.push('incorrect-focus');
             if (cell.classList.contains('cell-flip')) newClasses.push('cell-flip');
+            if (cell.classList.contains('split-flap')) newClasses.push('split-flap');
+            if (cell.classList.contains('split-flap-cycle')) newClasses.push('split-flap-cycle');
+            if (cell.classList.contains('split-flap-lock')) newClasses.push('split-flap-lock');
             if (cell.classList.contains('flip-correct')) newClasses.push('flip-correct');
             if (cell.classList.contains('number-place-animation')) newClasses.push('number-place-animation');
 
@@ -4680,33 +4683,75 @@ class SudokuGame {
                     const el = (this.cellCache && this.cellCache[cell.index]) || document.querySelector(`[data-index="${cell.index}"]`);
                     
                     if (el) {
-                        el.classList.add('cell-flip');
-                        
-                        // Swap to correct value halfway through the flip
-                        setTimeout(() => {
-                            this.grid[cell.r][cell.c] = cell.correctVal;
-                            this.autoSolvedCells[cell.r][cell.c] = true;
-                            this.notes[cell.r][cell.c].clear();
-                            
-                            el.textContent = cell.correctVal;
-                            el.classList.remove('incorrect-focus', 'error');
-                            el.classList.add('flip-correct', 'auto-solved');
-                            
-                            this.playSound('place');
-                            this.checkCompletion(cell.r, cell.c, cell.correctVal);
-                            this.updateProgress();
-                        }, 190);
+                        // Switch from focus styling to split-flap mechanical flight display styling
+                        el.classList.remove('incorrect-focus', 'error');
+                        el.classList.add('split-flap');
 
-                        // Finish flip animation
-                        setTimeout(() => {
-                            el.classList.remove('cell-flip');
+                        // Build a rapid Solari flight display mechanical flap sequence (e.g. 4 rapid flap drops)
+                        const fromVal = Number(cell.wrongVal) || 1;
+                        const toVal = Number(cell.correctVal);
+                        const flapSequence = [];
+                        let curVal = fromVal;
+                        const intermediateSteps = 4;
+                        for (let s = 1; s < intermediateSteps; s++) {
+                            curVal = ((curVal % 9) + 1);
+                            flapSequence.push(curVal);
+                        }
+                        flapSequence.push(toVal); // Destination value on final flap snap
+
+                        let flapStep = 0;
+
+                        const runFlap = () => {
+                            const isLast = (flapStep === flapSequence.length - 1);
+                            const nextNum = flapSequence[flapStep];
+
+                            // Trigger flap cycle animation with reflow
+                            el.classList.remove('split-flap-cycle');
+                            void el.offsetWidth;
+                            el.classList.add('split-flap-cycle');
+
+                            this.playSound('flap');
+                            if (typeof this.vibrate === 'function') this.vibrate(20);
+
+                            // At midpoint of flap rotation (55ms), change number on card
                             setTimeout(() => {
-                                if (el) el.classList.remove('flip-correct');
-                            }, 400);
-                            
-                            flipIdx++;
-                            this.autoSolveTimer = setTimeout(stepFlip, 140);
-                        }, 380);
+                                el.textContent = nextNum;
+
+                                if (isLast) {
+                                    // Final destination reached: mechanical lock snap!
+                                    this.grid[cell.r][cell.c] = toVal;
+                                    this.autoSolvedCells[cell.r][cell.c] = true;
+                                    this.notes[cell.r][cell.c].clear();
+
+                                    el.classList.remove('split-flap-cycle');
+                                    el.classList.add('split-flap-lock', 'flip-correct', 'auto-solved');
+
+                                    this.playSound('place');
+                                    if (typeof this.vibrate === 'function') this.vibrate(40);
+                                    this.checkCompletion(cell.r, cell.c, toVal);
+                                    this.updateProgress();
+
+                                    // Allow lock animation to finish settling, then proceed to next cell
+                                    setTimeout(() => {
+                                        el.classList.remove('split-flap', 'split-flap-lock');
+                                        setTimeout(() => {
+                                            if (el) el.classList.remove('flip-correct');
+                                        }, 350);
+
+                                        flipIdx++;
+                                        this.autoSolveTimer = setTimeout(stepFlip, 150);
+                                    }, 320);
+                                }
+                            }, 55);
+
+                            if (!isLast) {
+                                flapStep++;
+                                this.autoSolveTimer = setTimeout(runFlap, 125);
+                            }
+                        };
+
+                        runFlap();
+
                     } else {
                         // Fallback if element not found
                         this.grid[cell.r][cell.c] = cell.correctVal;
@@ -5641,6 +5686,23 @@ class SudokuGame {
             filter.connect(masterGain);
             
             switch (soundType) {
+                case 'flap':
+                    // Mechanical Split-Flap "Clack"
+                    const fCarrier = this.audioContext.createOscillator();
+                    const fGain = this.audioContext.createGain();
+                    fCarrier.connect(fGain);
+                    fGain.connect(filter);
+                    fCarrier.type = 'triangle';
+                    fCarrier.frequency.setValueAtTime(1200, this.audioContext.currentTime);
+                    fCarrier.frequency.exponentialRampToValueAtTime(140, this.audioContext.currentTime + 0.025);
+                    fGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    fGain.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.001);
+                    fGain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.025);
+                    fCarrier.start();
+                    fCarrier.stop(this.audioContext.currentTime + 0.025);
+                    this.playNoiseBurst(3800, 0.015, 0.035);
+                    break;
+
                 case 'place':
                     // Metallic FM Click (Carrier + Modulator)
                     const carrier = this.audioContext.createOscillator();
