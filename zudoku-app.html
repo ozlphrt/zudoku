@@ -2006,12 +2006,55 @@
         [data-theme="light"] .hint-btn-cancel { background: rgba(0,0,0,0.1); color: #000; }
         [data-theme="light"] .hint-btn-cancel:active { background: rgba(0,0,0,0.15); }
     
-        .cell.reveal-wrong {
-            color: #ff453a !important;
-            background-color: rgba(255, 69, 58, 0.22) !important;
-            box-shadow: inset 0 0 0 2px #ff453a, 0 0 12px rgba(255, 69, 58, 0.55) !important;
-            cursor: pointer;
+        @keyframes revealWrongPulse {
+            0% {
+                box-shadow: 0 0 0 2.5px #ff453a, 0 0 18px rgba(255, 69, 58, 0.9), inset 0 0 8px rgba(255, 69, 58, 0.4) !important;
+                background: #ff3b30 !important;
+                background-color: #ff3b30 !important;
+            }
+            100% {
+                box-shadow: 0 0 0 4px #ff3b30, 0 0 32px rgba(255, 59, 48, 1), inset 0 0 14px rgba(0, 0, 0, 0.55) !important;
+                background: #dc2626 !important;
+                background-color: #dc2626 !important;
+            }
         }
+
+        /* Top priority incorrect number highlight: overrides selected, same-number-highlight, themes */
+        .cell.reveal-wrong,
+        .cell.reveal-wrong.selected,
+        .cell.reveal-wrong.same-number-highlight,
+        .cell.reveal-wrong.highlighted,
+        .cell.reveal-wrong.number-selected,
+        .cell.reveal-wrong.zone-completed,
+        [data-theme] .cell.reveal-wrong,
+        [data-theme] .cell.reveal-wrong.selected,
+        [data-theme] .cell.reveal-wrong.same-number-highlight,
+        [data-theme] .cell.reveal-wrong.highlighted,
+        [data-theme] .cell.reveal-wrong.number-selected,
+        [data-theme="light"] .cell.reveal-wrong,
+        [data-theme="light"] .cell.reveal-wrong.selected,
+        [data-theme="light"] .cell.reveal-wrong.same-number-highlight,
+        [data-theme="light"] .cell.reveal-wrong.highlighted,
+        [data-theme="light"] .cell.reveal-wrong.number-selected,
+        [data-theme="dark"] .cell.reveal-wrong,
+        [data-theme="dark"] .cell.reveal-wrong.selected,
+        [data-theme="dark"] .cell.reveal-wrong.same-number-highlight,
+        [data-theme="dark"] .cell.reveal-wrong.highlighted,
+        [data-theme="dark"] .cell.reveal-wrong.number-selected {
+            color: #ffffff !important;
+            background: #ff3b30 !important;
+            background-color: #ff3b30 !important;
+            border-color: #ff3b30 !important;
+            box-shadow: 0 0 0 3px #ff3b30, 0 0 25px rgba(255, 59, 48, 0.95), inset 0 0 8px rgba(0, 0, 0, 0.4) !important;
+            animation: revealWrongPulse 0.55s ease-in-out infinite alternate !important;
+            z-index: 200 !important;
+            font-weight: 900 !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            opacity: 1 !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+        }
+
         .restart-level-btn.active {
             color: #ff453a !important;
             box-shadow: 0 0 12px rgba(255, 69, 58, 0.55) !important;
@@ -2122,7 +2165,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.6.4</div>
+    <div class="version-tag">V3.6.5</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -2169,7 +2212,7 @@
         <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 12px;">
             <button class="primary-btn" style="width: 100%; padding: 13px; background: rgba(var(--highlight-rgb), 0.15); border: 1px solid var(--highlight); font-weight: 700; letter-spacing: 1px; border-radius: 12px; cursor: pointer; color: var(--highlight);" onclick="revealPuzzle()">⚡ REVEAL PUZZLE</button>
             <button class="reset-btn" style="width: 100%;" onclick="resetAllData()">RESET ALL DATA</button>
-            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.6.4</div>
+            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.6.5</div>
         </div>
     </div>
 </div>
@@ -2213,7 +2256,7 @@
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
 <script src="puzzle-catalog.js?v=1"></script>
-<script src="script.js?v=3.6.4"></script>
+<script src="script.js?v=3.6.5"></script>
 <script>
     let isInitialized = false;
     
