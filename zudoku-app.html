@@ -76,7 +76,7 @@
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
-            touch-action: manipulation;
+            touch-action: none !important;
         }
 
         .sudoku-grid,
@@ -91,6 +91,7 @@
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
+            touch-action: none !important;
         }
 
         /* ========================================
@@ -2062,7 +2063,7 @@
 
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="script.js?v=3.5.2"></script>
+<script src="script.js?v=3.5.3"></script>
 <script>
     let isInitialized = false;
     
@@ -2340,6 +2341,17 @@
                 }, 170);
             });
 
+            btn.addEventListener('pointermove', (e) => {
+                if (timer) {
+                    const dist = Math.hypot(e.clientX - startPos.x, e.clientY - startPos.y);
+                    if (dist > 10) {
+                        clearTimeout(timer);
+                        timer = null;
+                        stopDial(false);
+                    }
+                }
+            });
+
             btn.addEventListener('pointerup', (e) => {
                 if (timer) { clearTimeout(timer); timer = null; }
                 if (!isLongPress) {
@@ -2525,23 +2537,22 @@
 
     // Register Service Worker with update notifications
     if ('serviceWorker' in navigator) {
+        let isInitialLoad = !navigator.serviceWorker.controller;
+
         const registerSW = () => {
-            navigator.serviceWorker.register('sw.js?v=3.5.2')
+            navigator.serviceWorker.register('sw.js')
                 .then(registration => {
                     console.log('SW registered: ', registration);
-                    
-                    // Periodically check for updates every 5 minutes
-                    setInterval(() => {
-                        registration.update();
-                    }, 5 * 60 * 1000);
 
-                    // Track updates
+                    // Track updates when a real new version is installed
                     registration.addEventListener('updatefound', () => {
                         const installingWorker = registration.installing;
+                        if (!installingWorker) return;
+
                         installingWorker.addEventListener('statechange', () => {
                             if (installingWorker.state === 'installed') {
-                                if (navigator.serviceWorker.controller) {
-                                    // A new worker is installed and waiting
+                                // Only notify if page was already controlled before this install
+                                if (navigator.serviceWorker.controller && !isInitialLoad) {
                                     console.log('SW: New version found, showing notification.');
                                     const toast = document.getElementById('update-toast');
                                     if (toast) toast.classList.add('visible');
@@ -2555,11 +2566,11 @@
                 });
         };
 
-        // Show update notification toast when a new worker takes control
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-            console.log('SW: Controller changed, prompting update.');
-            const toast = document.getElementById('update-toast');
-            if (toast) toast.classList.add('visible');
+            // Mark initial load complete when controller is first assigned
+            if (isInitialLoad) {
+                isInitialLoad = false;
+            }
         });
 
         if (document.readyState === 'complete' || document.readyState === 'interactive') {

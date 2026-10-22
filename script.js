@@ -139,6 +139,7 @@ class SudokuGame {
         
         this.createGrid();
         this.addWheelListener();
+        this.addSwipeHighlightListener();
         this.updateBestTimeDisplay();
         this.updateAutoDashboard();
         this.newGame();
@@ -836,79 +837,201 @@ class SudokuGame {
         }
     }
     
-    addWheelListener() {
-        // Add wheel listener to the entire document
-        document.addEventListener('wheel', (e) => {
-            // Only work when in paint mode
-            if (!this.isPaintMode || !this.paintNumber) return;
-            
-            let numberChanged = false;
-            const oldPaintNumber = this.paintNumber;
-            
-            // Scroll up = increase number, scroll down = decrease number
-            if (e.deltaY < 0) {
-                // Scroll up - increase number
-                const newNumber = Math.min(9, this.paintNumber + 1);
-                if (newNumber !== this.paintNumber) {
-                    this.paintNumber = newNumber;
-                    numberChanged = true;
-                }
-            } else if (e.deltaY > 0) {
-                // Scroll down - decrease number
-                const newNumber = Math.max(1, this.paintNumber - 1);
-                if (newNumber !== this.paintNumber) {
-                    this.paintNumber = newNumber;
-                    numberChanged = true;
-                }
+    cycleHighlightNumber(direction) {
+        if (this.isGameWon || this.isPaused) return;
+
+        let nextNum;
+        if (!this.paintNumber || this.paintNumber < 1 || this.paintNumber > 9) {
+            // No number currently highlighted:
+            // Swiping up or right (+1) highlights 1
+            // Swiping down or left (-1) wraps around to 9
+            nextNum = direction > 0 ? 1 : 9;
+        } else {
+            if (direction > 0) {
+                // Swiping up or right (+1) with wrap-around (9 -> 1)
+                nextNum = (this.paintNumber % 9) + 1;
+            } else {
+                // Swiping down or left (-1) with wrap-around (1 -> 9)
+                nextNum = this.paintNumber === 1 ? 9 : this.paintNumber - 1;
             }
-            
-            // Only prevent default and update if number actually changed
-            if (numberChanged) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Clear previous highlights and highlight new number with green
-                this.clearHighlights();
-                this.clearNoteHighlights();
-                this.highlightAllInstances(this.paintNumber);
-                this.setNumberCursor(this.paintNumber);
+        }
+
+        this.isPaintMode = true;
+        this.paintNumber = nextNum;
+        if (typeof selectedPadNumber !== 'undefined') {
+            selectedPadNumber = nextNum;
+        }
+
+        // Clear any selected cell so highlighting/painting focuses on the board
+        this.clearSelection();
+
+        // Clear previous highlights
+        this.clearHighlights();
+        this.clearNoteHighlights();
+
+        // Highlight all instances of this number with green glow
+        this.highlightAllInstances(nextNum);
+        this.setNumberCursor(nextNum);
+
+        // Sync visual state of number pad buttons
+        document.querySelectorAll('.num-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        const activeBtn = document.querySelector(`.num-btn[data-number="${nextNum}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('selected');
+        }
+
+        if (typeof this.vibrate === 'function') {
+            this.vibrate(12);
+        }
+    }
+
+    addWheelListener() {
+        // Wheel listener to cycle highlight numbers
+        document.addEventListener('wheel', (e) => {
+            if (this.isGameWon || this.isPaused) return;
+            if (e.target && e.target.closest && e.target.closest('.modal-overlay, #victoryOverlay, #confirmOverlay')) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Scroll up = +1, scroll down = -1
+            if (e.deltaY < 0) {
+                this.cycleHighlightNumber(1);
+            } else if (e.deltaY > 0) {
+                this.cycleHighlightNumber(-1);
             }
         }, { passive: false, capture: true });
-        
-        // Also add wheel listener to the grid specifically
-        const gridElement = document.getElementById('sudokuGrid');
-        if (gridElement) {
-            gridElement.addEventListener('wheel', (e) => {
-                if (!this.isPaintMode || !this.paintNumber) return;
-                
-                let numberChanged = false;
-                
-                if (e.deltaY < 0) {
-                    const newNumber = Math.min(9, this.paintNumber + 1);
-                    if (newNumber !== this.paintNumber) {
-                        this.paintNumber = newNumber;
-                        numberChanged = true;
-                    }
-                } else if (e.deltaY > 0) {
-                    const newNumber = Math.max(1, this.paintNumber - 1);
-                    if (newNumber !== this.paintNumber) {
-                        this.paintNumber = newNumber;
-                        numberChanged = true;
-                    }
+    }
+
+    addSwipeHighlightListener() {
+        let startX = null;
+        let startY = null;
+        let tracking = false;
+        let hasSwiped = false;
+        let lastTouchTime = 0;
+        const SWIPE_THRESHOLD = 28; // Responsive threshold in pixels
+
+        // Expose global helper for testing/debugging
+        window.cycleHighlight = (dir) => this.cycleHighlightNumber(dir);
+
+        const canStartSwipe = (target) => {
+            if (this.isGameWon || this.isPaused) return false;
+            if (target && target.closest) {
+                // Ignore touches inside modals or popups
+                if (target.closest('.modal-overlay, #victoryOverlay, #confirmOverlay, #hintBanner, input, select')) {
+                    return false;
                 }
-                
-                if (numberChanged) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    // Clear previous highlights and highlight new number with green
-                    this.clearHighlights();
-                    this.clearNoteHighlights();
-                    this.highlightAllInstances(this.paintNumber);
-                    this.setNumberCursor(this.paintNumber);
+                // Ignore utility buttons like pause, restart, undo, erase, theme
+                if (target.closest('.action-btn, #pauseBtn, #restartBtn, #undoBtn, #eraseBtn, #hintBtn, .header-btn, .theme-toggle')) {
+                    return false;
                 }
-            }, { passive: false });
-        }
+            }
+            return true;
+        };
+
+        const processMove = (clientX, clientY) => {
+            if (!tracking || startX === null || startY === null) return;
+            if (this.touchKeypadActive) {
+                tracking = false;
+                return;
+            }
+
+            const dx = clientX - startX;
+            const dy = clientY - startY;
+            const absX = Math.abs(dx);
+            const absY = Math.abs(dy);
+
+            if (Math.max(absX, absY) >= SWIPE_THRESHOLD) {
+                hasSwiped = true;
+                const direction = (absX >= absY) ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
+                console.log(`[Zudoku] Swipe gesture: ${direction > 0 ? '+1' : '-1'} (dx: ${Math.round(dx)}, dy: ${Math.round(dy)})`);
+                this.cycleHighlightNumber(direction);
+                startX = clientX;
+                startY = clientY;
+            }
+        };
+
+        const processEnd = (clientX, clientY) => {
+            if (tracking && !hasSwiped && startX !== null && startY !== null && !this.touchKeypadActive) {
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+                const absX = Math.abs(dx);
+                const absY = Math.abs(dy);
+
+                if (Math.max(absX, absY) >= SWIPE_THRESHOLD) {
+                    const direction = (absX >= absY) ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
+                    console.log(`[Zudoku] Swipe flick on release: ${direction > 0 ? '+1' : '-1'}`);
+                    this.cycleHighlightNumber(direction);
+                }
+            }
+            tracking = false;
+            startX = null;
+            startY = null;
+        };
+
+        // --- Touch Events (Mobile Safari / iPad / Android) ---
+        const onTouchStart = (e) => {
+            if (e.touches.length !== 1) return;
+            lastTouchTime = Date.now();
+            if (!canStartSwipe(e.target)) return;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            tracking = true;
+            hasSwiped = false;
+        };
+
+        const onTouchMove = (e) => {
+            if (!tracking || e.touches.length !== 1) return;
+            processMove(e.touches[0].clientX, e.touches[0].clientY);
+        };
+
+        const onTouchEnd = (e) => {
+            if (!tracking) return;
+            const touch = e.changedTouches && e.changedTouches[0];
+            processEnd(touch ? touch.clientX : startX, touch ? touch.clientY : startY);
+        };
+
+        // --- Pointer Events (Desktop Mouse / Trackpad) ---
+        const onPointerDown = (e) => {
+            // Avoid duplicate processing if recently triggered by touch
+            if (e.pointerType === 'touch' || Date.now() - lastTouchTime < 500) return;
+            if (e.button && e.button !== 0) return; // Left click only
+            if (!canStartSwipe(e.target)) return;
+
+            startX = e.clientX;
+            startY = e.clientY;
+            tracking = true;
+            hasSwiped = false;
+        };
+
+        const onPointerMove = (e) => {
+            if (!tracking || e.pointerType === 'touch') return;
+            processMove(e.clientX, e.clientY);
+        };
+
+        const onPointerUp = (e) => {
+            if (!tracking || e.pointerType === 'touch') return;
+            processEnd(e.clientX, e.clientY);
+        };
+
+        const onCancel = () => {
+            tracking = false;
+            startX = null;
+            startY = null;
+        };
+
+        // Attach listeners to document
+        document.addEventListener('touchstart', onTouchStart, { passive: true });
+        document.addEventListener('touchmove', onTouchMove, { passive: true });
+        document.addEventListener('touchend', onTouchEnd, { passive: true });
+        document.addEventListener('touchcancel', onCancel, { passive: true });
+
+        document.addEventListener('pointerdown', onPointerDown, { passive: true });
+        document.addEventListener('pointermove', onPointerMove, { passive: true });
+        document.addEventListener('pointerup', onPointerUp, { passive: true });
+        document.addEventListener('pointercancel', onCancel, { passive: true });
     }
     
     selectCell(index) {
