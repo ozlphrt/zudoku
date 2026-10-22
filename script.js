@@ -1071,6 +1071,18 @@ class SudokuGame {
         const row = Math.floor(index / 9);
         const col = index % 9;
         const cellValue = this.grid[row][col];
+
+        // Tapping a revealed incorrect number removes it.
+        if (this.revealedWrong && this.revealedWrong.has(index)) {
+            if (this.isWrongUserCell(row, col)) {
+                this.setNumber(row, col, 0);
+            }
+            this.revealedWrong.delete(index);
+            if (this.revealedWrong.size === 0) this.setRevealButtonActive(false);
+            this.updateDisplay();
+            this.playSound('undo');
+            return;
+        }
         
         // Toggle selection off if clicking the same cell again
         if (this.selectedCell === index) {
@@ -1847,6 +1859,14 @@ class SudokuGame {
             if (cell.classList.contains('related-highlight')) newClasses.push('related-highlight');
             if (cell.classList.contains('error')) newClasses.push('error');
             if (cell.classList.contains('incorrect-focus')) newClasses.push('incorrect-focus');
+            if (this.revealedWrong && this.revealedWrong.has(i)) {
+                if (this.isWrongUserCell(row, col)) {
+                    newClasses.push('reveal-wrong');
+                } else {
+                    this.revealedWrong.delete(i);
+                    if (this.revealedWrong.size === 0) this.setRevealButtonActive(false);
+                }
+            }
             if (cell.classList.contains('cell-flip')) newClasses.push('cell-flip');
             if (cell.classList.contains('split-flap')) newClasses.push('split-flap');
             if (cell.classList.contains('split-flap-cycle')) newClasses.push('split-flap-cycle');
@@ -2534,6 +2554,7 @@ class SudokuGame {
     }
     
     generateNewPuzzle() {
+        if (this.revealedWrong) { this.revealedWrong.clear(); this.setRevealButtonActive(false); }
         const difficultyKey = this.getSelectedDifficultyKey();
         if (difficultyKey === 'master') {
             return this.generateFromRatedMasterBank();
@@ -7087,6 +7108,57 @@ class SudokuGame {
         }
     }
     
+    isWrongUserCell(row, col) {
+        const val = this.grid[row][col];
+        return val !== 0 && !this.givenCells[row][col] && val !== this.solution[row][col];
+    }
+
+    setRevealButtonActive(active) {
+        const btn = document.getElementById('revealWrongBtn');
+        if (btn) btn.classList.toggle('active', active);
+    }
+
+    showRevealToast(message) {
+        let toast = document.getElementById('revealToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'revealToast';
+            toast.className = 'reveal-toast';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(this._revealToastTimer);
+        this._revealToastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    // Highlights (only) the numbers the player placed that disagree with the solution.
+    // Tap a highlighted cell to remove it. Pressing the button again hides the highlight.
+    revealIncorrect() {
+        if (this.isGameWon || this.isPaused) return;
+        if (this.revealedWrong && this.revealedWrong.size > 0) {
+            this.revealedWrong.clear();
+            this.setRevealButtonActive(false);
+            this.updateDisplay();
+            return;
+        }
+        const wrong = new Set();
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (this.isWrongUserCell(r, c)) wrong.add(r * 9 + c);
+            }
+        }
+        this.revealedWrong = wrong;
+        if (wrong.size === 0) {
+            this.showRevealToast('No incorrect numbers');
+            return;
+        }
+        this.setRevealButtonActive(true);
+        this.updateDisplay();
+        this.playSound('error');
+        this.showRevealToast(`${wrong.size} incorrect - tap to remove`);
+    }
+
     updateUndoRedoButtons() {
         const undoBtn = document.getElementById('undoBtn');
         const redoBtn = document.getElementById('redoBtn');
@@ -7510,6 +7582,13 @@ function loadSavedTheme() {
     
     // Apply theme to document (switch style is handled by CSS)
     document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+function revealIncorrect() {
+    if (game) {
+        game.revealIncorrect();
+        game.resetHintPulseTimer();
+    }
 }
 
 function undoMove() {
