@@ -2538,6 +2538,9 @@ class SudokuGame {
         if (difficultyKey === 'master') {
             return this.generateFromRatedMasterBank();
         }
+        if (typeof VALIDATED_PUZZLE_CATALOG !== 'undefined' && VALIDATED_PUZZLE_CATALOG[difficultyKey]?.length) {
+            return this.generateFromValidatedCatalog(difficultyKey);
+        }
         if (['medium', 'hard', 'expert'].includes(difficultyKey)) {
             return this.generateFromMasterBank();
         }
@@ -3122,6 +3125,29 @@ class SudokuGame {
 
         const clueCount = this.grid.flat().filter(Boolean).length;
         console.log(`✅ ${stage.label} puzzle loaded (${clueCount} clues, SE ${pair.r})`);
+        if (this.autoNotes) this.populateAutoNotes();
+        this.updateAutoDashboard();
+        this.updateDisplay();
+        this.updateProgress();
+        this.startTimer();
+        this.startAutoSave();
+    }
+
+    generateFromValidatedCatalog(tierKey) {
+        const pool = VALIDATED_PUZZLE_CATALOG[tierKey];
+        const pair = pool[Math.floor(Math.random() * pool.length)];
+        const toGrid = value => Array.from({ length: 9 }, (_, row) =>
+            value.slice(row * 9, row * 9 + 9).split('').map(Number));
+        const transformed = this.applyIsomorphism(toGrid(pair.p), toGrid(pair.s));
+
+        this.grid = transformed.grid;
+        this.solution = transformed.solution;
+        this.givenCells = this.grid.map(row => row.map(value => value !== 0));
+        // Grade for hints/dashboard; the band was already verified at build time.
+        this.currentPuzzleGrade = this.sarpSolver.solve(this.grid);
+        this.sarpAttemptCount = 0;
+        if (typeof hideLoadingProgress === 'function') hideLoadingProgress();
+
         if (this.autoNotes) this.populateAutoNotes();
         this.updateAutoDashboard();
         this.updateDisplay();

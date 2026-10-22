@@ -191,7 +191,45 @@ for (const [index, entry] of ratedMasterPuzzles.entries()) {
     }
 }
 
-console.log(`Validated ${total} master-bank puzzles.`);
+const catalog = require(path.join(root, 'puzzle-catalog.js'));
+const tierBands = {
+    easy: { min: 0, max: 2.3, minClues: 36, maxClues: 46 },
+    medium: { min: 2.6, max: 2.8, minClues: 29, maxClues: 35 },
+    hard: { min: 3.0, max: 4.0, minClues: 25, maxClues: 28 },
+    expert: { min: 4.2, max: 6.0, minClues: 21, maxClues: 24 }
+};
+const table = [];
+const seenCatalog = new Set();
+for (const [tier, band] of Object.entries(tierBands)) {
+    let ok = 0;
+    const entries = catalog[tier] || [];
+    entries.forEach((entry, index) => {
+        const before = failures.length;
+        const puzzle = toGrid(entry.p);
+        const solution = toGrid(entry.s);
+        const clues = puzzle.flat().filter(Boolean).length;
+        const tag = `${tier}#${index + 1}`;
+        if (seenCatalog.has(entry.p)) failures.push(`${tag}: duplicate puzzle`);
+        seenCatalog.add(entry.p);
+        if (clues < band.minClues || clues > band.maxClues) failures.push(`${tag}: ${clues} clues outside ${band.minClues}-${band.maxClues}`);
+        if (!isCompleteSolution(solution)) failures.push(`${tag}: stored solution invalid`);
+        if (puzzle.some((row, r) => row.some((v, c) => v && v !== solution[r][c]))) failures.push(`${tag}: given conflicts with solution`);
+        if (countSolutions(puzzle, 2) !== 1) failures.push(`${tag}: not uniquely solvable`);
+        const grade = solver.solve(puzzle);
+        if (!grade.solved) failures.push(`${tag}: solver cannot finish`);
+        else if (grade.maxStepDifficulty < band.min || grade.maxStepDifficulty > band.max) {
+            failures.push(`${tag}: rating ${grade.maxStepDifficulty} outside ${band.min}-${band.max}`);
+        }
+        if (failures.length === before) ok++;
+    });
+    table.push({ Level: tier, 'SE band': `${band.min}-${band.max}`, Clues: `${band.minClues}-${band.maxClues}`, Puzzles: entries.length, Validated: ok, 'All valid': ok === entries.length && ok > 0 });
+}
+table.push({ Level: 'master', 'SE band': '6.2-9.3', Clues: 'rated', Puzzles: ratedMasterPuzzles.length,
+    Validated: ratedMasterPuzzles.length - failures.filter(f => f.startsWith('Master#')).length,
+    'All valid': !failures.some(f => f.startsWith('Master#')) });
+console.table(table);
+
+console.log(`Validated ${total} legacy master-bank puzzles (no longer served for Easy-Expert).`);
 for (const [clues, summary] of Object.entries(ratings)) {
     console.log(`${clues} clues: ${JSON.stringify(summary)}`);
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zudoku-cache-v3.6.1';
+const CACHE_NAME = 'zudoku-cache-v3.6.2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -6,6 +6,7 @@ const ASSETS_TO_CACHE = [
   './script.js',
   './sarp-solver.js',
   './master-puzzles.js',
+  './puzzle-catalog.js',
   './favicon.svg',
   './public/192.png',
   './public/512.png',
