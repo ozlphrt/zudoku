@@ -4503,7 +4503,7 @@ class SudokuGame {
         // Ensure solution exists based on given cells so user errors don't prevent solution
         if (!this.solution || !this.solution.length) {
             const sol = Array(9).fill().map((_, r) => 
-                Array(9).fill().map((_, c) => this.givenCells[r][c] ? this.grid[r][c] : 0)
+                Array(9).fill().map((_, c) => this.givenCells[r][c] ? Number(this.grid[r][c]) : 0)
             );
             if (this.solveSudokuForGrid(sol)) {
                 this.solution = sol;
@@ -4522,12 +4522,14 @@ class SudokuGame {
         const incorrectCells = [];
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
-                if (!this.givenCells[r][c] && this.grid[r][c] !== 0 && this.grid[r][c] !== this.solution[r][c]) {
+                const currentVal = Number(this.grid[r][c]);
+                const correctVal = Number(this.solution[r][c]);
+                if (!this.givenCells[r][c] && currentVal !== 0 && currentVal !== correctVal) {
                     incorrectCells.push({
                         r,
                         c,
-                        wrongVal: this.grid[r][c],
-                        correctVal: this.solution[r][c],
+                        wrongVal: currentVal,
+                        correctVal: correctVal,
                         index: r * 9 + c
                     });
                 }
@@ -4542,7 +4544,7 @@ class SudokuGame {
                 const cells = [];
                 for (let r = 0; r < 9; r++) {
                     for (let c = 0; c < 9; c++) {
-                        if (this.solution[r][c] === num && (!this.givenCells[r][c] && this.grid[r][c] !== num)) {
+                        if (Number(this.solution[r][c]) === num && (!this.givenCells[r][c] && Number(this.grid[r][c]) !== num)) {
                             cells.push({ r, c });
                         }
                     }
@@ -4645,18 +4647,23 @@ class SudokuGame {
 
         // 2. Handle incorrect cells if present
         if (incorrectCells.length > 0) {
-            // First focus & highlight them
+            console.log('🚨 AutoSolve: Found incorrect cells to focus and flip:', incorrectCells);
+
+            // First focus & highlight them with intense attention-grabbing red glow
             incorrectCells.forEach(cell => {
-                const el = document.querySelector(`[data-index="${cell.index}"]`);
-                if (el) el.classList.add('incorrect-focus');
+                const el = (this.cellCache && this.cellCache[cell.index]) || document.querySelector(`[data-index="${cell.index}"]`);
+                if (el) {
+                    el.classList.remove('selected', 'same-number-highlight', 'related-highlight');
+                    el.classList.add('incorrect-focus');
+                }
             });
             this.playSound('error');
-            if (typeof this.vibrate === 'function') this.vibrate(60);
+            if (typeof this.vibrate === 'function') this.vibrate(80);
 
             // Determine starting number from the first corrected cell
-            const startNum = incorrectCells[0].correctVal;
+            const startNum = Number(incorrectCells[0].correctVal);
 
-            // Wait ~500ms for focus effect, then sequentially flip them
+            // Wait 1000ms for full attention-grabbing red pulse before flipping
             this.autoSolveTimer = setTimeout(() => {
                 let flipIdx = 0;
 
@@ -4665,12 +4672,12 @@ class SudokuGame {
                         // All incorrect numbers flipped! Proceed to cyclic solve starting from startNum
                         this.autoSolveTimer = setTimeout(() => {
                             proceedWithCyclicSolve(startNum);
-                        }, 220);
+                        }, 250);
                         return;
                     }
 
                     const cell = incorrectCells[flipIdx];
-                    const el = document.querySelector(`[data-index="${cell.index}"]`);
+                    const el = (this.cellCache && this.cellCache[cell.index]) || document.querySelector(`[data-index="${cell.index}"]`);
                     
                     if (el) {
                         el.classList.add('cell-flip');
@@ -4698,7 +4705,7 @@ class SudokuGame {
                             }, 400);
                             
                             flipIdx++;
-                            this.autoSolveTimer = setTimeout(stepFlip, 120);
+                            this.autoSolveTimer = setTimeout(stepFlip, 140);
                         }, 380);
                     } else {
                         // Fallback if element not found
@@ -4710,7 +4717,7 @@ class SudokuGame {
                 };
 
                 stepFlip();
-            }, 500);
+            }, 1000);
 
         } else {
             // No incorrect cells: determine starting number from currently selected keypad number or 1
