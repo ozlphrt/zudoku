@@ -840,21 +840,29 @@ class SudokuGame {
     cycleHighlightNumber(direction) {
         if (this.isGameWon || this.isPaused) return;
 
-        let nextNum;
-        if (!this.paintNumber || this.paintNumber < 1 || this.paintNumber > 9) {
-            // No number currently highlighted:
-            // Swiping up or right (+1) highlights 1
-            // Swiping down or left (-1) wraps around to 9
-            nextNum = direction > 0 ? 1 : 9;
-        } else {
+        let current = (!this.paintNumber || this.paintNumber < 1 || this.paintNumber > 9)
+            ? (direction > 0 ? 0 : 10)
+            : this.paintNumber;
+
+        let found = null;
+        // Search through numbers 1..9 in the given direction and pick the first incomplete number
+        for (let step = 1; step <= 9; step++) {
+            let candidate;
             if (direction > 0) {
-                // Swiping up or right (+1) with wrap-around (9 -> 1)
-                nextNum = (this.paintNumber % 9) + 1;
+                candidate = (current % 9) + 1;
             } else {
-                // Swiping down or left (-1) with wrap-around (1 -> 9)
-                nextNum = this.paintNumber === 1 ? 9 : this.paintNumber - 1;
+                candidate = current === 1 ? 9 : current - 1;
+            }
+            current = candidate;
+
+            if (!this.isNumberComplete(candidate)) {
+                found = candidate;
+                break;
             }
         }
+
+        // If an incomplete number was found, use it; otherwise fallback to standard step
+        const nextNum = found !== null ? found : (direction > 0 ? ((this.paintNumber % 9) + 1) : (this.paintNumber === 1 ? 9 : this.paintNumber - 1));
 
         this.isPaintMode = true;
         this.paintNumber = nextNum;
