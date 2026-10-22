@@ -1904,6 +1904,11 @@ class SudokuGame {
     }
     
     checkCompletion(lastMoveRow, lastMoveCol, lastMoveNumber) {
+        // Suppress row, column, and 3x3 block completion highlights during auto-solve / puzzle reveal
+        if (this.isAutoSolving) {
+            return false;
+        }
+
         // Only check the specific row, column, block, and number that was just affected
         let highlighted = false;
         
@@ -4494,6 +4499,7 @@ class SudokuGame {
         }
 
         this.wasAutoSolved = true;
+        this.isAutoSolving = true;
         this.stopTimer();
         this.clearSelection();
         this.clearHighlights();
@@ -4563,6 +4569,7 @@ class SudokuGame {
                 this.clearNumberCursor();
                 this.updateDisplay();
                 this.updateProgress();
+                this.isAutoSolving = false;
                 this.autoSolveTimer = setTimeout(() => {
                     this.gameWon();
                 }, 250);
@@ -4581,6 +4588,7 @@ class SudokuGame {
                     this.clearNumberCursor();
                     this.updateDisplay();
                     this.updateProgress();
+                    this.isAutoSolving = false;
                     if (typeof selectedPadNumber !== 'undefined') selectedPadNumber = null;
                     
                     // Notify user with victory modal
