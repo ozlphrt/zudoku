@@ -916,9 +916,11 @@ class SudokuGame {
     addSwipeHighlightListener() {
         let startX = null;
         let startY = null;
+        let startTime = 0;
         let tracking = false;
-        let hasSwiped = false;
+        let swipedInCurrentGesture = false;
         let lastTouchTime = 0;
+        let lastSwipeStepTime = 0;
         const SWIPE_THRESHOLD = 28; // Responsive threshold in pixels
 
         // Expose global helper for testing/debugging
@@ -939,6 +941,16 @@ class SudokuGame {
             return true;
         };
 
+        const onGestureStart = (clientX, clientY, target) => {
+            if (!canStartSwipe(target)) return;
+            startX = clientX;
+            startY = clientY;
+            startTime = performance.now();
+            tracking = true;
+            swipedInCurrentGesture = false;
+            lastSwipeStepTime = startTime;
+        };
+
         const processMove = (clientX, clientY) => {
             if (!tracking || startX === null || startY === null) return;
             if (this.touchKeypadActive) {
@@ -950,19 +962,37 @@ class SudokuGame {
             const dy = clientY - startY;
             const absX = Math.abs(dx);
             const absY = Math.abs(dy);
+            const distance = Math.max(absX, absY);
+            const now = performance.now();
 
-            if (Math.max(absX, absY) >= SWIPE_THRESHOLD) {
-                hasSwiped = true;
-                const direction = (absX >= absY) ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
-                console.log(`[Zudoku] Swipe gesture: ${direction > 0 ? '+1' : '-1'} (dx: ${Math.round(dx)}, dy: ${Math.round(dy)})`);
-                this.cycleHighlightNumber(direction);
-                startX = clientX;
-                startY = clientY;
+            if (!swipedInCurrentGesture) {
+                // First swipe trigger in this stroke (quick swipe flick) -> strictly 1 step (+1 or -1)
+                if (distance >= SWIPE_THRESHOLD) {
+                    swipedInCurrentGesture = true;
+                    lastSwipeStepTime = now;
+                    const direction = (absX >= absY) ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
+                    console.log(`[Zudoku] Quick swipe step: ${direction > 0 ? '+1' : '-1'} (dx: ${Math.round(dx)}, dy: ${Math.round(dy)})`);
+                    this.cycleHighlightNumber(direction);
+                    startX = clientX;
+                    startY = clientY;
+                }
+            } else {
+                // Only if user holds down and keeps dragging slowly (sustained drag), allow stepping again after a steady delay & distance
+                const elapsedSinceStart = now - startTime;
+                const elapsedSinceLastStep = now - lastSwipeStepTime;
+                if (elapsedSinceStart > 380 && elapsedSinceLastStep > 240 && distance >= 48) {
+                    lastSwipeStepTime = now;
+                    const direction = (absX >= absY) ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
+                    console.log(`[Zudoku] Sustained drag step: ${direction > 0 ? '+1' : '-1'}`);
+                    this.cycleHighlightNumber(direction);
+                    startX = clientX;
+                    startY = clientY;
+                }
             }
         };
 
         const processEnd = (clientX, clientY) => {
-            if (tracking && !hasSwiped && startX !== null && startY !== null && !this.touchKeypadActive) {
+            if (tracking && !swipedInCurrentGesture && startX !== null && startY !== null && !this.touchKeypadActive) {
                 const dx = clientX - startX;
                 const dy = clientY - startY;
                 const absX = Math.abs(dx);
@@ -970,24 +1000,21 @@ class SudokuGame {
 
                 if (Math.max(absX, absY) >= SWIPE_THRESHOLD) {
                     const direction = (absX >= absY) ? (dx > 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
-                    console.log(`[Zudoku] Swipe flick on release: ${direction > 0 ? '+1' : '-1'}`);
+                    console.log(`[Zudoku] Quick swipe flick on release: ${direction > 0 ? '+1' : '-1'}`);
                     this.cycleHighlightNumber(direction);
                 }
             }
             tracking = false;
             startX = null;
             startY = null;
+            swipedInCurrentGesture = false;
         };
 
         // --- Touch Events (Mobile Safari / iPad / Android) ---
         const onTouchStart = (e) => {
             if (e.touches.length !== 1) return;
             lastTouchTime = Date.now();
-            if (!canStartSwipe(e.target)) return;
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            tracking = true;
-            hasSwiped = false;
+            onGestureStart(e.touches[0].clientX, e.touches[0].clientY, e.target);
         };
 
         const onTouchMove = (e) => {
@@ -1006,12 +1033,7 @@ class SudokuGame {
             // Avoid duplicate processing if recently triggered by touch
             if (e.pointerType === 'touch' || Date.now() - lastTouchTime < 500) return;
             if (e.button && e.button !== 0) return; // Left click only
-            if (!canStartSwipe(e.target)) return;
-
-            startX = e.clientX;
-            startY = e.clientY;
-            tracking = true;
-            hasSwiped = false;
+            onGestureStart(e.clientX, e.clientY, e.target);
         };
 
         const onPointerMove = (e) => {
@@ -1028,6 +1050,7 @@ class SudokuGame {
             tracking = false;
             startX = null;
             startY = null;
+            swipedInCurrentGesture = false;
         };
 
         // Attach listeners to document
