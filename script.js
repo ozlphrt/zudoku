@@ -4614,8 +4614,10 @@ class SudokuGame {
                     cellIndex = 0;
                     this.autoSolveTimer = setTimeout(stepSolve, 180);
                 } else if (phase === 'PLACE_CELL') {
-                    // Step B: Fill in the puzzle for this number cell by cell
+                    // Step B: Reveal cells one by one with airport flight display split-flap mechanical flip
                     const { r, c } = currentGroup.cells[cellIndex];
+                    const index = r * 9 + c;
+                    const el = (this.cellCache && this.cellCache[index]) || document.querySelector(`[data-index="${index}"]`);
                     
                     this.grid[r][c] = num;
                     this.autoSolvedCells[r][c] = true;
@@ -4623,19 +4625,41 @@ class SudokuGame {
                     if (this.autoNotes) {
                         this.populateAutoNotes();
                     }
-                    
-                    this.updateDisplay();
-                    this.animateNumberPlacement(r, c);
-                    this.playSound('place');
-                    this.checkCompletion(r, c, num);
-                    this.updateProgress();
+
+                    if (el) {
+                        el.classList.add('split-flap');
+                        el.classList.remove('split-flap-cycle');
+                        void el.offsetWidth;
+                        el.classList.add('split-flap-cycle');
+
+                        this.playSound('flap');
+                        if (typeof this.vibrate === 'function') this.vibrate(15);
+
+                        // At midpoint of flap drop (50ms): reveal number
+                        setTimeout(() => {
+                            el.textContent = num;
+                            this.updateDisplay();
+                            this.playSound('place');
+                            this.checkCompletion(r, c, num);
+                            this.updateProgress();
+
+                            setTimeout(() => {
+                                el.classList.remove('split-flap', 'split-flap-cycle');
+                            }, 130);
+                        }, 50);
+                    } else {
+                        this.updateDisplay();
+                        this.playSound('place');
+                        this.checkCompletion(r, c, num);
+                        this.updateProgress();
+                    }
 
                     cellIndex++;
                     if (cellIndex < currentGroup.cells.length) {
-                        this.autoSolveTimer = setTimeout(stepSolve, 120);
+                        this.autoSolveTimer = setTimeout(stepSolve, 140);
                     } else {
                         phase = 'COMPLETE_NUMBER';
-                        this.autoSolveTimer = setTimeout(stepSolve, 150);
+                        this.autoSolveTimer = setTimeout(stepSolve, 180);
                     }
                 } else if (phase === 'COMPLETE_NUMBER') {
                     // Step C: Advance to next number in sequence
