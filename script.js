@@ -7118,20 +7118,6 @@ class SudokuGame {
         if (btn) btn.classList.toggle('active', active);
     }
 
-    showRevealToast(message) {
-        let toast = document.getElementById('revealToast');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'revealToast';
-            toast.className = 'reveal-toast';
-            document.body.appendChild(toast);
-        }
-        toast.textContent = message;
-        toast.classList.add('show');
-        clearTimeout(this._revealToastTimer);
-        this._revealToastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
-    }
-
     // Highlights (only) the numbers the player placed that disagree with the solution.
     // Tap a highlighted cell to remove it. Pressing the button again hides the highlight.
     revealIncorrect() {
@@ -7150,13 +7136,12 @@ class SudokuGame {
         }
         this.revealedWrong = wrong;
         if (wrong.size === 0) {
-            this.showRevealToast('No incorrect numbers');
+            this.setRevealButtonActive(false);
             return;
         }
         this.setRevealButtonActive(true);
         this.updateDisplay();
         this.playSound('error');
-        this.showRevealToast(`${wrong.size} incorrect - tap to remove`);
     }
 
     updateUndoRedoButtons() {

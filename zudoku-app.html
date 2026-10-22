@@ -2016,24 +2016,7 @@
             color: #ff453a !important;
             box-shadow: 0 0 12px rgba(255, 69, 58, 0.55) !important;
         }
-        .reveal-toast {
-            position: fixed;
-            left: 50%;
-            bottom: 22%;
-            transform: translate(-50%, 12px);
-            padding: 10px 18px;
-            border-radius: 999px;
-            background: rgba(20, 20, 24, 0.92);
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s, transform 0.2s;
-            z-index: 10000;
-        }
-        .reveal-toast.show { opacity: 1; transform: translate(-50%, 0); }
-    </style>
+        </style>
 </head>
 
 <body>
@@ -2139,7 +2122,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.6.3</div>
+    <div class="version-tag">V3.6.4</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -2186,7 +2169,7 @@
         <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 12px;">
             <button class="primary-btn" style="width: 100%; padding: 13px; background: rgba(var(--highlight-rgb), 0.15); border: 1px solid var(--highlight); font-weight: 700; letter-spacing: 1px; border-radius: 12px; cursor: pointer; color: var(--highlight);" onclick="revealPuzzle()">⚡ REVEAL PUZZLE</button>
             <button class="reset-btn" style="width: 100%;" onclick="resetAllData()">RESET ALL DATA</button>
-            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.6.3</div>
+            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.6.4</div>
         </div>
     </div>
 </div>
@@ -2230,7 +2213,7 @@
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
 <script src="puzzle-catalog.js?v=1"></script>
-<script src="script.js?v=3.6.3"></script>
+<script src="script.js?v=3.6.4"></script>
 <script>
     let isInitialized = false;
     
