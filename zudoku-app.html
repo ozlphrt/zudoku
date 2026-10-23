@@ -111,23 +111,60 @@
             gap: 12px;
         }
 
-        /* DESKTOP PILLAR - Constrain width to mobile-like vertical stack on portrait tablets */
+        /* TABLET & IPAD PORTRAIT — Dynamically scales board & controls to eliminate excess side padding */
         @media (min-width: 600px) and (orientation: portrait), (min-width: 600px) and (max-width: 859px) {
             .shell {
-                max-width: 540px;
-                border-left: 1px solid rgba(255, 255, 255, 0.05);
-                border-right: 1px solid rgba(255, 255, 255, 0.05);
-                background: rgba(0, 0, 0, 0.2);
-                box-shadow: 0 0 100px rgba(0,0,0,0.5);
+                max-width: 720px !important;
+                max-width: min(calc(100vw - 32px), calc(100vh - 310px), 720px) !important;
+                width: 100% !important;
+                padding: 0 16px !important;
+                border-left: none !important;
+                border-right: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                gap: clamp(8px, 1.4vh, 16px) !important;
             }
-            
-            .input-number-bar, .restart-level-container, .header-bar {
+
+            .grid-area {
+                width: 100% !important;
                 max-width: 100% !important;
+                padding: 0 !important;
+                display: flex !important;
+                justify-content: center !important;
             }
 
             .sudoku-grid {
-                width: 500px !important;
-                height: 500px !important;
+                width: calc(100vw - 32px) !important;
+                height: calc(100vw - 32px) !important;
+                width: min(calc(100vw - 32px), calc(100vh - 310px), 720px) !important;
+                height: min(calc(100vw - 32px), calc(100vh - 310px), 720px) !important;
+                max-width: 720px !important;
+                max-height: 720px !important;
+                border-radius: 20px !important;
+            }
+
+            .header-bar, .footer-bar {
+                width: 100% !important;
+                max-width: 720px !important;
+                max-width: min(calc(100vw - 32px), calc(100vh - 310px), 720px) !important;
+            }
+
+            .input-number-bar {
+                max-width: 100% !important;
+                padding: 4px 0 0 0 !important;
+                gap: clamp(6px, 1.5vw, 14px) !important;
+            }
+
+            .cell {
+                font-size: clamp(28px, 5.2vmin, 54px) !important;
+            }
+
+            .cell.given {
+                font-size: clamp(28px, 5.2vmin, 54px) !important;
+            }
+
+            .cell.notes .note-number {
+                font-size: clamp(16px, 2.6vmin, 26px) !important;
             }
         }
 
@@ -640,7 +677,6 @@
             position: relative;
             transition: background 0.1s, color 0.1s;
         }
-        .cell:hover { background: inherit; }
         
         .cell.given {
             font-weight: 800;
@@ -2165,7 +2201,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.6.5</div>
+    <div class="version-tag">V3.6.7</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -2256,7 +2292,7 @@
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
 <script src="puzzle-catalog.js?v=1"></script>
-<script src="script.js?v=3.6.5"></script>
+<script src="script.js?v=3.6.7"></script>
 <script>
     let isInitialized = false;
     
