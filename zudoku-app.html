@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Zudoku — Glassmorphism</title>
     
+    <script>try { var __pl = localStorage.getItem('zudoku-pillars') === 'true'; document.documentElement.setAttribute('data-pillars', __pl ? 'on' : 'off'); document.documentElement.setAttribute('data-splitflap', (!__pl && localStorage.getItem('zudoku-split-flap') === 'true') ? 'on' : 'off'); } catch (e) {}</script>
+
     <!-- PWA Integration -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
@@ -1130,16 +1132,18 @@
 
         /* Modal Overlays in Light Mode */
         [data-theme="light"] .modal-overlay {
-            background: rgba(255, 255, 255, 0.75);
+            background: rgba(0, 0, 0, 0.08) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
         }
         [data-theme="light"] .victory-content {
-            background: #ffffff;
-            border-color: #dddddd;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.94) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.04) !important;
         }
         [data-theme="light"] .hero-time {
-            color: #000000;
-            text-shadow: none;
+            color: #111111 !important;
+            text-shadow: none !important;
         }
         [data-theme="light"] .primary-btn {
             color: #ffffff;
@@ -1243,14 +1247,15 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(14px);
+            background: rgba(0, 0, 0, 0.22) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
             z-index: 2000;
             align-items: center;
             justify-content: center;
-            padding: 24px;
+            padding: 16px;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.2s ease;
         }
         .modal-overlay.visible { 
             display: flex;
@@ -1258,45 +1263,54 @@
         }
 
         .victory-content {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(40px);
-            padding: clamp(32px, 6vh, 64px) clamp(24px, 5vw, 48px);
-            border-radius: clamp(24px, 5vw, 40px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(22, 24, 30, 0.94) !important;
+            padding: 14px 18px 12px 18px !important;
+            border-radius: 16px !important;
+            border: 1px solid rgba(255, 255, 255, 0.16) !important;
             text-align: center;
-            width: 100%;
-            max-width: 440px;
-            box-shadow: 0 50px 120px rgba(0,0,0,0.7);
+            width: auto !important;
+            min-width: 180px !important;
+            max-width: 210px !important;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.25) !important;
             display: flex;
             flex-direction: column;
             align-items: center;
-            animation: victoryPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: victoryPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards;
             position: relative;
         }
         @keyframes victoryPop {
-            0% { transform: scale(0.85) translateY(30px); opacity: 0; }
+            0% { transform: scale(0.92) translateY(12px); opacity: 0; }
             100% { transform: scale(1) translateY(0); opacity: 1; }
         }
 
         .victory-reaction {
-            font-size: 14px;
+            font-size: 10px !important;
             font-weight: 700;
             color: var(--highlight);
             text-transform: uppercase;
-            letter-spacing: 0.3em;
-            margin-bottom: 8px;
-            opacity: 0.9;
+            letter-spacing: 0.22em;
+            margin-bottom: 2px !important;
+            opacity: 0.95;
         }
 
         .hero-time {
-            font-size: clamp(48px, 15vw, 84px);
+            font-size: 26px !important;
             font-weight: 800;
-            color: var(--text);
+            color: #ffffff !important;
             letter-spacing: -0.01em;
-            line-height: 1;
-            margin-bottom: 24px;
-            text-shadow: 0 0 40px rgba(255,255,255,0.1);
+            line-height: 1.1;
+            margin-bottom: 10px !important;
+            text-shadow: none !important;
             font-variant-numeric: tabular-nums;
+        }
+
+        .victory-content .primary-btn {
+            padding: 8px 16px !important;
+            font-size: 11px !important;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            border-radius: 8px !important;
+            width: 100% !important;
         }
 
         .primary-btn {
@@ -1508,8 +1522,8 @@
             padding: 12px;
         }
 
-        .header-left { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: flex-start; }
-        .header-right { display: flex; align-items: center; gap: 12px; flex: 1; justify-content: flex-end; }
+        .header-left { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; justify-content: flex-start; }
+        .header-right { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; justify-content: flex-end; }
         
         .main-controls-split {
             display: flex;
@@ -2095,7 +2109,718 @@
             color: #ff453a !important;
             box-shadow: 0 0 12px rgba(255, 69, 58, 0.55) !important;
         }
-        </style>
+        
+        /* ========================================================
+           SPLIT-FLAP DISPLAY (optional - Settings > Split-Flap Display)
+           Tile states: empty | pre-revealed | highlighted | permanent.
+           Only colours / the hinge line are styled - font family, size
+           and weight are intentionally left exactly as they are.
+        ======================================================== */
+
+        /* Shared tile shape: the hinge is a whisper-quiet hairline + faint top sheen */
+        html[data-splitflap="on"] .cell:not(:empty):not(.notes):not(.zone-completed):not(.same-number-highlight):not(.auto-solved):not(.reveal-wrong):not(.incorrect-focus), html[data-splitflap="on"] .cell.zone-completed:not(.same-number-highlight):not(.auto-solved):not(.reveal-wrong):not(.incorrect-focus), html[data-splitflap="on"] .cell.same-number-highlight:not(.reveal-wrong):not(.incorrect-focus) {
+            border-radius: 3px;
+            opacity: 1 !important;
+            filter: none !important;
+            text-shadow: none !important;
+        }
+        html[data-splitflap="on"] .cell:not(:empty):not(.notes):not(.zone-completed):not(.same-number-highlight):not(.auto-solved):not(.reveal-wrong):not(.incorrect-focus)::after, html[data-splitflap="on"] .cell.zone-completed:not(.same-number-highlight):not(.auto-solved):not(.reveal-wrong):not(.incorrect-focus)::after, html[data-splitflap="on"] .cell.same-number-highlight:not(.reveal-wrong):not(.incorrect-focus)::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            z-index: -1;
+            background:
+                linear-gradient(to bottom, transparent calc(50% - 1px), var(--sf-seam) calc(50% - 1px), var(--sf-seam) 50%, var(--sf-seam-hi) 50%, var(--sf-seam-hi) calc(50% + 1px), transparent calc(50% + 1px)),
+                linear-gradient(to bottom, var(--sf-sheen), transparent 50%);
+            box-shadow: inset 0 0 0 1px var(--sf-edge);
+        }
+
+        /* PRE-REVEALED (clues and numbers you placed look identical) - dark theme: dark card, light digits */
+        html[data-splitflap="on"] .cell:not(:empty):not(.notes):not(.zone-completed):not(.same-number-highlight):not(.auto-solved):not(.reveal-wrong):not(.incorrect-focus) {
+            --sf-seam: rgba(0, 0, 0, 0.55);
+            --sf-seam-hi: rgba(255, 255, 255, 0.05);
+            --sf-sheen: rgba(255, 255, 255, 0.045);
+            --sf-edge: rgba(255, 255, 255, 0.07);
+            background: #181a1f !important;
+            color: #e4e7ec !important;
+        }
+        /* PERMANENT (finished row / column / 3x3 block) - the negative of pre-revealed */
+        html[data-splitflap="on"] .cell.zone-completed:not(.same-number-highlight):not(.auto-solved):not(.reveal-wrong):not(.incorrect-focus) {
+            --sf-seam: rgba(0, 0, 0, 0.16);
+            --sf-seam-hi: rgba(255, 255, 255, 0.28);
+            --sf-sheen: rgba(255, 255, 255, 0.18);
+            --sf-edge: rgba(0, 0, 0, 0.12);
+            background: #aeb3bd !important;
+            color: #121317 !important;
+            box-shadow: none !important;
+        }
+        /* HIGHLIGHTED (same number as the active one) - solid theme colour in both themes */
+        html[data-splitflap="on"] .cell.same-number-highlight:not(.reveal-wrong):not(.incorrect-focus) {
+            --sf-seam: rgba(0, 0, 0, 0.22);
+            --sf-seam-hi: rgba(255, 255, 255, 0.14);
+            --sf-sheen: rgba(255, 255, 255, 0.10);
+            --sf-edge: rgba(255, 255, 255, 0.16);
+            background: var(--highlight) !important;
+            color: #ffffff !important;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28) !important;   /* no big glow - keep focus on the digits */
+        }
+
+        /* Light theme: pre-revealed = light card / dark digits, permanent = black card / white digits */
+        html[data-splitflap="on"][data-theme="light"] .cell:not(:empty):not(.notes):not(.zone-completed):not(.same-number-highlight):not(.auto-solved):not(.reveal-wrong):not(.incorrect-focus) {
+            --sf-seam: rgba(0, 0, 0, 0.16);
+            --sf-seam-hi: rgba(255, 255, 255, 0.7);
+            --sf-sheen: rgba(255, 255, 255, 0.55);
+            --sf-edge: rgba(0, 0, 0, 0.10);
+            background: #eceef1 !important;
+            color: #101114 !important;
+        }
+        html[data-splitflap="on"][data-theme="light"] .cell.zone-completed:not(.same-number-highlight):not(.auto-solved):not(.reveal-wrong):not(.incorrect-focus) {
+            --sf-seam: rgba(0, 0, 0, 0.45);
+            --sf-seam-hi: rgba(255, 255, 255, 0.05);
+            --sf-sheen: rgba(255, 255, 255, 0.04);
+            --sf-edge: rgba(255, 255, 255, 0.08);
+            background: #3b3f49 !important;
+            color: #f4f5f8 !important;
+        }
+
+
+        /* Mechanical flap: tile folds edge-on (number swaps there) and drops back, then a small lock-settle */
+        @keyframes sfCycle {
+            0%   { transform: perspective(500px) rotateX(0deg); }
+            45%  { transform: perspective(500px) rotateX(-90deg); }
+            55%  { transform: perspective(500px) rotateX(90deg); }
+            100% { transform: perspective(500px) rotateX(0deg); }
+        }
+        @keyframes sfLock {
+            0%   { transform: perspective(500px) rotateX(-12deg); }
+            45%  { transform: perspective(500px) rotateX(5deg); }
+            75%  { transform: perspective(500px) rotateX(-2deg); }
+            100% { transform: perspective(500px) rotateX(0deg); }
+        }
+        html[data-splitflap="on"] .cell.sf-cycle {
+            animation: sfCycle 0.13s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+            z-index: 30 !important;
+        }
+        html[data-splitflap="on"] .cell.sf-lock {
+            animation: sfLock 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+            z-index: 30 !important;
+        }
+        html[data-splitflap="on"] .cell.celebrate,
+        html[data-splitflap="on"] .cell.number-completed-pulse {
+            animation: none !important;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            html[data-splitflap="on"] .cell.sf-cycle,
+            html[data-splitflap="on"] .cell.sf-lock { animation: none !important; }
+        }
+    
+        /* ========================================================
+           SPLIT-FLAP: recessed 3x3 trays (Settings > Split-Flap Display)
+           The 81 tiles are placed on explicit grid tracks with a gutter
+           track between sections, and nine sunken trays sit behind them.
+        ======================================================== */
+        .sf-tray { display: none; }
+
+        html[data-splitflap="on"] .sudoku-grid {
+            --sf-u: clamp(4px, 1.1vmin, 8px);       /* one unit scales with the board */
+            --sf-b: 3px;                             /* frame border width */
+            border-width: var(--sf-b) !important;
+            border-radius: calc(var(--sf-u) * 2.8 + var(--sf-b)) !important;   /* concentric with the trays */
+            padding: calc(var(--sf-u) * 1.8) !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) calc(var(--sf-u) * 3 - 3px) repeat(3, minmax(0, 1fr)) calc(var(--sf-u) * 3 - 3px) repeat(3, minmax(0, 1fr)) !important;
+            grid-template-rows:    repeat(3, minmax(0, 1fr)) calc(var(--sf-u) * 3 - 3px) repeat(3, minmax(0, 1fr)) calc(var(--sf-u) * 3 - 3px) repeat(3, minmax(0, 1fr)) !important;
+            background: #2b2e35 !important;
+        }
+        html[data-splitflap="on"][data-theme="light"] .sudoku-grid { background: #dfe3ea !important; }
+
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(9n+1) { grid-column: 1; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(9n+2) { grid-column: 2; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(9n+3) { grid-column: 3; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(9n+4) { grid-column: 5; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(9n+5) { grid-column: 6; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(9n+6) { grid-column: 7; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(9n+7) { grid-column: 9; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(9n+8) { grid-column: 10; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(9n) { grid-column: 11; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(n+1):nth-child(-n+9) { grid-row: 1; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(n+10):nth-child(-n+18) { grid-row: 2; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(n+19):nth-child(-n+27) { grid-row: 3; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(n+28):nth-child(-n+36) { grid-row: 5; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(n+37):nth-child(-n+45) { grid-row: 6; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(n+46):nth-child(-n+54) { grid-row: 7; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(n+55):nth-child(-n+63) { grid-row: 9; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(n+64):nth-child(-n+72) { grid-row: 10; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:nth-child(n+73):nth-child(-n+81) { grid-row: 11; }
+
+        /* the sections are separated by the trays now - drop the old faint section lines */
+        html[data-splitflap="on"] .sudoku-grid .cell:nth-child(n)::before { box-shadow: none !important; }
+        html[data-splitflap="on"] .sudoku-grid > .cell { position: relative; z-index: 1; border: none !important; }
+
+        html[data-splitflap="on"] .sudoku-grid > .sf-tray {
+            display: block;
+            z-index: 0;
+            pointer-events: none;
+            margin: calc(var(--sf-u) * -1);
+            border-radius: calc(var(--sf-u) * 2);
+            background: #07080a;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.10);
+        }
+        html[data-splitflap="on"][data-theme="light"] .sudoku-grid > .sf-tray {
+            background: #aab2c0;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.30), inset 0 0 0 1px rgba(0, 0, 0, 0.14), 0 1px 0 rgba(255, 255, 255, 0.95);
+        }
+
+        /* tile corners nested inside each tray's rounded corners (concentric curves) */
+        html[data-splitflap="on"] .sudoku-grid > .cell { border-radius: 2px !important; }
+        html[data-splitflap="on"] .sudoku-grid > .cell.fill, html[data-splitflap="on"] .sudoku-grid > .cell.perm { border-radius: 2px !important; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:is(:nth-child(9n+1), :nth-child(9n+4), :nth-child(9n+7)):is(:nth-child(-n+9), :nth-child(n+28):nth-child(-n+36), :nth-child(n+55):nth-child(-n+63)) { border-top-left-radius: var(--sf-u) !important; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:is(:nth-child(9n+3), :nth-child(9n+6), :nth-child(9n)):is(:nth-child(-n+9), :nth-child(n+28):nth-child(-n+36), :nth-child(n+55):nth-child(-n+63)) { border-top-right-radius: var(--sf-u) !important; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:is(:nth-child(9n+1), :nth-child(9n+4), :nth-child(9n+7)):is(:nth-child(n+19):nth-child(-n+27), :nth-child(n+46):nth-child(-n+54), :nth-child(n+73):nth-child(-n+81)) { border-bottom-left-radius: var(--sf-u) !important; }
+        html[data-splitflap="on"] .sudoku-grid > .cell:is(:nth-child(9n+3), :nth-child(9n+6), :nth-child(9n)):is(:nth-child(n+19):nth-child(-n+27), :nth-child(n+46):nth-child(-n+54), :nth-child(n+73):nth-child(-n+81)) { border-bottom-right-radius: var(--sf-u) !important; }
+    
+        /* ========================================================
+           SPLIT-FLAP MODE - ASSET ALIGNMENT (Header, Controls, Buttons)
+        ======================================================== */
+        html[data-splitflap="on"] .header-bar,
+        html[data-splitflap="on"] .footer-bar {
+            background: #23252b !important;
+            border: 3px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+        html[data-splitflap="on"][data-theme="light"] .header-bar,
+        html[data-splitflap="on"][data-theme="light"] .footer-bar {
+            background: #dfe3ea !important;
+            border: 3px solid rgba(0, 0, 0, 0.08) !important;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        /* Split-Flap Timer */
+        html[data-splitflap="on"] #game-timer {
+            background: #181a1f !important;
+            color: #e4e7ec !important;
+            padding: 5px 14px !important;
+            border-radius: 6px !important;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.35) !important;
+            font-size: 24px !important;
+            letter-spacing: 0.08em !important;
+            position: relative;
+        }
+        html[data-splitflap="on"][data-theme="light"] #game-timer {
+            background: #fdfdfd !important;
+            color: #121317 !important;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+        }
+
+        /* Split-Flap Header Buttons & Cycle Pill */
+        html[data-splitflap="on"] .header-bar button,
+        html[data-splitflap="on"] .header-bar .display-mode-btn {
+            background: #181a1f !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+            color: #e4e7ec !important;
+        }
+        html[data-splitflap="on"] .header-bar button:hover,
+        html[data-splitflap="on"] .header-bar .display-mode-btn:hover {
+            border-color: rgba(var(--highlight-rgb), 0.6) !important;
+            color: #ffffff !important;
+        }
+        html[data-splitflap="on"][data-theme="light"] .header-bar button,
+        html[data-splitflap="on"][data-theme="light"] .header-bar .display-mode-btn {
+            background: #ffffff !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06) !important;
+            color: #121317 !important;
+        }
+        html[data-splitflap="on"][data-theme="light"] .header-bar button:hover,
+        html[data-splitflap="on"][data-theme="light"] .header-bar .display-mode-btn:hover {
+            border-color: var(--highlight) !important;
+            color: var(--highlight) !important;
+        }
+
+        /* Split-Flap Number Input Keys (1-9) */
+        html[data-splitflap="on"] .input-number-bar {
+            gap: 6px !important;
+        }
+        html[data-splitflap="on"] .num-btn {
+            background: linear-gradient(to bottom, #181a1f calc(50% - 0.5px), rgba(0,0,0,0.55) calc(50% - 0.5px), rgba(0,0,0,0.55) 50%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.06) calc(50% + 0.5px), #181a1f calc(50% + 0.5px)) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 5px !important;
+            color: #e4e7ec !important;
+            text-shadow: none !important;
+            font-weight: 800 !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+            transition: transform 0.1s ease !important;
+        }
+        html[data-splitflap="on"] .num-btn:hover {
+            color: var(--highlight) !important;
+            border-color: rgba(var(--highlight-rgb), 0.5) !important;
+        }
+        html[data-splitflap="on"] .num-btn:active {
+            transform: scale(0.96) !important;
+        }
+        html[data-splitflap="on"] .num-btn.selected {
+            background: linear-gradient(to bottom, var(--highlight) calc(50% - 0.5px), rgba(0,0,0,0.35) calc(50% - 0.5px), rgba(0,0,0,0.35) 50%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0.35) calc(50% + 0.5px), var(--highlight) calc(50% + 0.5px)) !important;
+            color: #ffffff !important;
+            border-color: var(--highlight) !important;
+            box-shadow: 0 2px 8px rgba(var(--highlight-rgb), 0.5) !important;
+        }
+        html[data-splitflap="on"][data-theme="light"] .num-btn {
+            background: linear-gradient(to bottom, #fdfdfd calc(50% - 0.5px), rgba(0,0,0,0.18) calc(50% - 0.5px), rgba(0,0,0,0.18) 50%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.4) calc(50% + 0.5px), #f4f5f8 calc(50% + 0.5px)) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            color: #121317 !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08) !important;
+        }
+        html[data-splitflap="on"][data-theme="light"] .num-btn.selected {
+            background: linear-gradient(to bottom, var(--highlight) calc(50% - 0.5px), rgba(0,0,0,0.3) calc(50% - 0.5px), rgba(0,0,0,0.3) 50%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.4) calc(50% + 0.5px), var(--highlight) calc(50% + 0.5px)) !important;
+            color: #ffffff !important;
+            border-color: var(--highlight) !important;
+            box-shadow: 0 2px 8px rgba(var(--highlight-rgb), 0.3) !important;
+        }
+
+        /* Split-Flap Control Action Buttons */
+        html[data-splitflap="on"] .buttons-grid .restart-level-btn {
+            background: #181a1f !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 9px !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+            color: #d0d4dc !important;
+        }
+        html[data-splitflap="on"] .buttons-grid .restart-level-btn:hover {
+            color: var(--highlight) !important;
+            border-color: rgba(var(--highlight-rgb), 0.5) !important;
+        }
+        html[data-splitflap="on"][data-theme="light"] .buttons-grid .restart-level-btn {
+            background: #fdfdfd !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            border-radius: 9px !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+            color: #181a1f !important;
+        }
+        html[data-splitflap="on"][data-theme="light"] .buttons-grid .restart-level-btn:hover {
+            color: var(--highlight) !important;
+            border-color: var(--highlight) !important;
+        }
+
+        /* Split-Flap Difficulty Dial */
+        html[data-splitflap="on"] #level_indicator {
+            border: 3px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.7), 0 4px 12px rgba(0,0,0,0.5) !important;
+        }
+        html[data-splitflap="on"][data-theme="light"] #level_indicator {
+            border: 3px solid rgba(0, 0, 0, 0.1) !important;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.08) !important;
+        }
+
+        /* ========================================================
+           PILLARS (optional - Settings > Pillars)  -  TOP-DOWN, no perspective
+           The camera looks straight down, so the pillars' sides are never seen:
+           the height is read from a hard-edged cast shadow (light from the upper left).
+             empty 0 | pre-revealed 3 | highlighted 5 | permanent 1   (units)
+           Stacking (z-index inside the board):
+             tiles of level L = 2L+2  ·  shadow layer of level L = 2L+1
+           so a pillar's shadow lies above every LOWER tile and below every tile of its own height or taller.
+           Each level's shadows are one layer with one opacity, so overlapping shadows stay one even tone.
+        ======================================================== */
+        .shl { display: none; }
+
+html[data-pillars="on"] .sudoku-grid {
+            --pu: clamp(1px, 0.3vmin, 2.5px);        /* one height unit, ultra-subtle micro-relief (halved) */
+            --pg: clamp(7px, 1.5vmin, 12px);        /* gutter between 3x3 sections */
+            position: relative;
+            isolation: isolate;
+            padding: calc(var(--pg) * 0.7) !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) calc(var(--pg) - 3px) repeat(3, minmax(0, 1fr)) calc(var(--pg) - 3px) repeat(3, minmax(0, 1fr)) !important;
+            grid-template-rows:    repeat(3, minmax(0, 1fr)) calc(var(--pg) - 3px) repeat(3, minmax(0, 1fr)) calc(var(--pg) - 3px) repeat(3, minmax(0, 1fr)) !important;
+            background: #16171b !important;
+            border-width: 3px !important;
+        }
+        html[data-pillars="on"][data-theme="light"] .sudoku-grid { background: #cfd5de !important; }
+
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(9n+1) { grid-column: 1; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(9n+2) { grid-column: 2; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(9n+3) { grid-column: 3; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(9n+4) { grid-column: 5; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(9n+5) { grid-column: 6; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(9n+6) { grid-column: 7; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(9n+7) { grid-column: 9; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(9n+8) { grid-column: 10; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(9n) { grid-column: 11; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(n+1):nth-child(-n+9) { grid-row: 1; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(n+10):nth-child(-n+18) { grid-row: 2; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(n+19):nth-child(-n+27) { grid-row: 3; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(n+28):nth-child(-n+36) { grid-row: 5; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(n+37):nth-child(-n+45) { grid-row: 6; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(n+46):nth-child(-n+54) { grid-row: 7; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(n+55):nth-child(-n+63) { grid-row: 9; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(n+64):nth-child(-n+72) { grid-row: 10; }
+        html[data-pillars="on"] .sudoku-grid > .cell:nth-child(n+73):nth-child(-n+81) { grid-row: 11; }
+
+        /* tiles = pillar tops; each is its own stacking context holding face (::before) and number */
+        html[data-pillars="on"] .sudoku-grid > .cell {
+            --lvl: 0;
+            --top: #25262c;
+            position: relative;
+            z-index: calc(var(--lvl) * 2 + 2) !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 5px;
+        }
+        html[data-pillars="on"] .sudoku-grid > .cell::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1 !important;
+            pointer-events: none;
+            border-radius: 5px;
+            background: var(--top) !important;
+            box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.12) !important;
+            transition: background-color 0.25s;
+        }
+        /* round 3x3 section outer corners more */
+        html[data-pillars="on"] .sudoku-grid > .cell[data-corner="tl"],
+        html[data-pillars="on"] .sudoku-grid > .cell[data-corner="tl"]::before {
+            border-top-left-radius: 13px !important;
+        }
+        html[data-pillars="on"] .sudoku-grid > .cell[data-corner="tr"],
+        html[data-pillars="on"] .sudoku-grid > .cell[data-corner="tr"]::before {
+            border-top-right-radius: 13px !important;
+        }
+        html[data-pillars="on"] .sudoku-grid > .cell[data-corner="bl"],
+        html[data-pillars="on"] .sudoku-grid > .cell[data-corner="bl"]::before {
+            border-bottom-left-radius: 13px !important;
+        }
+        html[data-pillars="on"] .sudoku-grid > .cell[data-corner="br"],
+        html[data-pillars="on"] .sudoku-grid > .cell[data-corner="br"]::before {
+            border-bottom-right-radius: 13px !important;
+        }
+
+        html[data-pillars="on"] .sudoku-grid > .cell.selected::before { box-shadow: inset 0 0 0 2px var(--highlight) !important; }
+        
+        /* quiet transition: no flashing when numbers, sections, rows, columns complete */
+        html[data-pillars="on"] .cell.celebrate,
+        html[data-pillars="on"] .cell.number-completed-pulse {
+            animation: none !important;
+        }
+
+        /* Hydraulic Piston Settle animation (Pillars mode only) */
+        @keyframes hydraulicPistonSettle {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            20% {
+                /* Subtle breath UP towards the directional light source */
+                transform: translate(calc(-1 * var(--pu) * 0.45), calc(-1 * var(--pu) * 0.45)) scale(1.012);
+            }
+            65% {
+                /* Sinks firmly DOWN into baseplate with hydraulic dampening */
+                transform: translate(calc(var(--pu) * 0.25), calc(var(--pu) * 0.25)) scale(0.99);
+            }
+            82% {
+                /* Subtle precision settle */
+                transform: translate(calc(-0.2px), calc(-0.2px)) scale(1.002);
+            }
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        html[data-pillars="on"] .sudoku-grid > .cell.pillar-settle {
+            animation: hydraulicPistonSettle 0.48s cubic-bezier(0.2, 0.9, 0.3, 1) both !important;
+            z-index: 10 !important;
+        }
+
+        /* shadow layers: same grid as the board, one layer per height level */
+        html[data-pillars="on"] .sudoku-grid > .shl {
+            display: grid;
+            position: absolute;
+            inset: 0;
+            padding: calc(var(--pg) * 0.7);
+            gap: 1.5px;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) calc(var(--pg) - 3px) repeat(3, minmax(0, 1fr)) calc(var(--pg) - 3px) repeat(3, minmax(0, 1fr));
+            grid-template-rows:    repeat(3, minmax(0, 1fr)) calc(var(--pg) - 3px) repeat(3, minmax(0, 1fr)) calc(var(--pg) - 3px) repeat(3, minmax(0, 1fr));
+            pointer-events: none;
+            --shc: #000;
+            opacity: 0.58;
+        }
+        html[data-pillars="on"][data-theme="light"] .sudoku-grid > .shl { --shc: #101828; opacity: 0.45; }
+        html[data-pillars="on"] .sudoku-grid > .shl[data-l="1"] {
+            --d: calc(1 * var(--pu) * 1.15);
+            z-index: 3;
+            filter: blur(max(0.5px, calc(var(--pu) * 0.35)));
+        }
+        html[data-pillars="on"] .sudoku-grid > .shl[data-l="3"] {
+            --d: calc(3 * var(--pu) * 1.15);
+            z-index: 7;
+            filter: blur(max(1px, calc(var(--pu) * 0.65)));
+        }
+        html[data-pillars="on"] .sudoku-grid > .shl[data-l="5"] {
+            --d: calc(5 * var(--pu) * 1.15);
+            z-index: 11;
+            filter: blur(max(1.8px, calc(var(--pu) * 1.05)));
+        }
+        /* a shadow = the tile swept along the light direction (upper left): one solid hexagon, no blur */
+        html[data-pillars="on"] .sudoku-grid > .shl > .sh {
+            justify-self: start;
+            align-self: start;
+            width: calc(100% + var(--d));
+            height: calc(100% + var(--d));
+            background: var(--shc);
+            clip-path: polygon(0 0, calc(100% - var(--d)) 0, 100% var(--d), 100% 100%, var(--d) 100%, 0 calc(100% - var(--d)));
+            transform-origin: 0 0;
+            transform: scale(0.35);
+            opacity: 0;
+            transition: transform 0.45s cubic-bezier(0.25, 1.2, 0.5, 1), opacity 0.3s;
+            border-radius: 5px;
+        }
+        html[data-pillars="on"] .sudoku-grid > .shl > .sh[data-corner="tl"] { border-top-left-radius: 13px; }
+        html[data-pillars="on"] .sudoku-grid > .shl > .sh[data-corner="tr"] { border-top-right-radius: 13px; }
+        html[data-pillars="on"] .sudoku-grid > .shl > .sh[data-corner="bl"] { border-bottom-left-radius: 13px; }
+        html[data-pillars="on"] .sudoku-grid > .shl > .sh[data-corner="br"] { border-bottom-right-radius: 13px; }
+        html[data-pillars="on"] .sudoku-grid > .shl > .sh[data-on="1"] { transform: none; opacity: 1; }
+
+        /* tops - dark theme */
+        html[data-pillars="on"] .sudoku-grid > .cell[data-s="empty"]:not(.reveal-wrong):not(.incorrect-focus) { --top: #25262c; }
+        html[data-pillars="on"] .sudoku-grid > .cell[data-s="fill"]:not(.reveal-wrong):not(.incorrect-focus)  { --top: linear-gradient(145deg, #3d414c, #31343d); color: #e9ebef !important; }
+        html[data-pillars="on"] .sudoku-grid > .cell[data-s="perm"]:not(.reveal-wrong):not(.incorrect-focus)  { --top: linear-gradient(145deg, #bcc1ca, #a3a8b2); color: #121317 !important; }
+        html[data-pillars="on"] .sudoku-grid > .cell[data-s="hl"]:not(.reveal-wrong):not(.incorrect-focus)    { --top: linear-gradient(145deg, #ee6414, var(--highlight)); color: #ffffff !important; }
+        /* tops - light theme */
+        html[data-pillars="on"][data-theme="light"] .sudoku-grid > .cell[data-s="empty"]:not(.reveal-wrong):not(.incorrect-focus) { --top: #e7eaf0; }
+        html[data-pillars="on"][data-theme="light"] .sudoku-grid > .cell[data-s="fill"]:not(.reveal-wrong):not(.incorrect-focus)  { --top: linear-gradient(145deg, #d8dce6, #cbcfd8); color: #101114 !important; }
+        html[data-pillars="on"][data-theme="light"] .sudoku-grid > .cell[data-s="perm"]:not(.reveal-wrong):not(.incorrect-focus)  { --top: linear-gradient(145deg, #4a4f5b, #373b45); color: #f4f5f8 !important; }
+        html[data-pillars="on"][data-theme="light"] .sudoku-grid > .cell[data-s="hl"]:not(.reveal-wrong):not(.incorrect-focus)    { --top: linear-gradient(145deg, #c24a00, var(--highlight)); color: #ffffff !important; }
+        /* wrong-number marker keeps its red */
+        html[data-pillars="on"] .sudoku-grid > .cell.reveal-wrong, html[data-pillars="on"] .sudoku-grid > .cell.incorrect-focus { --top: #ff3b30; color: #ffffff !important; }
+
+        /* ========================================================
+           PILLARS MODE - ASSET ALIGNMENT (Header, Controls, Buttons)
+        ======================================================== */
+        html[data-pillars="on"] .header-bar,
+        html[data-pillars="on"] .footer-bar {
+            background: #181a1f !important;
+            border: 2px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 18px !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+        html[data-pillars="on"][data-theme="light"] .header-bar,
+        html[data-pillars="on"][data-theme="light"] .footer-bar {
+            background: #d8dde6 !important;
+            border: 2px solid rgba(0, 0, 0, 0.08) !important;
+            border-radius: 18px !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        /* Pillars Timer - Recessed Debossed Well */
+        html[data-pillars="on"] #game-timer {
+            background: #121316 !important;
+            padding: 5px 14px !important;
+            border-radius: 9px !important;
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.8), inset -1px -1px 0 rgba(255,255,255,0.05) !important;
+            color: var(--highlight) !important;
+            text-shadow: none !important;
+            font-size: 24px !important;
+            letter-spacing: 0.05em !important;
+        }
+        html[data-pillars="on"][data-theme="light"] #game-timer {
+            background: #e9edf3 !important;
+            padding: 5px 14px !important;
+            border-radius: 9px !important;
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.15), inset -1px -1px 0 rgba(255,255,255,0.8) !important;
+            color: var(--highlight) !important;
+            text-shadow: none !important;
+            font-size: 24px !important;
+        }
+
+        /* Pillars Header Buttons & Cycle Pill */
+        html[data-pillars="on"] .header-bar button,
+        html[data-pillars="on"] .header-bar .display-mode-btn {
+            background: linear-gradient(145deg, #2c2f37, #21232a) !important;
+            border: none !important;
+            border-radius: 10px !important;
+            box-shadow: inset 1px 1px 0 rgba(255,255,255,0.14), 2px 2px 5px rgba(0,0,0,0.45) !important;
+            color: #e4e7ec !important;
+            transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+        }
+        html[data-pillars="on"] .header-bar button:active,
+        html[data-pillars="on"] .header-bar .display-mode-btn:active {
+            transform: translate(1px, 1px) !important;
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.6) !important;
+        }
+        html[data-pillars="on"][data-theme="light"] .header-bar button,
+        html[data-pillars="on"][data-theme="light"] .header-bar .display-mode-btn {
+            background: linear-gradient(145deg, #ffffff, #edf0f6) !important;
+            border: none !important;
+            border-radius: 10px !important;
+            box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), 2px 2px 5px rgba(0,0,0,0.12) !important;
+            color: #1a1a1a !important;
+            transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+        }
+        html[data-pillars="on"][data-theme="light"] .header-bar button:active,
+        html[data-pillars="on"][data-theme="light"] .header-bar .display-mode-btn:active {
+            transform: translate(1px, 1px) !important;
+            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.15) !important;
+        }
+
+        /* Pillars Number Input Keys (1-9) */
+        html[data-pillars="on"] .input-number-bar {
+            gap: 6px !important;
+        }
+        html[data-pillars="on"] .num-btn {
+            background: linear-gradient(145deg, #2e3139, #24262c) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            box-shadow: inset 1px 1px 0 rgba(255,255,255,0.14), 2px 2px 5px rgba(0,0,0,0.45) !important;
+            color: var(--highlight) !important;
+            font-weight: 800 !important;
+            text-shadow: none !important;
+            transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+        }
+        html[data-pillars="on"] .num-btn:hover {
+            background: linear-gradient(145deg, #373b45, #2a2d35) !important;
+            color: #ffffff !important;
+        }
+        html[data-pillars="on"] .num-btn:active {
+            transform: translate(1px, 1px) !important;
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.6) !important;
+        }
+        html[data-pillars="on"] .num-btn.selected {
+            background: linear-gradient(145deg, #ee6414, var(--highlight)) !important;
+            color: #ffffff !important;
+            box-shadow: inset 1px 1px 0 rgba(255,255,255,0.35), 2px 2px 6px rgba(0,0,0,0.5) !important;
+        }
+        html[data-pillars="on"][data-theme="light"] .num-btn {
+            background: linear-gradient(145deg, #ffffff, #edf0f6) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), 2px 2px 5px rgba(0,0,0,0.12) !important;
+            color: var(--highlight) !important;
+            font-weight: 800 !important;
+            text-shadow: none !important;
+            transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+        }
+        html[data-pillars="on"][data-theme="light"] .num-btn:hover {
+            background: linear-gradient(145deg, #ffffff, #e4e8f0) !important;
+            color: var(--highlight) !important;
+        }
+        html[data-pillars="on"][data-theme="light"] .num-btn:active {
+            transform: translate(1px, 1px) !important;
+            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.15) !important;
+        }
+        html[data-pillars="on"][data-theme="light"] .num-btn.selected {
+            background: linear-gradient(145deg, #c24a00, var(--highlight)) !important;
+            color: #ffffff !important;
+            box-shadow: inset 1px 1px 0 rgba(255,255,255,0.35), 2px 2px 6px rgba(0,0,0,0.2) !important;
+        }
+
+        /* Pillars Control Action Buttons */
+        html[data-pillars="on"] .buttons-grid .restart-level-btn {
+            background: linear-gradient(145deg, #292c34, #202228) !important;
+            border: none !important;
+            border-radius: 11px !important;
+            box-shadow: inset 1px 1px 0 rgba(255,255,255,0.1), 2px 2px 5px rgba(0,0,0,0.4) !important;
+            color: #d0d4dc !important;
+            transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+        }
+        html[data-pillars="on"] .buttons-grid .restart-level-btn:hover {
+            color: var(--highlight) !important;
+        }
+        html[data-pillars="on"] .buttons-grid .restart-level-btn:active {
+            transform: translate(1px, 1px) !important;
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.6) !important;
+        }
+        html[data-pillars="on"][data-theme="light"] .buttons-grid .restart-level-btn {
+            background: linear-gradient(145deg, #ffffff, #edf0f5) !important;
+            border: none !important;
+            border-radius: 11px !important;
+            box-shadow: inset 1px 1px 0 rgba(255,255,255,0.9), 2px 2px 5px rgba(0,0,0,0.1) !important;
+            color: #202227 !important;
+            transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+        }
+        html[data-pillars="on"][data-theme="light"] .buttons-grid .restart-level-btn:hover {
+            color: var(--highlight) !important;
+        }
+        html[data-pillars="on"][data-theme="light"] .buttons-grid .restart-level-btn:active {
+            transform: translate(1px, 1px) !important;
+            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.15) !important;
+        }
+
+        /* Pillars Difficulty Dial */
+        html[data-pillars="on"] #level_indicator {
+            border: 2px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: inset 1px 1px 0 rgba(255,255,255,0.18), 3px 3px 12px rgba(0,0,0,0.65) !important;
+        }
+        html[data-pillars="on"][data-theme="light"] #level_indicator {
+            border: 2px solid rgba(0, 0, 0, 0.08) !important;
+            box-shadow: inset 1px 1px 0 rgba(255,255,255,0.9), 3px 3px 10px rgba(0,0,0,0.12) !important;
+        }
+
+        /* DISPLAY MODE CYCLING BUTTON */
+        .header-bar .display-mode-btn {
+            width: auto !important;
+            height: 44px !important;
+            padding: 0 14px !important;
+            gap: 8px;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 12px !important;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+        }
+
+        .header-bar .display-mode-btn:hover {
+            border-color: rgba(var(--highlight-rgb), 0.6);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .header-bar .display-mode-btn:active {
+            transform: scale(0.95);
+        }
+
+        [data-theme="light"] .header-bar .display-mode-btn {
+            background: #ffffff !important;
+            border: 2px solid rgba(0, 0, 0, 0.08) !important;
+            color: #1a1a1a !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        [data-theme="light"] .header-bar .display-mode-btn:hover {
+            border-color: var(--highlight) !important;
+            background: #fdfdfd !important;
+        }
+
+        .display-mode-btn .mode-icon {
+            opacity: 0.85;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .display-mode-btn:active .mode-icon {
+            transform: rotate(20deg);
+        }
+
+        .display-mode-btn .mode-label {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
 </head>
 
 <body>
@@ -2117,6 +2842,14 @@
             <div id="game-timer" class="timer-display">00:00</div>
         </div>
         <div class="header-right">
+            <button type="button" class="display-mode-btn" id="displayModeBtn" onclick="cycleDisplayMode()" title="Toggle display mode: Classic / Split-Flap / Pillars">
+                <svg class="mode-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+                <span class="mode-label" id="displayModeLabel">Pillars</span>
+            </button>
             <button id="pause_toggle" onclick="togglePause()" style="width: 44px; height: 44px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
                     <rect x="6" y="4" width="4" height="16"></rect>
@@ -2201,7 +2934,7 @@
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.6.7</div>
+    <div class="version-tag">V3.8.9</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -2248,7 +2981,7 @@
         <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 12px;">
             <button class="primary-btn" style="width: 100%; padding: 13px; background: rgba(var(--highlight-rgb), 0.15); border: 1px solid var(--highlight); font-weight: 700; letter-spacing: 1px; border-radius: 12px; cursor: pointer; color: var(--highlight);" onclick="revealPuzzle()">⚡ REVEAL PUZZLE</button>
             <button class="reset-btn" style="width: 100%;" onclick="resetAllData()">RESET ALL DATA</button>
-            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.6.5</div>
+            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.8.9</div>
         </div>
     </div>
 </div>
@@ -2292,7 +3025,7 @@
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
 <script src="puzzle-catalog.js?v=1"></script>
-<script src="script.js?v=3.6.7"></script>
+<script src="script.js?v=3.8.9"></script>
 <script>
     let isInitialized = false;
     
@@ -2331,6 +3064,39 @@
         el.textContent = (parts.length === 3 && parts[0] === '00') ? parts[1] + ':' + parts[2] : timeStr;
     }
 
+    function cycleDisplayMode() {
+        if (!window.game) return;
+        if (window.game.pillars) {
+            // Pillars -> Classic
+            window.game.setPillars(false);
+            window.game.setSplitFlap(false);
+            syncDisplayModeUI('default');
+        } else if (window.game.splitFlap) {
+            // Split-Flap -> Pillars
+            window.game.setPillars(true);
+            syncDisplayModeUI('pillars');
+        } else {
+            // Classic -> Split-Flap
+            window.game.setSplitFlap(true);
+            syncDisplayModeUI('splitflap');
+        }
+    }
+
+    function syncDisplayModeUI(mode) {
+        if (!mode && window.game) {
+            if (window.game.pillars) mode = 'pillars';
+            else if (window.game.splitFlap) mode = 'splitflap';
+            else mode = 'default';
+        }
+        mode = mode || 'default';
+        const label = document.getElementById('displayModeLabel');
+        if (label) {
+            if (mode === 'pillars') label.textContent = 'Pillars';
+            else if (mode === 'splitflap') label.textContent = 'Split-Flap';
+            else label.textContent = 'Classic';
+        }
+    }
+
     function toggleSettings() {
         const el = document.getElementById('settingsOverlay');
         if (el) {
@@ -2364,6 +3130,18 @@
     }
 
     function autoSolvePuzzle() { revealPuzzle(); }
+
+    function togglePillars(enabled) {
+        if (window.game) {
+            window.game.setPillars(enabled);
+        }
+    }
+
+    function toggleSplitFlap(enabled) {
+        if (window.game) {
+            window.game.setSplitFlap(enabled);
+        }
+    }
 
     function toggleAutoNotes(enabled) {
         if (window.game) {
@@ -2729,6 +3507,8 @@
         const savedPalette = localStorage.getItem('zudoku-palette') || '#DA5100';
         applyPalette(savedPalette);
         
+        syncDisplayModeUI();
+
         const timerEl = document.getElementById('timer');
         if (timerEl) {
             new MutationObserver(() => updateTimerDisplay(timerEl.textContent)).observe(timerEl, { childList: true, subtree: true });

@@ -45,6 +45,12 @@ class SudokuGame {
         
         // Auto Notes mode
         this.autoNotes = this.loadAutoNotesSetting();
+        this.splitFlap = this.loadSplitFlapSetting();
+        this.pillars = this.loadPillarsSetting();   // exclusive with split-flap
+        this._sfPermanent = new Set();   // tiles already shown as permanent (split-flap mode)
+        this._sfPermInit = false;        // first scan seeds the set without animating
+        this._sfHl = null;               // {number, tiles:Set} - tiles already flipped in for the current highlight
+        this._sfHlTimer = null;
         
         // Touch Keypad state
         this.touchKeypadActive = false;
@@ -668,6 +674,12 @@ class SudokuGame {
             const cell = document.createElement('div');
             cell.className = 'cell';
             cell.dataset.index = i;
+            const cr = Math.floor(i / 9), cc = i % 9;
+            const cbr = cr % 3, cbc = cc % 3;
+            if (cbr === 0 && cbc === 0) cell.dataset.corner = 'tl';
+            else if (cbr === 0 && cbc === 2) cell.dataset.corner = 'tr';
+            else if (cbr === 2 && cbc === 0) cell.dataset.corner = 'bl';
+            else if (cbr === 2 && cbc === 2) cell.dataset.corner = 'br';
             
             // Clean short-tap / long-press handler with progressing dial animation
             let touchTimer = null;
@@ -835,6 +847,47 @@ class SudokuGame {
             
             gridElement.appendChild(cell);
         }
+
+        // Split-flap mode: nine recessed trays (one per 3x3 section) sit behind the tiles.
+        // They are appended AFTER the 81 cells so the cells' nth-child numbering is untouched,
+        // and stay display:none unless split-flap mode is on.
+        for (let br = 0; br < 3; br++) {
+            for (let bc = 0; bc < 3; bc++) {
+                const tray = document.createElement('div');
+                tray.className = 'sf-tray';
+                tray.setAttribute('aria-hidden', 'true');
+                tray.style.gridColumn = `${bc * 4 + 1} / span 3`;
+                tray.style.gridRow = `${br * 4 + 1} / span 3`;
+                gridElement.appendChild(tray);
+            }
+        }
+
+        // Pillars mode (top-down): one shadow layer per height level (1, 3, 5). A layer sits between the tiles of
+        // the next lower and its own level, so a pillar's shadow falls ONLY on lower surfaces, and because each
+        // layer is a single object the overlapping shadows read as one even tone (no darker overlaps).
+        for (const L of [1, 3, 5]) {
+            const layer = document.createElement('div');
+            layer.className = 'shl';
+            layer.dataset.l = String(L);
+            layer.setAttribute('aria-hidden', 'true');
+            for (let i = 0; i < 81; i++) {
+                const r = Math.floor(i / 9), c = i % 9;
+                const colLine = c + Math.floor(c / 3) + 1, rowLine = r + Math.floor(r / 3) + 1;
+                const sh = document.createElement('div');
+                sh.className = 'sh';
+                sh.dataset.on = '0';
+                sh.style.gridColumn = `${colLine} / ${colLine + 1}`;
+                sh.style.gridRow = `${rowLine} / ${rowLine + 1}`;
+                const sbr = r % 3, sbc = c % 3;
+                if (sbr === 0 && sbc === 0) sh.dataset.corner = 'tl';
+                else if (sbr === 0 && sbc === 2) sh.dataset.corner = 'tr';
+                else if (sbr === 2 && sbc === 0) sh.dataset.corner = 'bl';
+                else if (sbr === 2 && sbc === 2) sh.dataset.corner = 'br';
+                layer.appendChild(sh);
+            }
+            gridElement.appendChild(layer);
+        }
+        this._initPillarObserver(gridElement);
     }
     
     cycleHighlightNumber(direction) {
@@ -1180,8 +1233,12 @@ class SudokuGame {
     }
     
     highlightAllInstances(number) {
+        if (this._sfHlTimer) { clearTimeout(this._sfHlTimer); this._sfHlTimer = null; }
+        const sfPrev = this._sfHl;
         // Clear previous highlights
         this.clearHighlights();
+        // ...but we are re-highlighting right now, so keep the memory of which tiles already flapped
+        if (this._sfHlTimer) { clearTimeout(this._sfHlTimer); this._sfHlTimer = null; }
         this.clearNoteHighlights();
         
         // Notify UI that a number is being highlighted
@@ -1221,9 +1278,28 @@ class SudokuGame {
             const btn = document.querySelector(`.num-btn[data-number="${number}"]`);
             if (btn) btn.classList.add('selected');
         }
+
+        // Split-flap: only tiles that are NEW to this highlight flap. Tiles already showing
+        // the highlight (same number) stay still when another one is added.
+        if (number > 0) {
+            const idx = [];
+            for (let i = 0; i < 81; i++) {
+                if (this.grid[Math.floor(i / 9)][i % 9] === number) idx.push(i);
+            }
+            const known = (sfPrev && sfPrev.number === number) ? sfPrev.tiles : null;
+            const fresh = known ? idx.filter(i => !known.has(i)) : idx;
+            this._sfHl = { number, tiles: new Set(idx) };
+            if (this.splitFlap && fresh.length) this.sfFlip(fresh);
+        } else {
+            this._sfHl = null;
+        }
     }
 
     clearHighlights() {
+        // A clear that is followed right away by a re-highlight (e.g. after placing a number) keeps
+        // the memory of what already flapped; a real dismissal forgets it shortly after.
+        if (this._sfHlTimer) clearTimeout(this._sfHlTimer);
+        this._sfHlTimer = setTimeout(() => { this._sfHl = null; this._sfHlTimer = null; }, 300);
         // Notify UI that highlights are being cleared
         if (typeof this.onHighlightChange === 'function') {
             this.onHighlightChange(null);
@@ -1873,6 +1949,8 @@ class SudokuGame {
             if (cell.classList.contains('split-flap-lock')) newClasses.push('split-flap-lock');
             if (cell.classList.contains('flip-correct')) newClasses.push('flip-correct');
             if (cell.classList.contains('number-place-animation')) newClasses.push('number-place-animation');
+            if (cell.classList.contains('sf-cycle')) newClasses.push('sf-cycle');
+            if (cell.classList.contains('sf-lock')) newClasses.push('sf-lock');
 
             // Only update DOM if changed
             const classString = newClasses.join(' ');
@@ -1953,7 +2031,7 @@ class SudokuGame {
         }
         
         // Check if the number was just completed across the entire grid
-        if (this.isNumberComplete(lastMoveNumber)) {
+        if (lastMoveNumber > 0 && this.isNumberComplete(lastMoveNumber)) {
             this.highlightNumber(lastMoveNumber);
             highlighted = true;
         }
@@ -1998,6 +2076,12 @@ class SudokuGame {
         for (let col = 0; col < 9; col++) {
             indices.push(row * 9 + col);
         }
+        if (this.pillars) {
+            this.fullCompletionScan();
+            this.triggerPillarSettle(indices);
+            return;
+        }
+        if (this.splitFlap) { this.fullCompletionScan(); return; }
         indices.forEach(index => {
             this.celebratingCells.add(index);
             const cell = document.querySelector(`[data-index="${index}"]`);
@@ -2020,6 +2104,12 @@ class SudokuGame {
         for (let row = 0; row < 9; row++) {
             indices.push(row * 9 + col);
         }
+        if (this.pillars) {
+            this.fullCompletionScan();
+            this.triggerPillarSettle(indices);
+            return;
+        }
+        if (this.splitFlap) { this.fullCompletionScan(); return; }
         indices.forEach(index => {
             this.celebratingCells.add(index);
             const cell = document.querySelector(`[data-index="${index}"]`);
@@ -2079,6 +2169,12 @@ class SudokuGame {
                 indices.push(row * 9 + col);
             }
         }
+        if (this.pillars) {
+            this.fullCompletionScan();
+            this.triggerPillarSettle(indices);
+            return;
+        }
+        if (this.splitFlap) { this.fullCompletionScan(); return; }
         indices.forEach(index => {
             this.celebratingCells.add(index);
             const cell = document.querySelector(`[data-index="${index}"]`);
@@ -2117,6 +2213,12 @@ class SudokuGame {
                 }
             }
         }
+        if (this.pillars) {
+            this.fullCompletionScan();
+            this.triggerPillarSettle(indices);
+            return;
+        }
+        if (this.splitFlap) { this.sfFlip(indices); return; }
         indices.forEach(index => {
             this.celebratingCells.add(index);
             const cell = document.querySelector(`[data-index="${index}"]`);
@@ -2133,12 +2235,35 @@ class SudokuGame {
             this.fullCompletionScan();
         }, 450);
     }
+
+    // Concept 1: Hydraulic Piston Settle (strictly for Pillars mode)
+    triggerPillarSettle(indices) {
+        if (!this.pillars || !indices || indices.length === 0) return;
+        indices.forEach(idx => {
+            const cell = document.querySelector(`.cell[data-index="${idx}"]`);
+            if (cell) {
+                cell.classList.remove('pillar-settle');
+                void cell.offsetWidth;
+                cell.classList.add('pillar-settle');
+            }
+        });
+        setTimeout(() => {
+            indices.forEach(idx => {
+                const cell = document.querySelector(`.cell[data-index="${idx}"]`);
+                if (cell) cell.classList.remove('pillar-settle');
+            });
+        }, 550);
+    }
     
     fullCompletionScan() {
         const completedCells = new Set();
+        const sf = !!this.splitFlap;
+        // Split-flap: a zone only becomes permanent when it is filled with the *correct* digits
+        const ok = (r, c) => !sf || !this.solution || !this.solution[r][c] || this.solution[r][c] === this.grid[r][c];
         
         // 1. Identify all cells that belong to completed number sets
-        for (let n = 1; n <= 9; n++) if (this.isNumberComplete(n)) {
+        //    (split-flap mode keeps permanent tiles to whole rows/columns/blocks so blocks never look scattered)
+        if (!sf) for (let n = 1; n <= 9; n++) if (this.isNumberComplete(n)) {
             for (let r = 0; r < 9; r++) {
                 for (let c = 0; c < 9; c++) if (this.grid[r][c] === n) completedCells.add(r * 9 + c);
             }
@@ -2146,7 +2271,7 @@ class SudokuGame {
 
         // 2. Identify all cells in completed rows
         for (let r = 0; r < 9; r++) {
-            if (this.isRowComplete(r)) {
+            if (this.isRowComplete(r) && [0,1,2,3,4,5,6,7,8].every(c => ok(r, c))) {
                 for (let c = 0; c < 9; c++) {
                     completedCells.add(r * 9 + c);
                 }
@@ -2155,7 +2280,7 @@ class SudokuGame {
 
         // 3. Identify all cells in completed columns
         for (let c = 0; c < 9; c++) {
-            if (this.isColumnComplete(c)) {
+            if (this.isColumnComplete(c) && [0,1,2,3,4,5,6,7,8].every(r => ok(r, c))) {
                 for (let r = 0; r < 9; r++) {
                     completedCells.add(r * 9 + c);
                 }
@@ -2165,7 +2290,11 @@ class SudokuGame {
         // 4. Identify all cells in completed blocks (sections)
         for (let br = 0; br < 3; br++) {
             for (let bc = 0; bc < 3; bc++) {
-                if (this.isBlockComplete(br, bc)) {
+                let blockOk = this.isBlockComplete(br, bc);
+                for (let r = br * 3; blockOk && r < br * 3 + 3; r++) {
+                    for (let c = bc * 3; blockOk && c < bc * 3 + 3; c++) blockOk = ok(r, c);
+                }
+                if (blockOk) {
                     const startRow = br * 3;
                     const startCol = bc * 3;
                     for (let r = startRow; r < startRow + 3; r++) {
@@ -2189,6 +2318,23 @@ class SudokuGame {
                     cell.classList.remove('zone-completed');
                 }
             }
+        }
+
+        // Split-flap: one quiet flap for tiles that just became permanent
+        if (sf) {
+            const nowPermanent = new Set();
+            const fresh = [];
+            completedCells.forEach(i => {
+                if (this.celebratingCells.has(i)) return;
+                nowPermanent.add(i);
+                if (!this._sfPermanent.has(i)) fresh.push(i);
+            });
+            const animate = this._sfPermInit && !this.isAutoSolving && !this.wasAutoSolved;
+            this._sfPermanent = nowPermanent;
+            this._sfPermInit = true;
+            if (animate && fresh.length) this.sfFlip(fresh.sort((x, y) => x - y));
+        } else if (this._sfPermanent.size) {
+            this._sfPermanent = new Set();
         }
     }
 
@@ -5190,6 +5336,189 @@ class SudokuGame {
     }
     
     // Auto Notes setting & candidate population
+    loadSplitFlapSetting() {
+        const on = localStorage.getItem('zudoku-split-flap') === 'true';
+        document.documentElement.setAttribute('data-splitflap', on ? 'on' : 'off');
+        return on;
+    }
+
+    setSplitFlap(enabled) {
+        if (enabled && this.pillars) this.setPillars(false);
+        this.splitFlap = !!enabled;
+        localStorage.setItem('zudoku-split-flap', this.splitFlap ? 'true' : 'false');
+        document.documentElement.setAttribute('data-splitflap', this.splitFlap ? 'on' : 'off');
+        // Re-seed so switching the mode never triggers a wave of flips
+        this._sfPermInit = false;
+        this._sfHl = null;
+        this.updateDisplay();
+        this._syncModeToggles();
+    }
+
+    // ---------------------------------------------------------------------------------
+    // PILLARS display mode: every tile is a pillar in a fixed 3D scene.
+    //   empty = flat | pre-revealed = 3 units | highlighted = 5 units | permanent = 1 unit
+    // Heights are derived from the tile's existing state (classes / text), so no game logic is touched.
+    // ---------------------------------------------------------------------------------
+    loadPillarsSetting() {
+        let on = localStorage.getItem('zudoku-pillars') === 'true';
+        if (on && localStorage.getItem('zudoku-split-flap') === 'true') {   // never both
+            localStorage.setItem('zudoku-split-flap', 'false');
+            this.splitFlap = false;
+            document.documentElement.setAttribute('data-splitflap', 'off');
+        }
+        document.documentElement.setAttribute('data-pillars', on ? 'on' : 'off');
+        return on;
+    }
+
+    setPillars(enabled) {
+        enabled = !!enabled;
+        if (enabled && this.splitFlap) {
+            this.splitFlap = false;
+            localStorage.setItem('zudoku-split-flap', 'false');
+            document.documentElement.setAttribute('data-splitflap', 'off');
+            this._sfHl = null;
+            this._sfPermInit = false;
+        }
+        this.pillars = enabled;
+        localStorage.setItem('zudoku-pillars', enabled ? 'true' : 'false');
+        document.documentElement.setAttribute('data-pillars', enabled ? 'on' : 'off');
+        this.updateDisplay();
+        this.syncPillars();
+        this._syncModeToggles();
+    }
+
+    _syncModeToggles() {
+        const a = document.getElementById('split_flap_toggle');
+        const b = document.getElementById('pillars_toggle');
+        if (a) a.checked = !!this.splitFlap;
+        if (b) b.checked = !!this.pillars;
+        let mode = 'default';
+        if (this.pillars) mode = 'pillars';
+        else if (this.splitFlap) mode = 'splitflap';
+        if (typeof syncDisplayModeUI === 'function') {
+            syncDisplayModeUI(mode);
+        }
+    }
+
+    // State and level of one tile: highlighted and pre-revealed both = 3 units, permanent = 1 unit, empty = 0 units
+    _pillarState(cell) {
+        if (cell.classList.contains('notes')) return { state: 'empty', lvl: 0 };
+        if (cell.textContent.trim() === '') return { state: 'empty', lvl: 0 };
+        if (cell.classList.contains('same-number-highlight')) return { state: 'hl', lvl: 3 };
+        if (cell.classList.contains('zone-completed')) return { state: 'perm', lvl: 1 };
+        return { state: 'fill', lvl: 3 };
+    }
+
+    syncPillars() {
+        const grid = document.getElementById('sudokuGrid');
+        if (!grid) return;
+        const cells = grid.querySelectorAll(':scope > .cell');
+        const levels = [];
+        cells.forEach((cell, i) => {
+            const { state, lvl } = this._pillarState(cell);
+            levels.push(lvl);
+            if (cell.dataset.s !== state) cell.dataset.s = state;
+            cell.style.setProperty('--lvl', lvl);
+        });
+        // each shadow layer shows the shadows of exactly the pillars of its own level
+        grid.querySelectorAll(':scope > .shl').forEach(layer => {
+            const L = +layer.dataset.l;
+            const kids = layer.children;
+            for (let i = 0; i < kids.length; i++) {
+                const on = levels[i] === L ? '1' : '0';
+                if (kids[i].dataset.on !== on) kids[i].dataset.on = on;
+            }
+        });
+    }
+
+    _initPillarObserver(grid) {
+        if (this._pillarObserver) this._pillarObserver.disconnect();
+        // MutationObserver already batches every burst of DOM changes into one callback
+        this._pillarObserver = new MutationObserver(() => this.syncPillars());
+        // class changes (highlight / completed / notes) and text changes (placed / erased)
+        this._pillarObserver.observe(grid, { subtree: true, attributes: true, attributeFilter: ['class'], childList: true, characterData: true });
+        this.syncPillars();
+    }
+
+    // Circular 1-9 reel that rolls forward and lands on the target digit
+    getReelSequence(target, count = 4) {
+        const seq = [];
+        for (let step = count - 1; step >= 1; step--) {
+            seq.push(((target - step - 1) % 9 + 9) % 9 + 1);
+        }
+        seq.push(target);
+        return seq;
+    }
+
+    // Split-flap cascade: tiles flip through a few digits (clack each), then lock onto their number
+    sfFlip(indices, stagger = 38) {
+        if (!this.splitFlap || !indices || indices.length === 0) return;
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        this._sfTokens = this._sfTokens || {};
+        indices.forEach((index, n) => {
+            const token = Symbol('sf_' + index);
+            this._sfTokens[index] = token;          // a newer wave on the same tile supersedes this one
+            setTimeout(() => this._sfRunTile(index, token), n * stagger);
+        });
+    }
+
+    _sfRunTile(index, token) {
+        const r = Math.floor(index / 9);
+        const c = index % 9;
+        const target = this.grid[r][c];
+        if (!target) return;
+        const cell = (this.cellCache && this.cellCache[index]) || document.querySelector(`[data-index="${index}"]`);
+        if (!cell) return;
+        const live = () => this._sfTokens && this._sfTokens[index] === token;
+        const clean = () => {
+            cell.classList.remove('sf-cycle', 'sf-lock');
+            if (live()) delete this._sfTokens[index];
+        };
+        const abort = () => {            // value changed under us (erased / replaced): let updateDisplay repaint
+            clean();
+            this.updateDisplay();
+        };
+        const seq = this.getReelSequence(target, 4);
+        let step = 0;
+
+        const run = () => {
+            if (!live()) return;
+            if (this.grid[r][c] !== target) { abort(); return; }
+            const last = step === seq.length - 1;
+            cell.classList.remove('sf-cycle', 'sf-lock');
+            void cell.offsetWidth;       // restart the flap animation
+            cell.classList.add('sf-cycle');
+            this.sfClack('flap');
+            if (typeof this.vibrate === 'function') this.vibrate(last ? 18 : 8);
+
+            // number swaps while the flap is edge-on
+            setTimeout(() => {
+                if (!live()) return;
+                if (this.grid[r][c] !== target) { abort(); return; }
+                cell.textContent = String(seq[step]);
+                if (last) {
+                    setTimeout(() => {
+                        if (!live()) return;
+                        cell.classList.remove('sf-cycle');
+                        void cell.offsetWidth;
+                        cell.classList.add('sf-lock');
+                        this.sfClack('lock');        // solid lock latch
+                        setTimeout(() => {
+                            if (!live()) return;
+                            clean();
+                            const v = this.grid[r][c];
+                            cell.textContent = v ? String(v) : '';
+                        }, 280);
+                    }, 40);
+                } else {
+                    step++;
+                    setTimeout(run, 40);
+                }
+            }, 36);
+        };
+        run();
+    }
+
     loadAutoNotesSetting() {
         return localStorage.getItem('zudoku-auto-notes') === 'true';
     }
@@ -5712,6 +6041,14 @@ class SudokuGame {
     initAudio() {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            // Browsers start a context created before any tap in the 'suspended' state - resume it on user gestures
+            const unlock = () => {
+                if (this.audioContext && this.audioContext.state !== 'running') {
+                    try { this.audioContext.resume(); } catch (e) {}
+                }
+            };
+            ['pointerdown', 'touchstart', 'touchend', 'mousedown', 'keydown'].forEach(ev =>
+                document.addEventListener(ev, unlock, { passive: true, capture: true }));
             this.updateAudioUI();
         } catch (e) {
             console.log('Audio not supported:', e);
@@ -5750,6 +6087,7 @@ class SudokuGame {
     
     playSound(soundType) {
         if (!this.soundsEnabled || !this.audioContext) return;
+        if (this.audioContext.state === 'suspended') { try { this.audioContext.resume(); } catch (e) {} }
         
         try {
             // Create a more sophisticated sound using multiple oscillators and filters
@@ -5912,6 +6250,87 @@ class SudokuGame {
             }
         } catch (e) {
             console.log('Sound playback error:', e);
+        }
+    }
+
+    // Split-flap sounds, synthesised from noise transients the way a real Solari board sounds:
+    //  flap = dry plastic card slap + a tiny bounce + the riffle of the card brushing the stack + faint housing thump
+    //  lock = the same but heavier, with a double bounce and a deeper thud when the final card seats
+    // Every click is randomised slightly (pitch, level, timing) so a cascade rattles instead of machine-gunning.
+    sfClack(kind = 'flap') {
+        const ctx = this.audioContext;
+        if (!this.soundsEnabled || !ctx) return;
+        try {
+            if (ctx.state === 'suspended') ctx.resume();
+            const t0 = ctx.currentTime;
+            const rnd = (a, b) => a + Math.random() * (b - a);
+
+            // one shared white-noise buffer (cheap to reuse for dozens of clicks)
+            if (!this._sfNoise || this._sfNoise.sampleRate !== ctx.sampleRate) {
+                const len = Math.floor(ctx.sampleRate * 0.25);
+                const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+                const d = buf.getChannelData(0);
+                for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+                this._sfNoise = buf;
+            }
+
+            const out = ctx.createGain();
+            out.gain.value = kind === 'lock' ? 0.85 : 0.6;
+            // gentle low-pass: real flaps are plastic, not hissy
+            const lp = ctx.createBiquadFilter();
+            lp.type = 'lowpass';
+            lp.frequency.value = 7500;
+            out.connect(lp);
+            lp.connect(ctx.destination);
+
+            // a single click: filtered noise with a near-instant attack and a fast decay
+            const click = (at, dur, hz, q, peak, type = 'bandpass') => {
+                const src = ctx.createBufferSource();
+                src.buffer = this._sfNoise;
+                const f = ctx.createBiquadFilter();
+                f.type = type;
+                f.frequency.value = hz * rnd(0.92, 1.08);
+                f.Q.value = q;
+                const g = ctx.createGain();
+                const t = t0 + at;
+                g.gain.setValueAtTime(0.0001, t);
+                g.gain.linearRampToValueAtTime(peak * rnd(0.8, 1.15), t + 0.0007);
+                g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+                src.connect(f); f.connect(g); g.connect(out);
+                src.start(t, rnd(0, 0.15), dur + 0.01);
+            };
+            // low "box" resonance - the board housing ringing for a moment
+            const thump = (at, f0, f1, dur, peak) => {
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                const t = t0 + at;
+                o.type = 'sine';
+                o.frequency.setValueAtTime(f0 * rnd(0.94, 1.06), t);
+                o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+                g.gain.setValueAtTime(0.0001, t);
+                g.gain.linearRampToValueAtTime(peak, t + 0.002);
+                g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+                o.connect(g); g.connect(out);
+                o.start(t); o.stop(t + dur + 0.01);
+            };
+
+            if (kind === 'lock') {
+                click(0.000, 0.030, 2300, 0.8, 0.70);             // card slaps down
+                click(0.000, 0.012, 5200, 0.7, 0.30, 'highpass'); // sharp edge of the slap
+                click(0.011, 0.020, 2900, 1.0, 0.40);             // bounce 1
+                click(0.024, 0.014, 3400, 1.2, 0.22);             // bounce 2 (settling)
+                thump(0.000, 150, 62, 0.085, 0.45);               // seats into the housing
+                thump(0.000, 410, 240, 0.040, 0.14);              // plastic body
+            } else {
+                click(0.000, 0.020, rnd(2000, 2800), 0.9, 0.52);  // card slap
+                click(0.000, 0.008, 5600, 0.7, 0.16, 'highpass'); // edge
+                click(0.009, 0.014, rnd(2800, 3500), 1.1, 0.24);  // little bounce
+                // riffle: the card brushing past the stack as it falls (3 very quiet, very fast ticks)
+                [0.0035, 0.0065, 0.0095].forEach(at => click(at, 0.004, rnd(4200, 5600), 1.4, 0.10));
+                thump(0.000, rnd(150, 190), 90, 0.040, 0.16);
+            }
+        } catch (e) {
+            console.log('Split-flap sound error:', e);
         }
     }
 
