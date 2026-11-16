@@ -37,9 +37,9 @@ const LEVELS = {
         { clues: [24, 28], ok: m => m.max >= 3.2 && m.max <= 4.0 && m.ns <= 8 }
     ],
     expert: [
-        { clues: [22, 26], ok: m => m.max >= 4.2 && m.max <= 6.0 && m.ns >= 2 && m.ns <= 4 },
-        { clues: [22, 25], ok: m => m.max >= 4.2 && m.max <= 6.0 && m.ns >= 5 && m.ns <= 8 },
-        { clues: [21, 25], ok: m => m.max >= 4.2 && m.max <= 6.0 && m.ns >= 9 && m.ns <= 16 }
+        { clues: [23, 25], ok: m => m.max >= 4.2 && m.max <= 4.4 && m.ns >= 4 && m.ns <= 10 },
+        { clues: [22, 24], ok: m => m.max >= 4.6 && m.max <= 5.0 && m.ns >= 5 && m.ns <= 12 },
+        { clues: [21, 24], ok: m => m.max >= 5.2 && m.max <= 6.0 && m.ns >= 6 }
     ]
 };
 const perLevel = Number(process.argv[2] || 100);

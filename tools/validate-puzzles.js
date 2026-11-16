@@ -222,6 +222,12 @@ for (const [tier, band] of Object.entries(tierBands)) {
         if (!grade.solved) failures.push(`${tag}: solver cannot finish`);
         else if (grade.maxStepDifficulty < band.min || grade.maxStepDifficulty > band.max) {
             failures.push(`${tag}: rating ${grade.maxStepDifficulty} outside ${band.min}-${band.max}`);
+        } else if (tier === 'expert') {
+            const expSubBands = [[4.2, 4.4], [4.6, 5.0], [5.2, 6.0]];
+            const [sMin, sMax] = expSubBands[entry.l] || [4.2, 6.0];
+            if (grade.maxStepDifficulty < sMin || grade.maxStepDifficulty > sMax) {
+                failures.push(`${tag} (L${entry.l + 1}): rating ${grade.maxStepDifficulty} outside ${sMin}-${sMax}`);
+            }
         }
         if (failures.length === before) ok++;
     });

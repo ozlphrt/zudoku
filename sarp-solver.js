@@ -21,7 +21,20 @@ class SarpSolver {
             'Swordfish': 3.8,
             'Hidden Triple': 4.0,
             'XY-Wing': 4.2,
-            'Simple Coloring': 4.2,
+            'XYZ-Wing': 4.4,
+            'Skyscraper': 4.4,
+            '2-String Kite': 4.4,
+            'W-Wing': 4.6,
+            'Empty Rectangle': 4.6,
+            'Finned X-Wing': 4.6,
+            'Simple Coloring': 4.8,
+            'Naked Quad': 5.0,
+            'XY-Chain': 5.2,
+            'Long XY-Chain': 5.4,
+            'Hidden Quad': 5.4,
+            '3D Medusa': 5.6,
+            'AIC': 5.8,
+            'Extended AIC': 6.0,
             'Forcing Chain': 7.0
         };
     }
@@ -117,11 +130,22 @@ class SarpSolver {
                this.findBoxLineReduction(grid, candidates) ||
                this.findHiddenPair(grid, candidates) ||
                this.findNakedTriple(grid, candidates) ||
-               this.findHiddenTriple(grid, candidates) ||
                this.findXWing(grid, candidates) ||
-               this.findXYWing(grid, candidates) ||
                this.findSwordfish(grid, candidates) ||
-               this.findSimpleColoring(grid, candidates);
+               this.findHiddenTriple(grid, candidates) ||
+               this.findXYWing(grid, candidates) ||
+               this.findXYZWing(grid, candidates) ||
+               this.findSkyscraper(grid, candidates) ||
+               this.findTwoStringKite(grid, candidates) ||
+               this.findWWing(grid, candidates) ||
+               this.findEmptyRectangle(grid, candidates) ||
+               this.findFinnedXWing(grid, candidates) ||
+               this.findSimpleColoring(grid, candidates) ||
+               this.findNakedQuad(grid, candidates) ||
+               this.findXYChain(grid, candidates) ||
+               this.findHiddenQuad(grid, candidates) ||
+               this.find3DMedusa(grid, candidates) ||
+               this.findAIC(grid, candidates);
     }
 
     applyStep(grid, candidates, step) {
@@ -580,6 +604,43 @@ class SarpSolver {
                     }
                 }
             }
+
+            // Columns X-Wing (symmetric so board transpositions grade identically)
+            const colPositions = [];
+            for (let c = 0; c < 9; c++) {
+                const rows = [];
+                for (let r = 0; r < 9; r++) {
+                    if (grid[r][c] === 0 && candidates[r][c].has(num)) rows.push(r);
+                }
+                if (rows.length === 2) colPositions.push({ c, rows });
+            }
+
+            if (colPositions.length >= 2) {
+                for (let i = 0; i < colPositions.length; i++) {
+                    for (let j = i + 1; j < colPositions.length; j++) {
+                        const c1 = colPositions[i];
+                        const c2 = colPositions[j];
+                        if (c1.rows[0] === c2.rows[0] && c1.rows[1] === c2.rows[1]) {
+                            const candidatesRemoved = [];
+                            const r1 = c1.rows[0], r2 = c1.rows[1];
+                            for (let c = 0; c < 9; c++) {
+                                if (c === c1.c || c === c2.c) continue;
+                                if (grid[r1][c] === 0 && candidates[r1][c].has(num)) candidatesRemoved.push({ row: r1, col: c, number: num });
+                                if (grid[r2][c] === 0 && candidates[r2][c].has(num)) candidatesRemoved.push({ row: r2, col: c, number: num });
+                            }
+                            if (candidatesRemoved.length > 0) {
+                                return {
+                                    technique: 'X-Wing',
+                                    type: 'elimination',
+                                    difficultyWeight: this.weights['X-Wing'],
+                                    candidatesRemoved: candidatesRemoved,
+                                    reason: `X-Wing for ${num} in columns ${c1.c+1}, ${c2.c+1} and rows ${r1+1}, ${r2+1}.`
+                                };
+                            }
+                        }
+                    }
+                }
+            }
         }
         return null;
     }
@@ -649,15 +710,826 @@ class SarpSolver {
     }
 
     findSwordfish(grid, candidates) {
-        // Implementation similar to X-Wing but for 3 rows/cols
+        for (let num = 1; num <= 9; num++) {
+            // Row-based Swordfish
+            const rowLines = [];
+            for (let r = 0; r < 9; r++) {
+                const cols = [];
+                for (let c = 0; c < 9; c++) {
+                    if (grid[r][c] === 0 && candidates[r][c].has(num)) cols.push(c);
+                }
+                if (cols.length >= 2 && cols.length <= 3) rowLines.push({ r, cols });
+            }
+            if (rowLines.length >= 3) {
+                for (const trio of this.getCombinations(rowLines, 3)) {
+                    const colSet = new Set();
+                    for (const row of trio) for (const c of row.cols) colSet.add(c);
+                    if (colSet.size === 3) {
+                        const rowSet = new Set(trio.map(x => x.r));
+                        const removed = [];
+                        for (const c of colSet) {
+                            for (let r = 0; r < 9; r++) {
+                                if (rowSet.has(r)) continue;
+                                if (grid[r][c] === 0 && candidates[r][c].has(num)) removed.push({ row: r, col: c, number: num });
+                            }
+                        }
+                        if (removed.length > 0) {
+                            return {
+                                technique: 'Swordfish',
+                                type: 'elimination',
+                                difficultyWeight: this.weights['Swordfish'],
+                                candidatesRemoved: removed,
+                                reason: `Swordfish for ${num} in rows ${trio.map(x => x.r + 1).join(', ')}.`
+                            };
+                        }
+                    }
+                }
+            }
+
+            // Column-based Swordfish
+            const colLines = [];
+            for (let c = 0; c < 9; c++) {
+                const rows = [];
+                for (let r = 0; r < 9; r++) {
+                    if (grid[r][c] === 0 && candidates[r][c].has(num)) rows.push(r);
+                }
+                if (rows.length >= 2 && rows.length <= 3) colLines.push({ c, rows });
+            }
+            if (colLines.length >= 3) {
+                for (const trio of this.getCombinations(colLines, 3)) {
+                    const rowSet = new Set();
+                    for (const col of trio) for (const r of col.rows) rowSet.add(r);
+                    if (rowSet.size === 3) {
+                        const colSet = new Set(trio.map(x => x.c));
+                        const removed = [];
+                        for (const r of rowSet) {
+                            for (let c = 0; c < 9; c++) {
+                                if (colSet.has(c)) continue;
+                                if (grid[r][c] === 0 && candidates[r][c].has(num)) removed.push({ row: r, col: c, number: num });
+                            }
+                        }
+                        if (removed.length > 0) {
+                            return {
+                                technique: 'Swordfish',
+                                type: 'elimination',
+                                difficultyWeight: this.weights['Swordfish'],
+                                candidatesRemoved: removed,
+                                reason: `Swordfish for ${num} in columns ${trio.map(x => x.c + 1).join(', ')}.`
+                            };
+                        }
+                    }
+                }
+            }
+        }
         return null;
     }
 
+    // 4.4: XYZ-Wing — 3-candidate pivot {X,Y,Z} with two bivalue pincer peers {X,Z} and {Y,Z}
+    findXYZWing(grid, candidates) {
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid[r][c] !== 0 || candidates[r][c].size !== 3) continue;
+                const pVals = [...candidates[r][c]];
+                const subPeers = this.getPeers(r, c).filter(p =>
+                    grid[p.r][p.c] === 0 &&
+                    candidates[p.r][p.c].size === 2 &&
+                    [...candidates[p.r][p.c]].every(v => candidates[r][c].has(v))
+                );
+                for (let i = 0; i < subPeers.length; i++) {
+                    for (let j = i + 1; j < subPeers.length; j++) {
+                        const p1 = subPeers[i], p2 = subPeers[j];
+                        const v1 = [...candidates[p1.r][p1.c]], v2 = [...candidates[p2.r][p2.c]];
+                        if (v1[0] === v2[0] && v1[1] === v2[1]) continue;
+                        const shared = v1.filter(v => v2.includes(v));
+                        if (shared.length !== 1) continue;
+                        const Z = shared[0];
+                        const removed = [];
+                        for (const peer of this.getPeers(r, c)) {
+                            if ((peer.r === p1.r && peer.c === p1.c) || (peer.r === p2.r && peer.c === p2.c)) continue;
+                            if (grid[peer.r][peer.c] === 0 && candidates[peer.r][peer.c].has(Z) &&
+                                this.arePeers(peer.r, peer.c, p1.r, p1.c) && this.arePeers(peer.r, peer.c, p2.r, p2.c)) {
+                                removed.push({ row: peer.r, col: peer.c, number: Z });
+                            }
+                        }
+                        if (removed.length > 0) {
+                            return {
+                                technique: 'XYZ-Wing',
+                                type: 'elimination',
+                                difficultyWeight: this.weights['XYZ-Wing'],
+                                candidatesRemoved: removed,
+                                reason: `XYZ-Wing on {${pVals.join(',')}} at pivot (${r+1},${c+1}) with pincers (${p1.r+1},${p1.c+1}) and (${p2.r+1},${p2.c+1}).`
+                            };
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // 4.4: Skyscraper — two conjugate pairs in parallel lines sharing one cross-line
+    findSkyscraper(grid, candidates) {
+        for (let num = 1; num <= 9; num++) {
+            const biRows = [];
+            for (let r = 0; r < 9; r++) {
+                const cols = [];
+                for (let c = 0; c < 9; c++) if (grid[r][c] === 0 && candidates[r][c].has(num)) cols.push(c);
+                if (cols.length === 2) biRows.push({ r, cols });
+            }
+            for (let i = 0; i < biRows.length; i++) {
+                for (let j = i + 1; j < biRows.length; j++) {
+                    const a = biRows[i], b = biRows[j];
+                    for (let ai = 0; ai < 2; ai++) {
+                        for (let bi = 0; bi < 2; bi++) {
+                            if (a.cols[ai] === b.cols[bi] && a.cols[1 - ai] !== b.cols[1 - bi]) {
+                                const e1 = { r: a.r, c: a.cols[1 - ai] }, e2 = { r: b.r, c: b.cols[1 - bi] };
+                                const removed = [];
+                                for (let r = 0; r < 9; r++) {
+                                    for (let c = 0; c < 9; c++) {
+                                        if (grid[r][c] === 0 && candidates[r][c].has(num) &&
+                                            !(r === e1.r && c === e1.c) && !(r === e2.r && c === e2.c) &&
+                                            this.arePeers(r, c, e1.r, e1.c) && this.arePeers(r, c, e2.r, e2.c)) {
+                                            removed.push({ row: r, col: c, number: num });
+                                        }
+                                    }
+                                }
+                                if (removed.length > 0) {
+                                    return {
+                                        technique: 'Skyscraper',
+                                        type: 'elimination',
+                                        difficultyWeight: this.weights['Skyscraper'],
+                                        candidatesRemoved: removed,
+                                        reason: `Skyscraper for ${num} in rows ${a.r+1} and ${b.r+1} sharing column ${a.cols[ai]+1}.`
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            const biCols = [];
+            for (let c = 0; c < 9; c++) {
+                const rows = [];
+                for (let r = 0; r < 9; r++) if (grid[r][c] === 0 && candidates[r][c].has(num)) rows.push(r);
+                if (rows.length === 2) biCols.push({ c, rows });
+            }
+            for (let i = 0; i < biCols.length; i++) {
+                for (let j = i + 1; j < biCols.length; j++) {
+                    const a = biCols[i], b = biCols[j];
+                    for (let ai = 0; ai < 2; ai++) {
+                        for (let bi = 0; bi < 2; bi++) {
+                            if (a.rows[ai] === b.rows[bi] && a.rows[1 - ai] !== b.rows[1 - bi]) {
+                                const e1 = { r: a.rows[1 - ai], c: a.c }, e2 = { r: b.rows[1 - bi], c: b.c };
+                                const removed = [];
+                                for (let r = 0; r < 9; r++) {
+                                    for (let c = 0; c < 9; c++) {
+                                        if (grid[r][c] === 0 && candidates[r][c].has(num) &&
+                                            !(r === e1.r && c === e1.c) && !(r === e2.r && c === e2.c) &&
+                                            this.arePeers(r, c, e1.r, e1.c) && this.arePeers(r, c, e2.r, e2.c)) {
+                                            removed.push({ row: r, col: c, number: num });
+                                        }
+                                    }
+                                }
+                                if (removed.length > 0) {
+                                    return {
+                                        technique: 'Skyscraper',
+                                        type: 'elimination',
+                                        difficultyWeight: this.weights['Skyscraper'],
+                                        candidatesRemoved: removed,
+                                        reason: `Skyscraper for ${num} in columns ${a.c+1} and ${b.c+1} sharing row ${a.rows[ai]+1}.`
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // 4.4: 2-String Kite — row conjugate pair + column conjugate pair linked via a shared box
+    findTwoStringKite(grid, candidates) {
+        for (let num = 1; num <= 9; num++) {
+            const biRows = [], biCols = [];
+            for (let r = 0; r < 9; r++) {
+                const cols = [];
+                for (let c = 0; c < 9; c++) if (grid[r][c] === 0 && candidates[r][c].has(num)) cols.push(c);
+                if (cols.length === 2) biRows.push({ r, cols });
+            }
+            for (let c = 0; c < 9; c++) {
+                const rows = [];
+                for (let r = 0; r < 9; r++) if (grid[r][c] === 0 && candidates[r][c].has(num)) rows.push(r);
+                if (rows.length === 2) biCols.push({ c, rows });
+            }
+            for (const br of biRows) {
+                for (const bc of biCols) {
+                    for (let ri = 0; ri < 2; ri++) {
+                        for (let ci = 0; ci < 2; ci++) {
+                            const boxRCell = { r: br.r, c: br.cols[ri] };
+                            const boxCCell = { r: bc.rows[ci], c: bc.c };
+                            if (boxRCell.r === boxCCell.r && boxRCell.c === boxCCell.c) continue;
+                            if (Math.floor(boxRCell.r / 3) === Math.floor(boxCCell.r / 3) &&
+                                Math.floor(boxRCell.c / 3) === Math.floor(boxCCell.c / 3)) {
+                                const endR = { r: br.r, c: br.cols[1 - ri] };
+                                const endC = { r: bc.rows[1 - ci], c: bc.c };
+                                if (Math.floor(endR.c / 3) === Math.floor(boxRCell.c / 3) ||
+                                    Math.floor(endC.r / 3) === Math.floor(boxCCell.r / 3)) continue;
+                                const tr = endC.r, tc = endR.c;
+                                if (grid[tr][tc] === 0 && candidates[tr][tc].has(num)) {
+                                    return {
+                                        technique: '2-String Kite',
+                                        type: 'elimination',
+                                        difficultyWeight: this.weights['2-String Kite'],
+                                        candidatesRemoved: [{ row: tr, col: tc, number: num }],
+                                        reason: `2-String Kite for ${num} in row ${br.r+1} and column ${bc.c+1} eliminates ${num} at (${tr+1},${tc+1}).`
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // 4.6: W-Wing — two identical bivalue cells {X,Y} linked by a conjugate pair on X
+    findWWing(grid, candidates) {
+        const bivalues = [];
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid[r][c] === 0 && candidates[r][c].size === 2) {
+                    bivalues.push({ r, c, vals: [...candidates[r][c]] });
+                }
+            }
+        }
+        const units = [];
+        for (let i = 0; i < 9; i++) units.push(this.getRowCells(i), this.getColCells(i), this.getBoxCells(i));
+        for (let i = 0; i < bivalues.length; i++) {
+            for (let j = i + 1; j < bivalues.length; j++) {
+                const c1 = bivalues[i], c2 = bivalues[j];
+                if (c1.vals[0] !== c2.vals[0] || c1.vals[1] !== c2.vals[1]) continue;
+                if (this.arePeers(c1.r, c1.c, c2.r, c2.c)) continue;
+                for (const [X, Y] of [[c1.vals[0], c1.vals[1]], [c1.vals[1], c1.vals[0]]]) {
+                    let linked = false;
+                    for (const unit of units) {
+                        const xCells = unit.filter(u => grid[u.r][u.c] === 0 && candidates[u.r][u.c].has(X));
+                        if (xCells.length !== 2) continue;
+                        const [s1, s2] = xCells;
+                        if ((s1.r === c1.r && s1.c === c1.c) || (s1.r === c2.r && s1.c === c2.c) ||
+                            (s2.r === c1.r && s2.c === c1.c) || (s2.r === c2.r && s2.c === c2.c)) continue;
+                        if ((this.arePeers(s1.r, s1.c, c1.r, c1.c) && this.arePeers(s2.r, s2.c, c2.r, c2.c)) ||
+                            (this.arePeers(s1.r, s1.c, c2.r, c2.c) && this.arePeers(s2.r, s2.c, c1.r, c1.c))) {
+                            linked = true;
+                            break;
+                        }
+                    }
+                    if (!linked) continue;
+                    const removed = [];
+                    for (let r = 0; r < 9; r++) {
+                        for (let c = 0; c < 9; c++) {
+                            if (grid[r][c] === 0 && candidates[r][c].has(Y) &&
+                                this.arePeers(r, c, c1.r, c1.c) && this.arePeers(r, c, c2.r, c2.c)) {
+                                removed.push({ row: r, col: c, number: Y });
+                            }
+                        }
+                    }
+                    if (removed.length > 0) {
+                        return {
+                            technique: 'W-Wing',
+                            type: 'elimination',
+                            difficultyWeight: this.weights['W-Wing'],
+                            candidatesRemoved: removed,
+                            reason: `W-Wing on {${X},${Y}} at (${c1.r+1},${c1.c+1}) and (${c2.r+1},${c2.c+1}) linked by ${X}.`
+                        };
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // 4.6: Empty Rectangle — box candidates restricted to 1 row + 1 col paired with an outside conjugate link
+    findEmptyRectangle(grid, candidates) {
+        for (let num = 1; num <= 9; num++) {
+            for (let b = 0; b < 9; b++) {
+                const br = Math.floor(b / 3), bc = b % 3;
+                const boxCells = this.getBoxCells(b).filter(cell => grid[cell.r][cell.c] === 0 && candidates[cell.r][cell.c].has(num));
+                if (boxCells.length < 2) continue;
+                for (let r0 = br * 3; r0 < br * 3 + 3; r0++) {
+                    for (let c0 = bc * 3; c0 < bc * 3 + 3; c0++) {
+                        if (!boxCells.every(cell => cell.r === r0 || cell.c === c0)) continue;
+                        for (let c1 = 0; c1 < 9; c1++) {
+                            if (Math.floor(c1 / 3) === bc) continue;
+                            const rows = [];
+                            for (let r = 0; r < 9; r++) if (grid[r][c1] === 0 && candidates[r][c1].has(num)) rows.push(r);
+                            if (rows.length !== 2 || !rows.includes(r0)) continue;
+                            const r2 = rows[0] === r0 ? rows[1] : rows[0];
+                            if (Math.floor(r2 / 3) === br) continue;
+                            if (grid[r2][c0] === 0 && candidates[r2][c0].has(num)) {
+                                return {
+                                    technique: 'Empty Rectangle',
+                                    type: 'elimination',
+                                    difficultyWeight: this.weights['Empty Rectangle'],
+                                    candidatesRemoved: [{ row: r2, col: c0, number: num }],
+                                    reason: `Empty Rectangle for ${num} in block ${b+1} with column ${c1+1} eliminates ${num} at (${r2+1},${c0+1}).`
+                                };
+                            }
+                        }
+                        for (let r1 = 0; r1 < 9; r1++) {
+                            if (Math.floor(r1 / 3) === br) continue;
+                            const cols = [];
+                            for (let c = 0; c < 9; c++) if (grid[r1][c] === 0 && candidates[r1][c].has(num)) cols.push(c);
+                            if (cols.length !== 2 || !cols.includes(c0)) continue;
+                            const c2 = cols[0] === c0 ? cols[1] : cols[0];
+                            if (Math.floor(c2 / 3) === bc) continue;
+                            if (grid[r0][c2] === 0 && candidates[r0][c2].has(num)) {
+                                return {
+                                    technique: 'Empty Rectangle',
+                                    type: 'elimination',
+                                    difficultyWeight: this.weights['Empty Rectangle'],
+                                    candidatesRemoved: [{ row: r0, col: c2, number: num }],
+                                    reason: `Empty Rectangle for ${num} in block ${b+1} with row ${r1+1} eliminates ${num} at (${r0+1},${c2+1}).`
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // 4.6: Finned X-Wing (rows and columns)
+    findFinnedXWing(grid, candidates) {
+        for (let num = 1; num <= 9; num++) {
+            for (let r1 = 0; r1 < 9; r1++) {
+                const cols1 = [];
+                for (let c = 0; c < 9; c++) if (grid[r1][c] === 0 && candidates[r1][c].has(num)) cols1.push(c);
+                if (cols1.length !== 2) continue;
+                for (let r2 = 0; r2 < 9; r2++) {
+                    if (Math.floor(r1 / 3) === Math.floor(r2 / 3)) continue;
+                    const cols2 = [];
+                    for (let c = 0; c < 9; c++) if (grid[r2][c] === 0 && candidates[r2][c].has(num)) cols2.push(c);
+                    if (cols2.length < 2 || cols2.length > 4) continue;
+                    for (const [cBase, cFinCol] of [[cols1[0], cols1[1]], [cols1[1], cols1[0]]]) {
+                        if (Math.floor(cBase / 3) === Math.floor(cFinCol / 3)) continue;
+                        if (!cols2.includes(cBase)) continue;
+                        const fins = cols2.filter(c => c !== cBase && c !== cFinCol);
+                        if (fins.length === 0 || !fins.every(c => Math.floor(c / 3) === Math.floor(cFinCol / 3))) continue;
+                        const br2 = Math.floor(r2 / 3) * 3;
+                        const removed = [];
+                        for (let r = br2; r < br2 + 3; r++) {
+                            if (r === r2) continue;
+                            if (grid[r][cFinCol] === 0 && candidates[r][cFinCol].has(num)) removed.push({ row: r, col: cFinCol, number: num });
+                        }
+                        if (removed.length > 0) {
+                            return {
+                                technique: 'Finned X-Wing',
+                                type: 'elimination',
+                                difficultyWeight: this.weights['Finned X-Wing'],
+                                candidatesRemoved: removed,
+                                reason: `Finned X-Wing for ${num} in rows ${r1+1} and ${r2+1}.`
+                            };
+                        }
+                    }
+                }
+            }
+            for (let c1 = 0; c1 < 9; c1++) {
+                const rows1 = [];
+                for (let r = 0; r < 9; r++) if (grid[r][c1] === 0 && candidates[r][c1].has(num)) rows1.push(r);
+                if (rows1.length !== 2) continue;
+                for (let c2 = 0; c2 < 9; c2++) {
+                    if (Math.floor(c1 / 3) === Math.floor(c2 / 3)) continue;
+                    const rows2 = [];
+                    for (let r = 0; r < 9; r++) if (grid[r][c2] === 0 && candidates[r][c2].has(num)) rows2.push(r);
+                    if (rows2.length < 2 || rows2.length > 4) continue;
+                    for (const [rBase, rFinRow] of [[rows1[0], rows1[1]], [rows1[1], rows1[0]]]) {
+                        if (Math.floor(rBase / 3) === Math.floor(rFinRow / 3)) continue;
+                        if (!rows2.includes(rBase)) continue;
+                        const fins = rows2.filter(r => r !== rBase && r !== rFinRow);
+                        if (fins.length === 0 || !fins.every(r => Math.floor(r / 3) === Math.floor(rFinRow / 3))) continue;
+                        const bc2 = Math.floor(c2 / 3) * 3;
+                        const removed = [];
+                        for (let c = bc2; c < bc2 + 3; c++) {
+                            if (c === c2) continue;
+                            if (grid[rFinRow][c] === 0 && candidates[rFinRow][c].has(num)) removed.push({ row: rFinRow, col: c, number: num });
+                        }
+                        if (removed.length > 0) {
+                            return {
+                                technique: 'Finned X-Wing',
+                                type: 'elimination',
+                                difficultyWeight: this.weights['Finned X-Wing'],
+                                candidatesRemoved: removed,
+                                reason: `Finned X-Wing for ${num} in columns ${c1+1} and ${c2+1}.`
+                            };
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // 4.8: Simple Coloring — single-digit conjugate-pair components (Color Wrap & Color Trap)
     findSimpleColoring(grid, candidates) {
+        const units = [];
+        for (let i = 0; i < 9; i++) units.push(this.getRowCells(i), this.getColCells(i), this.getBoxCells(i));
+        for (let num = 1; num <= 9; num++) {
+            const adj = new Map();
+            const addEdge = (a, b) => {
+                if (!adj.has(a)) adj.set(a, new Set());
+                if (!adj.has(b)) adj.set(b, new Set());
+                adj.get(a).add(b);
+                adj.get(b).add(a);
+            };
+            for (const unit of units) {
+                const pos = unit.filter(u => grid[u.r][u.c] === 0 && candidates[u.r][u.c].has(num));
+                if (pos.length === 2) addEdge(pos[0].r * 9 + pos[0].c, pos[1].r * 9 + pos[1].c);
+            }
+            const color = new Map();
+            for (const start of adj.keys()) {
+                if (color.has(start)) continue;
+                const comp = [[], []];
+                const q = [start];
+                color.set(start, 0);
+                while (q.length) {
+                    const u = q.shift();
+                    const cu = color.get(u);
+                    comp[cu].push({ r: (u / 9) | 0, c: u % 9 });
+                    for (const v of adj.get(u)) {
+                        if (!color.has(v)) {
+                            color.set(v, 1 - cu);
+                            q.push(v);
+                        }
+                    }
+                }
+                for (let p = 0; p < 2; p++) {
+                    let wrap = false;
+                    for (let i = 0; i < comp[p].length && !wrap; i++) {
+                        for (let j = i + 1; j < comp[p].length; j++) {
+                            if (this.arePeers(comp[p][i].r, comp[p][i].c, comp[p][j].r, comp[p][j].c)) {
+                                wrap = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (wrap) {
+                        return {
+                            technique: 'Simple Coloring',
+                            type: 'elimination',
+                            difficultyWeight: this.weights['Simple Coloring'],
+                            candidatesRemoved: comp[p].map(cell => ({ row: cell.r, col: cell.c, number: num })),
+                            reason: `Simple Coloring wrap for ${num} eliminates contradictory color group.`
+                        };
+                    }
+                }
+                const inComp = new Set([...comp[0], ...comp[1]].map(x => x.r * 9 + x.c));
+                const removed = [];
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        if (grid[r][c] !== 0 || !candidates[r][c].has(num) || inComp.has(r * 9 + c)) continue;
+                        if (comp[0].some(x => this.arePeers(r, c, x.r, x.c)) &&
+                            comp[1].some(x => this.arePeers(r, c, x.r, x.c))) {
+                            removed.push({ row: r, col: c, number: num });
+                        }
+                    }
+                }
+                if (removed.length > 0) {
+                    return {
+                        technique: 'Simple Coloring',
+                        type: 'elimination',
+                        difficultyWeight: this.weights['Simple Coloring'],
+                        candidatesRemoved: removed,
+                        reason: `Simple Coloring trap for ${num} eliminates candidates seeing both colors.`
+                    };
+                }
+            }
+        }
+        return null;
+    }
+
+    // 5.0: Naked Quad
+    findNakedQuad(grid, candidates) {
+        for (let i = 0; i < 9; i++) {
+            for (const cells of [this.getRowCells(i), this.getColCells(i), this.getBoxCells(i)]) {
+                const res = this.findNakedSubsetInUnit(candidates, cells, 4);
+                if (res) return { ...res, technique: 'Naked Quad', difficultyWeight: this.weights['Naked Quad'] };
+            }
+        }
+        return null;
+    }
+
+    // 5.2 / 5.4: XY-Chain — shortest-first bivalue chain (4 cells = 5.2, 5..7 cells = 5.4)
+    findXYChain(grid, candidates) {
+        const bi = [];
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid[r][c] === 0 && candidates[r][c].size === 2) {
+                    const [a, b] = [...candidates[r][c]];
+                    bi.push({ id: r * 9 + c, r, c, a, b, peers: [] });
+                }
+            }
+        }
+        for (let i = 0; i < bi.length; i++) {
+            for (let j = i + 1; j < bi.length; j++) {
+                if (this.arePeers(bi[i].r, bi[i].c, bi[j].r, bi[j].c)) {
+                    bi[i].peers.push(bi[j]);
+                    bi[j].peers.push(bi[i]);
+                }
+            }
+        }
+        for (let targetLen = 4; targetLen <= 7; targetLen++) {
+            const techName = targetLen === 4 ? 'XY-Chain' : 'Long XY-Chain';
+            for (const start of bi) {
+                for (const [Z, firstLink] of [[start.a, start.b], [start.b, start.a]]) {
+                    const visited = new Set([start.id]);
+                    const dfs = (curr, outVal, depth) => {
+                        if (depth === targetLen) {
+                            if (outVal !== Z) return null;
+                            const removed = [];
+                            for (let r = 0; r < 9; r++) {
+                                for (let c = 0; c < 9; c++) {
+                                    const id = r * 9 + c;
+                                    if (id === start.id || id === curr.id) continue;
+                                    if (grid[r][c] === 0 && candidates[r][c].has(Z) &&
+                                        this.arePeers(r, c, start.r, start.c) && this.arePeers(r, c, curr.r, curr.c)) {
+                                        removed.push({ row: r, col: c, number: Z });
+                                    }
+                                }
+                            }
+                            return removed.length > 0 ? { end: curr, removed } : null;
+                        }
+                        for (const nxt of curr.peers) {
+                            if (visited.has(nxt.id)) continue;
+                            if (nxt.a !== outVal && nxt.b !== outVal) continue;
+                            const nextOut = nxt.a === outVal ? nxt.b : nxt.a;
+                            visited.add(nxt.id);
+                            const hit = dfs(nxt, nextOut, depth + 1);
+                            visited.delete(nxt.id);
+                            if (hit) return hit;
+                        }
+                        return null;
+                    };
+                    const hit = dfs(start, firstLink, 1);
+                    if (hit) {
+                        return {
+                            technique: techName,
+                            type: 'elimination',
+                            difficultyWeight: this.weights[techName],
+                            candidatesRemoved: hit.removed,
+                            reason: `${techName} (${targetLen} cells) between (${start.r+1},${start.c+1}) and (${hit.end.r+1},${hit.end.c+1}) eliminates ${Z}.`
+                        };
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // 5.4: Hidden Quad
+    findHiddenQuad(grid, candidates) {
+        const units = [];
+        for (let i = 0; i < 9; i++) {
+            units.push({ cells: this.getRowCells(i), name: `row ${i+1}` },
+                       { cells: this.getColCells(i), name: `col ${i+1}` },
+                       { cells: this.getBoxCells(i), name: `box ${i+1}` });
+        }
+        for (const unit of units) {
+            const unsolved = unit.cells.filter(cell => grid[cell.r][cell.c] === 0 && candidates[cell.r][cell.c].size > 0);
+            if (unsolved.length < 5) continue;
+            const numPositions = new Map();
+            for (let num = 1; num <= 9; num++) {
+                const pos = unsolved.filter(cell => candidates[cell.r][cell.c].has(num));
+                if (pos.length >= 2 && pos.length <= 4) numPositions.set(num, pos);
+            }
+            const nums = [...numPositions.keys()];
+            if (nums.length < 4) continue;
+            for (const quadNums of this.getCombinations(nums, 4)) {
+                const cellSet = new Set();
+                for (const n of quadNums) for (const p of numPositions.get(n)) cellSet.add(p.r * 9 + p.c);
+                if (cellSet.size === 4) {
+                    const quadSet = new Set(quadNums);
+                    const removed = [];
+                    for (const key of cellSet) {
+                        const r = (key / 9) | 0, c = key % 9;
+                        for (const cand of candidates[r][c]) {
+                            if (!quadSet.has(cand)) removed.push({ row: r, col: c, number: cand });
+                        }
+                    }
+                    if (removed.length > 0) {
+                        return {
+                            technique: 'Hidden Quad',
+                            type: 'elimination',
+                            difficultyWeight: this.weights['Hidden Quad'],
+                            candidatesRemoved: removed,
+                            reason: `Hidden Quad {${quadNums.join(',')}} in ${unit.name}.`
+                        };
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // 5.6: 3D Medusa — multi-digit XOR coloring across bivalue cells and unit conjugate pairs
+    find3DMedusa(grid, candidates) {
+        const adj = new Map();
+        const key = (r, c, d) => (r * 9 + c) * 10 + d;
+        const decode = k => ({ r: ((k / 10) | 0) / 9 | 0, c: ((k / 10) | 0) % 9, d: k % 10 });
+        const addEdge = (a, b) => {
+            if (!adj.has(a)) adj.set(a, new Set());
+            if (!adj.has(b)) adj.set(b, new Set());
+            adj.get(a).add(b);
+            adj.get(b).add(a);
+        };
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid[r][c] === 0 && candidates[r][c].size === 2) {
+                    const [d1, d2] = [...candidates[r][c]];
+                    addEdge(key(r, c, d1), key(r, c, d2));
+                }
+            }
+        }
+        const units = [];
+        for (let i = 0; i < 9; i++) units.push(this.getRowCells(i), this.getColCells(i), this.getBoxCells(i));
+        for (let d = 1; d <= 9; d++) {
+            for (const unit of units) {
+                const pos = unit.filter(u => grid[u.r][u.c] === 0 && candidates[u.r][u.c].has(d));
+                if (pos.length === 2) addEdge(key(pos[0].r, pos[0].c, d), key(pos[1].r, pos[1].c, d));
+            }
+        }
+        const conflicts = (a, b) => (a.r === b.r && a.c === b.c && a.d !== b.d) || (a.d === b.d && this.arePeers(a.r, a.c, b.r, b.c));
+        const color = new Map();
+        for (const start of adj.keys()) {
+            if (color.has(start)) continue;
+            const comp = [[], []];
+            const q = [start];
+            color.set(start, 0);
+            while (q.length) {
+                const u = q.shift();
+                const cu = color.get(u);
+                comp[cu].push({ k: u, ...decode(u) });
+                for (const v of adj.get(u)) {
+                    if (!color.has(v)) {
+                        color.set(v, 1 - cu);
+                        q.push(v);
+                    }
+                }
+            }
+            if (comp[0].length + comp[1].length < 3) continue;
+            for (let p = 0; p < 2; p++) {
+                let wrap = false;
+                for (let i = 0; i < comp[p].length && !wrap; i++) {
+                    for (let j = i + 1; j < comp[p].length; j++) {
+                        if (conflicts(comp[p][i], comp[p][j])) {
+                            wrap = true;
+                            break;
+                        }
+                    }
+                }
+                if (wrap) {
+                    return {
+                        technique: '3D Medusa',
+                        type: 'elimination',
+                        difficultyWeight: this.weights['3D Medusa'],
+                        candidatesRemoved: comp[p].map(n => ({ row: n.r, col: n.c, number: n.d })),
+                        reason: `3D Medusa color contradiction eliminates contradictory candidate group.`
+                    };
+                }
+            }
+            const inComp = new Set([...comp[0], ...comp[1]].map(n => n.k));
+            const removed = [];
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (grid[r][c] !== 0) continue;
+                    for (const d of candidates[r][c]) {
+                        const k = key(r, c, d);
+                        if (inComp.has(k)) continue;
+                        const node = { r, c, d };
+                        if (comp[0].some(x => conflicts(node, x)) && comp[1].some(x => conflicts(node, x))) {
+                            removed.push({ row: r, col: c, number: d });
+                        }
+                    }
+                }
+            }
+            if (removed.length > 0) {
+                return {
+                    technique: '3D Medusa',
+                    type: 'elimination',
+                    difficultyWeight: this.weights['3D Medusa'],
+                    candidatesRemoved: removed,
+                    reason: `3D Medusa trap eliminates candidates seeing both colors.`
+                };
+            }
+        }
+        return null;
+    }
+
+    // 5.8 / 6.0: Alternating Inference Chains (2 strong links = 5.8 AIC, 3 strong links = 6.0 Extended AIC)
+    findAIC(grid, candidates) {
+        const nodes = [];
+        const nodeIdx = new Map();
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid[r][c] !== 0) continue;
+                for (const d of candidates[r][c]) {
+                    const id = nodes.length;
+                    nodeIdx.set((r * 9 + c) * 10 + d, id);
+                    nodes.push({ id, r, c, d, strong: [], weak: [] });
+                }
+            }
+        }
+        const addStrong = (k1, k2) => {
+            const a = nodeIdx.get(k1), b = nodeIdx.get(k2);
+            if (a === undefined || b === undefined || a === b) return;
+            if (!nodes[a].strong.includes(b)) {
+                nodes[a].strong.push(b);
+                nodes[b].strong.push(a);
+            }
+        };
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid[r][c] === 0 && candidates[r][c].size === 2) {
+                    const [d1, d2] = [...candidates[r][c]];
+                    addStrong((r * 9 + c) * 10 + d1, (r * 9 + c) * 10 + d2);
+                }
+            }
+        }
+        const units = [];
+        for (let i = 0; i < 9; i++) units.push(this.getRowCells(i), this.getColCells(i), this.getBoxCells(i));
+        for (let d = 1; d <= 9; d++) {
+            for (const unit of units) {
+                const pos = unit.filter(u => grid[u.r][u.c] === 0 && candidates[u.r][u.c].has(d));
+                if (pos.length === 2) addStrong((pos[0].r * 9 + pos[0].c) * 10 + d, (pos[1].r * 9 + pos[1].c) * 10 + d);
+            }
+        }
+        const conflicts = (a, b) => (a.r === b.r && a.c === b.c && a.d !== b.d) || (a.d === b.d && this.arePeers(a.r, a.c, b.r, b.c));
+        for (let i = 0; i < nodes.length; i++) {
+            if (nodes[i].strong.length === 0) continue;
+            for (let j = 0; j < nodes.length; j++) {
+                if (i !== j && nodes[j].strong.length > 0 && conflicts(nodes[i], nodes[j])) nodes[i].weak.push(j);
+            }
+        }
+        // Pass 1: 2-strong-link AIC (5.8)
+        for (const u1 of nodes) {
+            for (const v1 of u1.strong) {
+                for (const u2 of nodes[v1].weak) {
+                    if (u2 === u1.id) continue;
+                    for (const v2 of nodes[u2].strong) {
+                        if (v2 === u1.id || v2 === v1) continue;
+                        const rem = nodes.filter(x => x.id !== u1.id && x.id !== v2 && conflicts(x, u1) && conflicts(x, nodes[v2]));
+                        if (rem.length > 0) {
+                            return {
+                                technique: 'AIC',
+                                type: 'elimination',
+                                difficultyWeight: this.weights['AIC'],
+                                candidatesRemoved: rem.map(x => ({ row: x.r, col: x.c, number: x.d })),
+                                reason: `AIC between (${u1.r+1},${u1.c+1})=${u1.d} and (${nodes[v2].r+1},${nodes[v2].c+1})=${nodes[v2].d}.`
+                            };
+                        }
+                    }
+                }
+            }
+        }
+        // Pass 2: 3-strong-link Extended AIC (6.0)
+        for (const u1 of nodes) {
+            for (const v1 of u1.strong) {
+                for (const u2 of nodes[v1].weak) {
+                    if (u2 === u1.id) continue;
+                    for (const v2 of nodes[u2].strong) {
+                        if (v2 === u1.id || v2 === v1) continue;
+                        for (const u3 of nodes[v2].weak) {
+                            if (u3 === u1.id || u3 === v1 || u3 === u2) continue;
+                            for (const v3 of nodes[u3].strong) {
+                                if (v3 === u1.id || v3 === v1 || v3 === u2 || v3 === v2) continue;
+                                const rem = nodes.filter(x => x.id !== u1.id && x.id !== v3 && conflicts(x, u1) && conflicts(x, nodes[v3]));
+                                if (rem.length > 0) {
+                                    return {
+                                        technique: 'Extended AIC',
+                                        type: 'elimination',
+                                        difficultyWeight: this.weights['Extended AIC'],
+                                        candidatesRemoved: rem.map(x => ({ row: x.r, col: x.c, number: x.d })),
+                                        reason: `Extended AIC between (${u1.r+1},${u1.c+1})=${u1.d} and (${nodes[v3].r+1},${nodes[v3].c+1})=${nodes[v3].d}.`
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return null;
     }
 
     // --- Helper Methods ---
+
+    arePeers(r1, c1, r2, c2) {
+        if (r1 === r2 && c1 === c2) return false;
+        return r1 === r2 || c1 === c2 || (Math.floor(r1 / 3) === Math.floor(r2 / 3) && Math.floor(c1 / 3) === Math.floor(c2 / 3));
+    }
 
     getRowCells(r) {
         const cells = [];

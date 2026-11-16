@@ -1601,44 +1601,41 @@
             -webkit-tap-highlight-color: transparent !important;
         }
 
-        /* Global progress: 16-cell outer ring around the level dial */
+        /* Global progress: 16-segment Single-Accent Tonal Ramp gauge */
         .level-dial-wrap { position: relative; width: clamp(112px, 15vh, 128px); height: clamp(112px, 15vh, 128px); container-type: size; display: grid; place-items: center; flex: none; }
-        .level-dial-wrap #level_indicator { width: 74% !important; height: 74% !important; }
-        /* Soft neumorphic disc: raised face on the page background, recessed track for the ring */
+        .level-dial-wrap #level_indicator { width: 76% !important; height: 76% !important; font-family: 'Outfit', sans-serif !important; }
         html:root .level-dial-wrap #level_indicator {
             border: none !important;
-            background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(0,0,0,0.16)), var(--bg) !important;
-            box-shadow: 4.3cqw 4.3cqw 10cqw rgba(0,0,0,0.55), -3.6cqw -3.6cqw 8.5cqw rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.05) !important;
-            transition: box-shadow 0.18s ease, transform 0.18s ease !important;
+            background: linear-gradient(145deg, #2a2d35, #191b20) !important;
+            box-shadow: 3.5cqw 3.5cqw 9cqw rgba(0,0,0,0.42), -2.5cqw -2.5cqw 7cqw rgba(255,255,255,0.03), inset 0 0 0 1px rgba(255,255,255,0.08) !important;
+            transition: box-shadow 0.16s ease, transform 0.16s ease !important;
         }
         html:root[data-theme="light"] .level-dial-wrap #level_indicator {
-            background: linear-gradient(145deg, #ffffff, #e9ebf0) !important;
-            box-shadow: 4.3cqw 4.3cqw 10cqw rgba(0,0,0,0.16), -3.6cqw -3.6cqw 8.5cqw rgba(255,255,255,0.95), inset 0 0 0 1px rgba(0,0,0,0.04) !important;
+            background: linear-gradient(145deg, #ffffff, #e4e8f0) !important;
+            box-shadow: 3.5cqw 3.5cqw 9cqw rgba(0,0,0,0.13), -2.5cqw -2.5cqw 7cqw rgba(255,255,255,0.92), inset 0 0 0 1px rgba(15,20,30,0.08) !important;
         }
         html:root .level-dial-wrap #level_indicator:hover { transform: none !important; }
         html:root .level-dial-wrap #level_indicator:active {
             transform: scale(0.97) !important;
-            box-shadow: inset 2.6cqw 2.6cqw 6cqw rgba(0,0,0,0.55), inset -2.2cqw -2.2cqw 5cqw rgba(255,255,255,0.05) !important;
+            box-shadow: inset 2.2cqw 2.2cqw 5.5cqw rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.06) !important;
         }
         html:root[data-theme="light"] .level-dial-wrap #level_indicator:active {
-            box-shadow: inset 2.6cqw 2.6cqw 6cqw rgba(0,0,0,0.16), inset -2.2cqw -2.2cqw 5cqw rgba(255,255,255,0.9) !important;
+            box-shadow: inset 2.2cqw 2.2cqw 5.5cqw rgba(0,0,0,0.15), inset 0 0 0 1px rgba(15,20,30,0.06) !important;
         }
         .ld-outer { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
-        .ld-cell { fill: none; stroke: rgba(255,255,255,0.12); stroke-width: 8; stroke-linecap: round; }
-        [data-theme="light"] .ld-cell { stroke: rgba(0,0,0,0.11); }
-        .ld-cell-fill { fill: none; stroke: hsl(var(--h, 24) 82% 56%); stroke-width: 8; stroke-linecap: round; }
-        [data-theme="light"] .ld-cell-fill { stroke: hsl(var(--h, 24) 84% 44%); }
-        #level_indicator .ld-cap-top { font-size: 6.4cqw; font-weight: 800; letter-spacing: 0.2em; opacity: 0.7; margin-bottom: 0.6cqw; padding-left: 0.2em; line-height: 1; }
-        #level_indicator .ld-num { font-size: 24cqw; font-weight: 900; line-height: 0.9; }
-        #level_indicator .ld-pips { display: flex; gap: 4cqw; margin-bottom: 3.6cqw; }
-        #level_indicator .ld-pip { display: block; width: 5.4cqw; height: 5.4cqw; border-radius: 50%; background: transparent; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.65), inset -1px -1px 2px rgba(255,255,255,0.09); }
-        [data-theme="light"] #level_indicator .ld-pip { box-shadow: inset 1px 1px 2px rgba(0,0,0,0.22), inset -1px -1px 2px rgba(255,255,255,0.95); }
-        #level_indicator .ld-pip.on { background: hsl(var(--h, 24) 82% 56%); box-shadow: 0 0 6px hsl(var(--h, 24) 82% 56% / 0.6); }
-        [data-theme="light"] #level_indicator .ld-pip.on { background: hsl(var(--h, 24) 84% 44%); box-shadow: 0 0 6px hsl(var(--h, 24) 84% 44% / 0.4); }
-        #level_indicator .ld-num { font-size: 25cqw; font-weight: 800; color: #eceef3; }
-        [data-theme="light"] #level_indicator .ld-num { color: #1b1d23; }
-        #level_indicator .ld-cap { margin-top: 3cqw; font-size: 9.6cqw; font-weight: 900; letter-spacing: 0.05em; opacity: 1; line-height: 1; white-space: nowrap; color: hsl(var(--h, 24) 88% 62%); }
-        [data-theme="light"] #level_indicator .ld-cap { color: hsl(var(--h, 24) 88% 38%); }
+        .ld-cell { fill: none; stroke: rgba(255,255,255,0.09); stroke-width: 5; stroke-linecap: butt; }
+        [data-theme="light"] .ld-cell { stroke: rgba(15,20,30,0.09); }
+        .ld-cell-past { fill: none; stroke: rgba(var(--highlight-rgb), 0.40); stroke-width: 5; stroke-linecap: butt; }
+        [data-theme="light"] .ld-cell-past { stroke: rgba(var(--highlight-rgb), 0.35); }
+        .ld-cell-active { fill: none; stroke: var(--highlight); stroke-width: 5; stroke-linecap: butt; }
+        #level_indicator .ld-pips { display: flex; gap: 3.2cqw; margin-bottom: 4.2cqw; }
+        #level_indicator .ld-pip { display: block; width: 5.8cqw; height: 2.1cqw; border-radius: 1px; background: rgba(255,255,255,0.15); }
+        [data-theme="light"] #level_indicator .ld-pip { background: rgba(15,20,30,0.15); }
+        #level_indicator .ld-pip.on { background: var(--highlight); }
+        #level_indicator .ld-num { font-size: 24.5cqw; font-weight: 650; letter-spacing: -0.01em; line-height: 0.95; color: #eceff4; }
+        [data-theme="light"] #level_indicator .ld-num { color: #17191e; }
+        #level_indicator .ld-cap { margin-top: 4cqw; font-size: 8.2cqw; font-weight: 600; letter-spacing: 0.13em; padding-left: 0.13em; line-height: 1; white-space: nowrap; color: #9aa1b0; }
+        [data-theme="light"] #level_indicator .ld-cap { color: #586070; }
 
         /* Level ring dial: tier name + level numeral live inside the circle */        #level_indicator { flex-direction: column; padding: 0 !important; }
         #level_indicator .ld-ring { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -2984,7 +2981,7 @@ html[data-pillars="on"] .sudoku-grid {
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.9.1</div>
+    <div class="version-tag">V3.9.2</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -3031,7 +3028,7 @@ html[data-pillars="on"] .sudoku-grid {
         <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 12px;">
             <button class="primary-btn" style="width: 100%; padding: 13px; background: rgba(var(--highlight-rgb), 0.15); border: 1px solid var(--highlight); font-weight: 700; letter-spacing: 1px; border-radius: 12px; cursor: pointer; color: var(--highlight);" onclick="revealPuzzle()">⚡ REVEAL PUZZLE</button>
             <button class="reset-btn" style="width: 100%;" onclick="resetAllData()">RESET ALL DATA</button>
-            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.9.1</div>
+            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.9.2</div>
         </div>
     </div>
 </div>
@@ -3072,10 +3069,10 @@ html[data-pillars="on"] .sudoku-grid {
 
 <!-- Hint Tooltip Removed in favor of direct flash-and-place -->
 
-<script src="sarp-solver.js?v=2"></script>
+<script src="sarp-solver.js?v=3.9.2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="puzzle-catalog.js?v=2"></script>
-<script src="script.js?v=3.9.1"></script>
+<script src="puzzle-catalog.js?v=3.9.2"></script>
+<script src="script.js?v=3.9.2"></script>
 <script>
     let isInitialized = false;
     

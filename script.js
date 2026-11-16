@@ -212,8 +212,9 @@ class SudokuGame {
         return idx * SUB_LEVELS_PER_TIER + (tierKey === this.autoMode?.currentTier ? this.getSubLevel() : 0);
     }
 
-    // Renders the dial: outer ring = 16 level cells (whole game), win pips (0-3) sit above the number;
-    // the face shows the global level number with the tier + numeral as a caption.
+    // Renders the dial (Single-Accent Tonal Ramp):
+    //   outer ring = 16 crisp butt-capped segments (past levels in muted accent, current level in 100% accent);
+    //   face = 3 horizontal micro-bars for wins (0-3), level number, and calm tracked tier caption.
     renderLevelDial(btn, name, previewKey) {
         if (!btn) return;
         const preset = this.getDifficultyPreset(previewKey);
@@ -225,30 +226,32 @@ class SudokuGame {
         const subIndex = master ? step - (DIFFICULTY_PRESETS.length - 1) * SUB_LEVELS_PER_TIER : step % SUB_LEVELS_PER_TIER;
         const numeral = ROMAN_LEVELS[Math.max(0, Math.min(ROMAN_LEVELS.length - 1, subIndex))];
 
-        // Win pips above the number: one dot per win needed in this level
         let pips = '';
         for (let i = 0; i < winsNeeded; i++) pips += `<i class="ld-pip${i < wins ? ' on' : ''}"></i>`;
-        btn.style.setProperty('--h', preset.hue);
         btn.innerHTML =
             `<span class="ld-in"><span class="ld-pips">${pips}</span><span class="ld-num">${step + 1}</span>` +
             `<span class="ld-cap">${preset.short || name} ${numeral}</span></span>`;
-        // Outer ring: one cell per level on the whole ladder
+
         const pt = (a, r, cc) => [cc + r * Math.cos(a * Math.PI / 180), cc + r * Math.sin(a * Math.PI / 180)];
         const outer = document.getElementById('level_outer_ring');
         if (outer) {
-            const OR = 62, OC = 70, OGAP = 11, ospan = (360 - OGAP * totalSteps) / totalSteps;
+            const OR = 62, OC = 70, OGAP = 3.2, ospan = (360 - OGAP * totalSteps) / totalSteps;
+            const d = (b0, b1) => {
+                const [p0, q0] = pt(b0, OR, OC), [p1, q1] = pt(b1, OR, OC);
+                return `M${p0.toFixed(2)} ${q0.toFixed(2)} A${OR} ${OR} 0 0 1 ${p1.toFixed(2)} ${q1.toFixed(2)}`;
+            };
             let cells = '';
             for (let k = 0; k < totalSteps; k++) {
                 const a0 = -90 + OGAP / 2 + k * (ospan + OGAP), a1 = a0 + ospan;
-                const [x0, y0] = pt(a0, OR, OC), [x1, y1] = pt(a1, OR, OC);
-                const d = (b0, b1) => {
-                    const [p0, q0] = pt(b0, OR, OC), [p1, q1] = pt(b1, OR, OC);
-                    return `M${p0.toFixed(2)} ${q0.toFixed(2)} A${OR} ${OR} 0 0 1 ${p1.toFixed(2)} ${q1.toFixed(2)}`;
-                };
-                const frac = k < step ? 1 : (k === step ? wins / winsNeeded : 0);
-                cells += `<path class="ld-cell" d="M${x0.toFixed(2)} ${y0.toFixed(2)} A${OR} ${OR} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}"/>`;
-                const tierHue = DIFFICULTY_PRESETS[k >= (DIFFICULTY_PRESETS.length - 1) * SUB_LEVELS_PER_TIER ? DIFFICULTY_PRESETS.length - 1 : Math.floor(k / SUB_LEVELS_PER_TIER)].hue;
-                if (frac > 0) cells += `<path class="ld-cell-fill" style="--h:${tierHue}" d="${d(a0, a0 + (a1 - a0) * frac)}"/>`;
+                if (k < step) {
+                    cells += `<path class="ld-cell-past" d="${d(a0, a1)}"/>`;
+                } else if (k === step) {
+                    cells += `<path class="ld-cell" d="${d(a0, a1)}"/>`;
+                    const fr = Math.max(0.22, (wins + 0.35) / (winsNeeded + 0.35));
+                    cells += `<path class="ld-cell-active" d="${d(a0, a0 + ospan * fr)}"/>`;
+                } else {
+                    cells += `<path class="ld-cell" d="${d(a0, a1)}"/>`;
+                }
             }
             outer.innerHTML = cells;
         }
@@ -4457,12 +4460,13 @@ class SudokuGame {
         const bannerText = document.getElementById('hintBannerText');
         const banner = document.getElementById('hintBanner');
         if (bannerText && banner) {
-            let title = hint.type === 'fullhouse' ? 'Full House' :
+            let title = hint.techniqueTitle ? hint.techniqueTitle :
+                        hint.type === 'fullhouse' ? 'Full House' :
                         hint.type === 'naked' ? 'Naked Single' :
                         hint.type === 'hidden' ? 'Hidden Single' : 'Hint';
             
             // Fallback: if Sarp solver was used, the title might be 'Hint' but it IS a naked or hidden single
-            if (title === 'Hint' && hint.reason) {
+            if (!hint.techniqueTitle && title === 'Hint' && hint.reason) {
                 if (hint.reason.includes('possible candidate')) {
                     title = 'Naked Single';
                     hint.type = 'naked'; // Normalize for shading logic later
@@ -4473,12 +4477,14 @@ class SudokuGame {
             }
             
             let fullReason = hint.reason;
-            if (hint.type === 'hidden') {
-                fullReason = `Other ${hint.number}s cross out all other empty cells in this unit.`;
-            } else if (hint.type === 'naked') {
-                fullReason = `Row, column, and block already contain every other number.`;
-            } else if (hint.type === 'fullhouse') {
-                fullReason = `Only one empty spot remains.`;
+            if (!hint.techniqueTitle) {
+                if (hint.type === 'hidden') {
+                    fullReason = `Other ${hint.number}s cross out all other empty cells in this unit.`;
+                } else if (hint.type === 'naked') {
+                    fullReason = `Row, column, and block already contain every other number.`;
+                } else if (hint.type === 'fullhouse') {
+                    fullReason = `Only one empty spot remains.`;
+                }
             }
 
             bannerText.innerHTML = `
@@ -7449,11 +7455,27 @@ class SudokuGame {
     }
     
     getSmartHint() {
-        // If we have a cached grade from SarpSolver, use its first logical step
-        if (this.currentPuzzleGrade && this.currentPuzzleGrade.solveSteps) {
-            // Find the first step that isn't already filled in the grid
-            for (const step of this.currentPuzzleGrade.solveSteps) {
-                if (this.grid[step.row][step.col] === 0) {
+        const pickFromSteps = (steps) => {
+            if (!Array.isArray(steps)) return null;
+            let leadElim = null;
+            for (const step of steps) {
+                if (step.type === 'elimination') {
+                    if (!leadElim || step.difficultyWeight > leadElim.difficultyWeight) leadElim = step;
+                    continue;
+                }
+                if (step.type === 'placement' && Number.isInteger(step.row) && Number.isInteger(step.col) &&
+                    this.grid[step.row][step.col] === 0 &&
+                    (!this.solution?.[step.row]?.[step.col] || this.solution[step.row][step.col] === step.number)) {
+                    if (leadElim) {
+                        return {
+                            row: step.row,
+                            col: step.col,
+                            number: step.number,
+                            type: step.technique,
+                            techniqueTitle: leadElim.technique,
+                            reason: `${leadElim.reason} Unlocks ${step.number} at (${step.row + 1},${step.col + 1}).`
+                        };
+                    }
                     return {
                         row: step.row,
                         col: step.col,
@@ -7462,22 +7484,41 @@ class SudokuGame {
                         reason: step.reason
                     };
                 }
+                leadElim = null;
+            }
+            return null;
+        };
+
+        // Solve from the live board first so hints reflect any eliminations needed right now
+        const liveGrade = this.sarpSolver.solve(this.grid);
+        if (liveGrade.solveSteps?.length) {
+            const liveHint = pickFromSteps(liveGrade.solveSteps);
+            if (liveHint) return liveHint;
+        }
+
+        if (this.currentPuzzleGrade?.solveSteps) {
+            const cachedHint = pickFromSteps(this.currentPuzzleGrade.solveSteps);
+            if (cachedHint) return cachedHint;
+        }
+
+        // Fallback for Master inference-chain puzzles beyond SarpSolver's 6.0 ceiling
+        if (this.solution) {
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (this.grid[r][c] === 0 && this.solution[r][c]) {
+                        return {
+                            row: r,
+                            col: c,
+                            number: this.solution[r][c],
+                            type: 'chain',
+                            techniqueTitle: 'Forcing Chain',
+                            reason: `Deep chain inference resolves cell (${r + 1},${c + 1}) to ${this.solution[r][c]}.`
+                        };
+                    }
+                }
             }
         }
-        
-        // Fallback to basic logical search if grade is missing or stale
-        const grade = this.sarpSolver.solve(this.grid);
-        if (grade.solved && grade.solveSteps.length > 0) {
-            const step = grade.solveSteps[0];
-            return {
-                row: step.row,
-                col: step.col,
-                number: step.number,
-                type: step.technique,
-                reason: step.reason
-            };
-        }
-        
+
         return null;
     }
 
