@@ -1601,6 +1601,53 @@
             -webkit-tap-highlight-color: transparent !important;
         }
 
+        /* Global progress: 16-cell outer ring around the level dial */
+        .level-dial-wrap { position: relative; width: clamp(112px, 15vh, 128px); height: clamp(112px, 15vh, 128px); container-type: size; display: grid; place-items: center; flex: none; }
+        .level-dial-wrap #level_indicator { width: 74% !important; height: 74% !important; }
+        /* Soft neumorphic disc: raised face on the page background, recessed track for the ring */
+        html:root .level-dial-wrap #level_indicator {
+            border: none !important;
+            background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(0,0,0,0.16)), var(--bg) !important;
+            box-shadow: 4.3cqw 4.3cqw 10cqw rgba(0,0,0,0.55), -3.6cqw -3.6cqw 8.5cqw rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.05) !important;
+            transition: box-shadow 0.18s ease, transform 0.18s ease !important;
+        }
+        html:root[data-theme="light"] .level-dial-wrap #level_indicator {
+            background: linear-gradient(145deg, #ffffff, #e9ebf0) !important;
+            box-shadow: 4.3cqw 4.3cqw 10cqw rgba(0,0,0,0.16), -3.6cqw -3.6cqw 8.5cqw rgba(255,255,255,0.95), inset 0 0 0 1px rgba(0,0,0,0.04) !important;
+        }
+        html:root .level-dial-wrap #level_indicator:hover { transform: none !important; }
+        html:root .level-dial-wrap #level_indicator:active {
+            transform: scale(0.97) !important;
+            box-shadow: inset 2.6cqw 2.6cqw 6cqw rgba(0,0,0,0.55), inset -2.2cqw -2.2cqw 5cqw rgba(255,255,255,0.05) !important;
+        }
+        html:root[data-theme="light"] .level-dial-wrap #level_indicator:active {
+            box-shadow: inset 2.6cqw 2.6cqw 6cqw rgba(0,0,0,0.16), inset -2.2cqw -2.2cqw 5cqw rgba(255,255,255,0.9) !important;
+        }
+        .ld-outer { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+        .ld-cell { fill: none; stroke: rgba(255,255,255,0.12); stroke-width: 8; stroke-linecap: round; }
+        [data-theme="light"] .ld-cell { stroke: rgba(0,0,0,0.11); }
+        .ld-cell-fill { fill: none; stroke: var(--highlight); stroke-width: 8; stroke-linecap: round; }
+        #level_indicator .ld-cap-top { font-size: 6.4cqw; font-weight: 800; letter-spacing: 0.2em; opacity: 0.7; margin-bottom: 0.6cqw; padding-left: 0.2em; line-height: 1; }
+        #level_indicator .ld-num { font-size: 24cqw; font-weight: 900; line-height: 0.9; }
+        #level_indicator .ld-pips { display: flex; gap: 4cqw; margin-bottom: 3.6cqw; }
+        #level_indicator .ld-pip { display: block; width: 5.4cqw; height: 5.4cqw; border-radius: 50%; background: transparent; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.65), inset -1px -1px 2px rgba(255,255,255,0.09); }
+        [data-theme="light"] #level_indicator .ld-pip { box-shadow: inset 1px 1px 2px rgba(0,0,0,0.22), inset -1px -1px 2px rgba(255,255,255,0.95); }
+        #level_indicator .ld-pip.on { background: var(--highlight); box-shadow: 0 0 6px rgba(var(--highlight-rgb), 0.55); }
+        #level_indicator .ld-num { font-size: 26cqw; font-weight: 800; color: #eceef3; }
+        [data-theme="light"] #level_indicator .ld-num { color: #1b1d23; }
+        #level_indicator .ld-cap { margin-top: 2.6cqw; font-size: 6.8cqw; font-weight: 800; letter-spacing: 0.08em; opacity: 0.85; line-height: 1; white-space: nowrap; }
+
+        /* Level ring dial: tier name + level numeral live inside the circle */        #level_indicator { flex-direction: column; padding: 0 !important; }
+        #level_indicator .ld-ring { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+        #level_indicator .ld-seg { fill: none; stroke: rgba(255,255,255,0.16); stroke-width: 4.6; stroke-linecap: round; transition: stroke 0.3s ease, filter 0.3s ease; }
+        [data-theme="light"] #level_indicator .ld-seg { stroke: rgba(0,0,0,0.16); }
+        #level_indicator .ld-seg.on { stroke: var(--highlight); filter: drop-shadow(0 0 3px var(--highlight)); }
+        #level_indicator .ld-in { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; pointer-events: none; }
+        #level_indicator .ld-name { font-size: 18px; font-weight: 900; letter-spacing: 0.04em; line-height: 1; padding-left: 0.04em; }
+        #level_indicator .ld-lv { margin-top: 5px; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; opacity: 0.85; line-height: 1; padding-left: 0.12em; }
+        #level_indicator .ld-lv.ld-stars { font-size: 9px; letter-spacing: 1px; }
+        #difficulty_display_label { display: none !important; }
+
         .dial-label[data-master-stars] {
             color: var(--highlight);
             font-size: 14px !important;
@@ -2894,7 +2941,7 @@ html[data-pillars="on"] .sudoku-grid {
         <div class="main-controls-split">
             <!-- Left: Dial Section -->
             <div class="dial-section">
-                <button id="level_indicator" onclick="game.cycleDifficulty()" aria-label="Medium difficulty. Click to change difficulty">MEDIUM</button>
+                <div class="level-dial-wrap"><svg class="ld-outer" id="level_outer_ring" viewBox="0 0 140 140" aria-hidden="true"></svg><button id="level_indicator" onclick="game.cycleDifficulty()" aria-label="Medium difficulty. Click to change difficulty">MEDIUM</button></div>
                 <div class="dial-label" id="difficulty_display_label">Difficulty</div>
             </div>
 
@@ -2934,7 +2981,7 @@ html[data-pillars="on"] .sudoku-grid {
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.8.9</div>
+    <div class="version-tag">V3.9.0</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -2981,7 +3028,7 @@ html[data-pillars="on"] .sudoku-grid {
         <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 12px;">
             <button class="primary-btn" style="width: 100%; padding: 13px; background: rgba(var(--highlight-rgb), 0.15); border: 1px solid var(--highlight); font-weight: 700; letter-spacing: 1px; border-radius: 12px; cursor: pointer; color: var(--highlight);" onclick="revealPuzzle()">⚡ REVEAL PUZZLE</button>
             <button class="reset-btn" style="width: 100%;" onclick="resetAllData()">RESET ALL DATA</button>
-            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.8.9</div>
+            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.9.0</div>
         </div>
     </div>
 </div>
@@ -3024,8 +3071,8 @@ html[data-pillars="on"] .sudoku-grid {
 
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
-<script src="puzzle-catalog.js?v=1"></script>
-<script src="script.js?v=3.8.9"></script>
+<script src="puzzle-catalog.js?v=2"></script>
+<script src="script.js?v=3.9.0"></script>
 <script>
     let isInitialized = false;
     
@@ -3466,9 +3513,9 @@ html[data-pillars="on"] .sudoku-grid {
             if (levelBtn) {
                 const preset = this.getDifficultyPreset();
                 const rating = this.getAutoDifficultyLabel();
-                levelBtn.textContent = rating;
+                this.renderLevelDial(levelBtn, rating);
                 levelBtn.dataset.difficulty = preset.key;
-                levelBtn.title = `${rating} difficulty (rated by required logic)`;
+                levelBtn.title = `Level ${this.getGlobalStep() + 1} of 16: ${this.getLevelName()}`;
                 levelBtn.setAttribute('aria-label', `${rating} difficulty. Click to change difficulty`);
                 
                 // Sync dial rotation
@@ -3478,7 +3525,7 @@ html[data-pillars="on"] .sudoku-grid {
                 levelBtn.style.setProperty('--dial-angle', `${angle}rad`);
                 if (dialLabel) {
                     const isMaster = preset.key === 'master';
-                    dialLabel.textContent = isMaster ? '★'.repeat(this.autoMode.masterStage + 1) : 'Difficulty';
+                    dialLabel.textContent = this.getDialLevelText();
                     dialLabel.toggleAttribute('data-master-stars', isMaster);
                     if (isMaster) dialLabel.setAttribute('aria-label', this.getMasterStage().label);
                     else dialLabel.removeAttribute('aria-label');

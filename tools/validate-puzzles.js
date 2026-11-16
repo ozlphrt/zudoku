@@ -193,16 +193,19 @@ for (const [index, entry] of ratedMasterPuzzles.entries()) {
 
 const catalog = require(path.join(root, 'puzzle-catalog.js'));
 const tierBands = {
-    easy: { min: 0, max: 2.3, minClues: 36, maxClues: 46 },
-    medium: { min: 2.6, max: 2.8, minClues: 29, maxClues: 35 },
-    hard: { min: 3.0, max: 4.0, minClues: 25, maxClues: 28 },
-    expert: { min: 4.2, max: 6.0, minClues: 21, maxClues: 24 }
+    easy: { min: 0, max: 2.3, minClues: 34, maxClues: 46 },
+    medium: { min: 0, max: 2.8, minClues: 28, maxClues: 35 },   // Medium I is singles-only (hidden singles)
+    hard: { min: 3.0, max: 4.0, minClues: 24, maxClues: 30 },
+    expert: { min: 4.2, max: 6.0, minClues: 21, maxClues: 26 }
 };
 const table = [];
 const seenCatalog = new Set();
 for (const [tier, band] of Object.entries(tierBands)) {
     let ok = 0;
     const entries = catalog[tier] || [];
+    for (let l = 0; l < 3; l++) {
+        if (!entries.some(entry => entry.l === l)) failures.push(`${tier}: sub-level ${l + 1} has no puzzles`);
+    }
     entries.forEach((entry, index) => {
         const before = failures.length;
         const puzzle = toGrid(entry.p);

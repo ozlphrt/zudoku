@@ -2,7 +2,7 @@
 // Every puzzle written is: uniquely solvable, solved by the Sarp solver, rated in the
 // tier's SE band, and inside the tier's clue-count window. Master uses master-puzzles.js.
 //
-// Usage: node tools/build-puzzle-catalog.js [perTier=100]
+// Usage: node tools/build-puzzle-catalog.js [perLevel=100] [tier]
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
@@ -12,16 +12,38 @@ global.window = global;
 vm.runInThisContext(fs.readFileSync(path.join(root, 'sarp-solver.js'), 'utf8'), { filename: 'sarp-solver.js' });
 const solver = new SarpSolver();
 
-// Keep in sync with DIFFICULTY_PRESETS in script.js. Clue windows are disjoint and
-// strictly decreasing so a higher tier never has more givens than a lower one.
-const TIERS = {
-    easy:   { minRating: 0,   maxRating: 2.3, minClues: 36, maxClues: 46 },
-    medium: { minRating: 2.6, maxRating: 2.8, minClues: 29, maxClues: 35 },
-    hard:   { minRating: 3.0, maxRating: 4.0, minClues: 25, maxClues: 28 },
-    expert: { minRating: 4.2, maxRating: 6.0, minClues: 21, maxClues: 24 }
+// Sub-levels (I/II/III) inside each tier. A puzzle belongs to a level when its metrics
+// (measured with the Sarp solver's cheapest-technique-first path) satisfy the spec:
+//   max  = hardest technique rating      ns = number of non-single steps
+//   hs   = number of Hidden Single steps (the solver prefers Naked Singles first,
+//          so a Hidden Single step means the player really has to scan for one)
+// Each rung changes ONE thing: Easy I->II fewer clues, Easy II->III hidden singles,
+// Medium I->II first locked-candidate step, II->III more of them, etc.
+// Keep tier names in sync with DIFFICULTY_PRESETS in script.js.
+const LEVELS = {
+    easy: [
+        { clues: [42, 46], ok: m => m.ns === 0 && m.hs <= 1 },
+        { clues: [36, 41], ok: m => m.ns === 0 && m.hs <= 2 },
+        { clues: [34, 40], ok: m => m.ns === 0 && m.hs >= 3 && m.hs <= 8 }
+    ],
+    medium: [
+        { clues: [30, 35], ok: m => m.ns === 0 && m.hs >= 8 },
+        { clues: [29, 34], ok: m => m.ns === 1 && m.max === 2.6 },
+        { clues: [28, 33], ok: m => m.ns >= 2 && m.ns <= 3 && m.max >= 2.6 && m.max <= 2.8 }
+    ],
+    hard: [
+        { clues: [26, 30], ok: m => m.max === 3.0 && m.ns >= 1 && m.ns <= 2 },
+        { clues: [25, 29], ok: m => m.max === 3.0 && m.ns >= 3 && m.ns <= 5 },
+        { clues: [24, 28], ok: m => m.max >= 3.2 && m.max <= 4.0 && m.ns <= 8 }
+    ],
+    expert: [
+        { clues: [22, 26], ok: m => m.max >= 4.2 && m.max <= 6.0 && m.ns >= 2 && m.ns <= 4 },
+        { clues: [22, 25], ok: m => m.max >= 4.2 && m.max <= 6.0 && m.ns >= 5 && m.ns <= 8 },
+        { clues: [21, 25], ok: m => m.max >= 4.2 && m.max <= 6.0 && m.ns >= 9 && m.ns <= 16 }
+    ]
 };
-const perTier = Number(process.argv[2] || 100);
-
+const perLevel = Number(process.argv[2] || 100);
+const onlyTier = process.argv[3]; // optional: rebuild a single tier
 const rand = n => Math.floor(Math.random() * n);
 function shuffle(a) {
     for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
@@ -94,35 +116,44 @@ function carve(solution, targetClues) {
 function rate(puzzle) {
     const grid = Array.from({ length: 9 }, (_, r) => puzzle.slice(r * 9, r * 9 + 9).split('').map(Number));
     const grade = solver.solve(grid);
-    return grade.solved ? grade.maxStepDifficulty : null;
+    if (!grade.solved) return null;
+    const steps = grade.solveSteps;
+    return {
+        max: grade.maxStepDifficulty,
+        ns: steps.filter(s => !/Single/.test(s.technique)).length,
+        hs: steps.filter(s => s.technique === 'Hidden Single').length
+    };
 }
-
-const catalog = {};
+let catalog = {};
+const outPath = path.join(root, 'puzzle-catalog.js');
+if (onlyTier && !process.argv[4] && fs.existsSync(outPath)) catalog = require(outPath); // keep other tiers
+catalog = JSON.parse(JSON.stringify(catalog));
 const seen = new Set();
-for (const [tier, spec] of Object.entries(TIERS)) {
+for (const [tier, levels] of Object.entries(LEVELS)) {
+    if (onlyTier && tier !== onlyTier) continue;
     catalog[tier] = [];
-    const started = Date.now();
-    let tried = 0;
-    while (catalog[tier].length < perTier) {
-        tried++;
-        const target = spec.minClues + rand(spec.maxClues - spec.minClues + 1);
-        const solution = randomSolution();
-        const puzzle = carve(solution, target);
-        if (!puzzle || seen.has(puzzle)) continue;
-        const r = rate(puzzle);
-        if (r === null || r < spec.minRating || r > spec.maxRating) continue;
-        seen.add(puzzle);
-        catalog[tier].push({ p: puzzle, s: countSolutions(puzzle.split('').map(Number), 1).solution, r });
-        if (catalog[tier].length % 10 === 0) {
-            console.error(`${tier}: ${catalog[tier].length}/${perTier} (${tried} tried, ${((Date.now() - started) / 1000).toFixed(0)}s)`);
+    levels.forEach((spec, l) => {
+        const started = Date.now();
+        let tried = 0, have = 0;
+        while (have < perLevel) {
+            tried++;
+            const target = spec.clues[0] + rand(spec.clues[1] - spec.clues[0] + 1);
+            const puzzle = carve(randomSolution(), target);
+            if (!puzzle || seen.has(puzzle)) continue;
+            const m = rate(puzzle);
+            if (!m || !spec.ok(m)) continue;
+            seen.add(puzzle);
+            catalog[tier].push({ p: puzzle, s: countSolutions(puzzle.split('').map(Number), 1).solution, r: m.max, l });
+            have++;
+            if (have % 10 === 0) {
+                console.error(`${tier} L${l + 1}: ${have}/${perLevel} (${tried} tried, ${((Date.now() - started) / 1000).toFixed(0)}s)`);
+            }
         }
-    }
-    catalog[tier].sort((a, b) => a.r - b.r || b.p.split('0').length - a.p.split('0').length);
+    });
 }
-
 const out = '// Generated by tools/build-puzzle-catalog.js - do not edit by hand.\n' +
     '// Every puzzle is uniquely solvable, logically solvable, and rated inside its tier band.\n' +
     'const VALIDATED_PUZZLE_CATALOG = Object.freeze(' + JSON.stringify(catalog) + ');\n' +
     "if (typeof module !== 'undefined') module.exports = VALIDATED_PUZZLE_CATALOG;\n";
-fs.writeFileSync(path.join(root, 'puzzle-catalog.js'), out);
+fs.writeFileSync(process.argv[4] || path.join(root, 'puzzle-catalog.js'), out);
 console.error('Wrote puzzle-catalog.js');

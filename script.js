@@ -1,4 +1,6 @@
-const AUTO_WINS_PER_STEP = 3;
+const AUTO_WINS_PER_STEP = 3;   // wins needed to advance one sub-level (I -> II -> III -> next tier)
+const SUB_LEVELS_PER_TIER = 3;   // Easy/Medium/Hard/Expert each have levels I-III (Master keeps its own 4 stages)
+const ROMAN_LEVELS = Object.freeze(['I', 'II', 'III', 'IV']);
 const MASTER_STAGES = Object.freeze([
     { label: 'MASTER I', minRating: 6.2, maxRating: 6.9 },
     { label: 'MASTER II', minRating: 7.0, maxRating: 7.6 },
@@ -6,11 +8,11 @@ const MASTER_STAGES = Object.freeze([
     { label: 'MASTER IV', minRating: 8.4, maxRating: 9.3 }
 ]);
 const DIFFICULTY_PRESETS = Object.freeze([
-    { key: 'easy', label: 'EASY', clues: 44, minRating: 0, maxRating: 2.3, hue: 185 },
-    { key: 'medium', label: 'MEDIUM', clues: 34, minRating: 2.6, maxRating: 2.8, hue: 50 },
-    { key: 'hard', label: 'HARD', clues: 27, minRating: 3.0, maxRating: 4.0, hue: 32 },
-    { key: 'expert', label: 'EXPERT', clues: 17, minRating: 4.2, maxRating: 6.0, hue: 0 },
-    { key: 'master', label: 'MASTER', clues: 17, minRating: 6.2, maxRating: Infinity, hue: 280 }
+    { key: 'easy', label: 'EASY', short: 'EASY', clues: 44, minRating: 0, maxRating: 2.3, hue: 185 },
+    { key: 'medium', label: 'MEDIUM', short: 'MED', clues: 34, minRating: 2.6, maxRating: 2.8, hue: 50 },
+    { key: 'hard', label: 'HARD', short: 'HARD', clues: 27, minRating: 3.0, maxRating: 4.0, hue: 32 },
+    { key: 'expert', label: 'EXPERT', short: 'EXP', clues: 17, minRating: 4.2, maxRating: 6.0, hue: 0 },
+    { key: 'master', label: 'MASTER', short: 'MSTR', clues: 17, minRating: 6.2, maxRating: Infinity, hue: 280 }
 ]);
 
 class SudokuGame {
@@ -179,6 +181,76 @@ class SudokuGame {
         return MASTER_STAGES[index];
     }
 
+    // Current sub-level (0-2) within the active tier. Manual/legacy modes always use level I.
+    getSubLevel() {
+        if (!this.autoMode?.active || this.getDifficultyPreset().key === 'master') return 0;
+        const l = this.autoMode.subLevel;
+        return Number.isInteger(l) ? Math.max(0, Math.min(SUB_LEVELS_PER_TIER - 1, l)) : 0;
+    }
+
+    // "MEDIUM II" style name for messages / aria labels
+    getLevelName() {
+        const preset = this.getDifficultyPreset();
+        if (preset.key === 'master') return this.getMasterStage().label;
+        return `${preset.label} ${ROMAN_LEVELS[this.getSubLevel()]}`;
+    }
+
+    // Small text under the difficulty dial: Roman numeral level, or stars for Master.
+    getDialLevelText() {
+        const preset = this.getDifficultyPreset();
+        if (preset.key === 'master') return '★'.repeat(this.autoMode.masterStage + 1);
+        return `Level ${ROMAN_LEVELS[this.getSubLevel()]}`;
+    }
+
+    // Position on the whole ladder, 0..15: Easy I..Expert III = 0..11, Master I..IV = 12..15.
+    getGlobalStep(tierKey = this.autoMode?.currentTier) {
+        const idx = Math.max(0, DIFFICULTY_PRESETS.findIndex(p => p.key === tierKey));
+        if (tierKey === 'master') {
+            return (DIFFICULTY_PRESETS.length - 1) * SUB_LEVELS_PER_TIER +
+                Math.max(0, Math.min(MASTER_STAGES.length - 1, this.autoMode?.masterStage || 0));
+        }
+        return idx * SUB_LEVELS_PER_TIER + (tierKey === this.autoMode?.currentTier ? this.getSubLevel() : 0);
+    }
+
+    // Renders the dial: outer ring = 16 level cells (whole game), win pips (0-3) sit above the number;
+    // the face shows the global level number with the tier + numeral as a caption.
+    renderLevelDial(btn, name, previewKey) {
+        if (!btn) return;
+        const preset = this.getDifficultyPreset(previewKey);
+        const master = preset.key === 'master';
+        const winsNeeded = AUTO_WINS_PER_STEP;
+        const wins = previewKey ? 0 : Math.max(0, Math.min(winsNeeded, Number(this.autoMode.winsInLevel) || 0));
+        const step = previewKey ? this.getGlobalStep(previewKey) : this.getGlobalStep();
+        const totalSteps = (DIFFICULTY_PRESETS.length - 1) * SUB_LEVELS_PER_TIER + MASTER_STAGES.length;
+        const subIndex = master ? step - (DIFFICULTY_PRESETS.length - 1) * SUB_LEVELS_PER_TIER : step % SUB_LEVELS_PER_TIER;
+        const numeral = ROMAN_LEVELS[Math.max(0, Math.min(ROMAN_LEVELS.length - 1, subIndex))];
+
+        // Win pips above the number: one dot per win needed in this level
+        let pips = '';
+        for (let i = 0; i < winsNeeded; i++) pips += `<i class="ld-pip${i < wins ? ' on' : ''}"></i>`;
+        btn.innerHTML =
+            `<span class="ld-in"><span class="ld-pips">${pips}</span><span class="ld-num">${step + 1}</span>` +
+            `<span class="ld-cap">${preset.short || name} ${numeral}</span></span>`;
+        // Outer ring: one cell per level on the whole ladder
+        const pt = (a, r, cc) => [cc + r * Math.cos(a * Math.PI / 180), cc + r * Math.sin(a * Math.PI / 180)];
+        const outer = document.getElementById('level_outer_ring');
+        if (outer) {
+            const OR = 62, OC = 70, OGAP = 11, ospan = (360 - OGAP * totalSteps) / totalSteps;
+            let cells = '';
+            for (let k = 0; k < totalSteps; k++) {
+                const a0 = -90 + OGAP / 2 + k * (ospan + OGAP), a1 = a0 + ospan;
+                const [x0, y0] = pt(a0, OR, OC), [x1, y1] = pt(a1, OR, OC);
+                const d = (b0, b1) => {
+                    const [p0, q0] = pt(b0, OR, OC), [p1, q1] = pt(b1, OR, OC);
+                    return `M${p0.toFixed(2)} ${q0.toFixed(2)} A${OR} ${OR} 0 0 1 ${p1.toFixed(2)} ${q1.toFixed(2)}`;
+                };
+                const frac = k < step ? 1 : (k === step ? wins / winsNeeded : 0);
+                cells += `<path class="ld-cell" d="M${x0.toFixed(2)} ${y0.toFixed(2)} A${OR} ${OR} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}"/>`;
+                if (frac > 0) cells += `<path class="ld-cell-fill" d="${d(a0, a0 + (a1 - a0) * frac)}"/>`;
+            }
+            outer.innerHTML = cells;
+        }
+    }
     getSelectedDifficultyKey() {
         return this.autoMode?.active ? this.getDifficultyPreset().key : this.difficulty.toLowerCase();
     }
@@ -2395,19 +2467,25 @@ class SudokuGame {
                         title = "Mastery Streak!";
                         message = "You've completed another MASTER IV streak. Your next puzzle stays in the highest rating band.";
                     }
+                } else if (this.getSubLevel() < SUB_LEVELS_PER_TIER - 1) {
+                    // Next sub-level inside the same tier (e.g. MEDIUM I -> MEDIUM II)
+                    this.autoMode.subLevel = this.getSubLevel() + 1;
+                    this.autoMode.levelUpPending = true;
+                    title = "Level Up!";
+                    message = `You've advanced to ${this.getLevelName()}. ${AUTO_WINS_PER_STEP} completed puzzles unlocked the next level.`;
                 } else {
                     const nextPreset = DIFFICULTY_PRESETS[Math.max(0, currentIndex) + 1];
                     this.autoMode.currentTier = nextPreset.key;
                     this.autoMode.currentClues = nextPreset.clues; // Legacy save compatibility
+                    this.autoMode.subLevel = 0;
                     if (nextPreset.key === 'master') this.autoMode.masterStage = 0;
                     this.autoMode.levelUpPending = true;
                     title = "Challenge Increased!";
-                    message = `You've advanced to ${nextPreset.label}. Three completed puzzles unlocked the next difficulty.`;
+                    message = `You've advanced to ${this.getLevelName()}. ${AUTO_WINS_PER_STEP} completed puzzles unlocked the next difficulty.`;
                 }
             } else {
                 const remaining = AUTO_WINS_PER_STEP - this.autoMode.winsInLevel;
-                const currentLabel = this.autoMode.currentTier === 'master' ?
-                    this.getMasterStage().label : this.getDifficultyPreset().label;
+                const currentLabel = this.getLevelName();
                 message = `${remaining} more completed ${remaining === 1 ? 'puzzle' : 'puzzles'} to advance from ${currentLabel}.`;
             }
             
@@ -3301,7 +3379,11 @@ class SudokuGame {
     }
 
     generateFromValidatedCatalog(tierKey) {
-        const pool = VALIDATED_PUZZLE_CATALOG[tierKey];
+        const fullPool = VALIDATED_PUZZLE_CATALOG[tierKey];
+        // Pick from the player's current sub-level; fall back to the whole tier if a level is empty.
+        const level = this.getSubLevel();
+        const levelPool = fullPool.filter(entry => (entry.l || 0) === level);
+        const pool = levelPool.length ? levelPool : fullPool;
         const pair = pool[Math.floor(Math.random() * pool.length)];
         const toGrid = value => Array.from({ length: 9 }, (_, row) =>
             value.slice(row * 9, row * 9 + 9).split('').map(Number));
@@ -5310,12 +5392,14 @@ class SudokuGame {
                     Number.isInteger(state.masterStage) ? state.masterStage : 0));
                 state.winsInLevel = Math.max(0, Math.min(AUTO_WINS_PER_STEP - 1,
                     Number.isFinite(state.winsInLevel) ? state.winsInLevel : 0));
+                state.subLevel = Math.max(0, Math.min(SUB_LEVELS_PER_TIER - 1,
+                    Number.isInteger(state.subLevel) ? state.subLevel : 0));
                 return state;
             } catch (e) {
                 console.error('Error parsing auto state:', e);
             }
         }
-        return { active: false, currentTier: 'medium', currentClues: 34, totalTries: 0, triesInRank: 0, winsInLevel: 0, masterStage: 0 };
+        return { active: false, currentTier: 'medium', currentClues: 34, totalTries: 0, triesInRank: 0, winsInLevel: 0, masterStage: 0, subLevel: 0 };
     }
 
     loadSarpMode() {
@@ -5585,6 +5669,8 @@ class SudokuGame {
     }
     
     getAutoDifficultyLabel(_clues, useCurrentGrade = true) {
+        // In auto/tier mode the chosen tier is the label (sub-level puzzles may be rated below the tier name).
+        if (this.autoMode?.active) return this.getDifficultyPreset().label;
         if (useCurrentGrade && this.currentPuzzleGrade?.solved && this.currentPuzzleGrade.difficultyLabel) {
             return this.currentPuzzleGrade.difficultyLabel.toUpperCase();
         }
@@ -5600,14 +5686,14 @@ class SudokuGame {
         if (levelBtn) {
             const preset = this.getDifficultyPreset();
             const rating = this.getAutoDifficultyLabel();
-            levelBtn.textContent = rating;
+            this.renderLevelDial(levelBtn, rating);
             levelBtn.dataset.difficulty = preset.key;
-            levelBtn.title = `${rating} difficulty (rated by required logic)`;
+            levelBtn.title = `${this.getLevelName()} difficulty`;
             levelBtn.setAttribute('aria-label', `${rating} difficulty. Click to change difficulty`);
             const label = document.getElementById('difficulty_display_label');
             if (label) {
                 const isMaster = preset.key === 'master';
-                label.textContent = isMaster ? '★'.repeat(this.autoMode.masterStage + 1) : 'Difficulty';
+                label.textContent = this.getDialLevelText();
                 label.toggleAttribute('data-master-stars', isMaster);
                 if (isMaster) label.setAttribute('aria-label', this.getMasterStage().label);
                 else label.removeAttribute('aria-label');
@@ -5630,6 +5716,7 @@ class SudokuGame {
         this.autoMode.currentTier = nextPreset.key;
         this.autoMode.currentClues = nextPreset.clues; // Legacy save compatibility
         this.autoMode.masterStage = nextPreset.key === 'master' ? 0 : this.autoMode.masterStage;
+        this.autoMode.subLevel = 0;
         this.autoMode.winsInLevel = 0;
         this.autoMode.triesInRank = 0;
         this.saveAutoModeState();
@@ -5752,7 +5839,7 @@ class SudokuGame {
             // Update UI Elements
             if (valEl) valEl.textContent = preset.label;
             if (levelBtn) {
-                levelBtn.textContent = preset.label;
+                this.renderLevelDial(levelBtn, preset.label, preset.key);
                 levelBtn.style.setProperty('--dial-angle', `${angle}rad`);
             }
 
@@ -5781,10 +5868,13 @@ class SudokuGame {
             this.autoMode.currentTier = preset.key;
             this.autoMode.currentClues = preset.clues; // Legacy save compatibility
             if (preset.key === 'master') this.autoMode.masterStage = 0;
+            this.autoMode.subLevel = 0;
             this.autoMode.winsInLevel = 0;
             this.saveAutoModeState();
             this.clearGameState();
             this.newGame();
+        } else {
+            this.updateAutoDashboard(); // scrubbed back to the same tier: restore the real ring
         }
     }
     
