@@ -1626,16 +1626,19 @@
         .ld-outer { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
         .ld-cell { fill: none; stroke: rgba(255,255,255,0.12); stroke-width: 8; stroke-linecap: round; }
         [data-theme="light"] .ld-cell { stroke: rgba(0,0,0,0.11); }
-        .ld-cell-fill { fill: none; stroke: var(--highlight); stroke-width: 8; stroke-linecap: round; }
+        .ld-cell-fill { fill: none; stroke: hsl(var(--h, 24) 82% 56%); stroke-width: 8; stroke-linecap: round; }
+        [data-theme="light"] .ld-cell-fill { stroke: hsl(var(--h, 24) 84% 44%); }
         #level_indicator .ld-cap-top { font-size: 6.4cqw; font-weight: 800; letter-spacing: 0.2em; opacity: 0.7; margin-bottom: 0.6cqw; padding-left: 0.2em; line-height: 1; }
         #level_indicator .ld-num { font-size: 24cqw; font-weight: 900; line-height: 0.9; }
         #level_indicator .ld-pips { display: flex; gap: 4cqw; margin-bottom: 3.6cqw; }
         #level_indicator .ld-pip { display: block; width: 5.4cqw; height: 5.4cqw; border-radius: 50%; background: transparent; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.65), inset -1px -1px 2px rgba(255,255,255,0.09); }
         [data-theme="light"] #level_indicator .ld-pip { box-shadow: inset 1px 1px 2px rgba(0,0,0,0.22), inset -1px -1px 2px rgba(255,255,255,0.95); }
-        #level_indicator .ld-pip.on { background: var(--highlight); box-shadow: 0 0 6px rgba(var(--highlight-rgb), 0.55); }
-        #level_indicator .ld-num { font-size: 26cqw; font-weight: 800; color: #eceef3; }
+        #level_indicator .ld-pip.on { background: hsl(var(--h, 24) 82% 56%); box-shadow: 0 0 6px hsl(var(--h, 24) 82% 56% / 0.6); }
+        [data-theme="light"] #level_indicator .ld-pip.on { background: hsl(var(--h, 24) 84% 44%); box-shadow: 0 0 6px hsl(var(--h, 24) 84% 44% / 0.4); }
+        #level_indicator .ld-num { font-size: 25cqw; font-weight: 800; color: #eceef3; }
         [data-theme="light"] #level_indicator .ld-num { color: #1b1d23; }
-        #level_indicator .ld-cap { margin-top: 2.6cqw; font-size: 6.8cqw; font-weight: 800; letter-spacing: 0.08em; opacity: 0.85; line-height: 1; white-space: nowrap; }
+        #level_indicator .ld-cap { margin-top: 3cqw; font-size: 9.6cqw; font-weight: 900; letter-spacing: 0.05em; opacity: 1; line-height: 1; white-space: nowrap; color: hsl(var(--h, 24) 88% 62%); }
+        [data-theme="light"] #level_indicator .ld-cap { color: hsl(var(--h, 24) 88% 38%); }
 
         /* Level ring dial: tier name + level numeral live inside the circle */        #level_indicator { flex-direction: column; padding: 0 !important; }
         #level_indicator .ld-ring { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -2981,7 +2984,7 @@ html[data-pillars="on"] .sudoku-grid {
             </div>
         </div>
     </footer>
-    <div class="version-tag">V3.9.0</div>
+    <div class="version-tag">V3.9.1</div>
 </div>
 
 <div id="compatibility-stubs" style="display: none !important;">
@@ -3028,7 +3031,7 @@ html[data-pillars="on"] .sudoku-grid {
         <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 12px;">
             <button class="primary-btn" style="width: 100%; padding: 13px; background: rgba(var(--highlight-rgb), 0.15); border: 1px solid var(--highlight); font-weight: 700; letter-spacing: 1px; border-radius: 12px; cursor: pointer; color: var(--highlight);" onclick="revealPuzzle()">⚡ REVEAL PUZZLE</button>
             <button class="reset-btn" style="width: 100%;" onclick="resetAllData()">RESET ALL DATA</button>
-            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.9.0</div>
+            <div style="text-align: center; font-size: 11px; color: var(--text); opacity: 0.4; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;">VERSION 3.9.1</div>
         </div>
     </div>
 </div>
@@ -3072,7 +3075,7 @@ html[data-pillars="on"] .sudoku-grid {
 <script src="sarp-solver.js?v=2"></script>
 <script src="master-puzzles.js?v=1"></script>
 <script src="puzzle-catalog.js?v=2"></script>
-<script src="script.js?v=3.9.0"></script>
+<script src="script.js?v=3.9.1"></script>
 <script>
     let isInitialized = false;
     

@@ -8,10 +8,10 @@ const MASTER_STAGES = Object.freeze([
     { label: 'MASTER IV', minRating: 8.4, maxRating: 9.3 }
 ]);
 const DIFFICULTY_PRESETS = Object.freeze([
-    { key: 'easy', label: 'EASY', short: 'EASY', clues: 44, minRating: 0, maxRating: 2.3, hue: 185 },
-    { key: 'medium', label: 'MEDIUM', short: 'MED', clues: 34, minRating: 2.6, maxRating: 2.8, hue: 50 },
-    { key: 'hard', label: 'HARD', short: 'HARD', clues: 27, minRating: 3.0, maxRating: 4.0, hue: 32 },
-    { key: 'expert', label: 'EXPERT', short: 'EXP', clues: 17, minRating: 4.2, maxRating: 6.0, hue: 0 },
+    { key: 'easy', label: 'EASY', short: 'EASY', clues: 44, minRating: 0, maxRating: 2.3, hue: 172 },
+    { key: 'medium', label: 'MEDIUM', short: 'MED', clues: 34, minRating: 2.6, maxRating: 2.8, hue: 48 },
+    { key: 'hard', label: 'HARD', short: 'HARD', clues: 27, minRating: 3.0, maxRating: 4.0, hue: 24 },
+    { key: 'expert', label: 'EXPERT', short: 'EXP', clues: 17, minRating: 4.2, maxRating: 6.0, hue: 355 },
     { key: 'master', label: 'MASTER', short: 'MSTR', clues: 17, minRating: 6.2, maxRating: Infinity, hue: 280 }
 ]);
 
@@ -228,6 +228,7 @@ class SudokuGame {
         // Win pips above the number: one dot per win needed in this level
         let pips = '';
         for (let i = 0; i < winsNeeded; i++) pips += `<i class="ld-pip${i < wins ? ' on' : ''}"></i>`;
+        btn.style.setProperty('--h', preset.hue);
         btn.innerHTML =
             `<span class="ld-in"><span class="ld-pips">${pips}</span><span class="ld-num">${step + 1}</span>` +
             `<span class="ld-cap">${preset.short || name} ${numeral}</span></span>`;
@@ -246,7 +247,8 @@ class SudokuGame {
                 };
                 const frac = k < step ? 1 : (k === step ? wins / winsNeeded : 0);
                 cells += `<path class="ld-cell" d="M${x0.toFixed(2)} ${y0.toFixed(2)} A${OR} ${OR} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}"/>`;
-                if (frac > 0) cells += `<path class="ld-cell-fill" d="${d(a0, a0 + (a1 - a0) * frac)}"/>`;
+                const tierHue = DIFFICULTY_PRESETS[k >= (DIFFICULTY_PRESETS.length - 1) * SUB_LEVELS_PER_TIER ? DIFFICULTY_PRESETS.length - 1 : Math.floor(k / SUB_LEVELS_PER_TIER)].hue;
+                if (frac > 0) cells += `<path class="ld-cell-fill" style="--h:${tierHue}" d="${d(a0, a0 + (a1 - a0) * frac)}"/>`;
             }
             outer.innerHTML = cells;
         }
